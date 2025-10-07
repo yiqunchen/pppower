@@ -2,39 +2,81 @@
 % Please edit documentation in R/required_n_ppi.R
 \name{n_required_PP}
 \alias{n_required_PP}
-\title{Solve for required n (labeled sample size) for a desired power}
+\title{Required labeled sample size for desired PPI power}
 \usage{
 n_required_PP(
   delta,
-  var_f,
-  var_res,
   N,
   alpha = 0.05,
   power = 0.8,
+  type = c("mean", "ols", "custom"),
+  var_f = NULL,
+  var_res = NULL,
+  V_u = NULL,
+  V_l = NULL,
+  c = NULL,
+  var_unlabeled = NULL,
+  var_labeled = NULL,
   warn_smallN = TRUE,
   smallN_threshold = 500,
   mode = c("error", "cap")
 )
 }
 \arguments{
-\item{delta}{Effect size (θ - θ_0)}
+\item{delta}{Effect size \eqn{\theta - \theta_0} for the estimand of interest.}
 
-\item{var_f}{Variance of f(X), the predictor function}
+\item{N}{Unlabeled sample size.}
 
-\item{var_res}{Variance of (Y - f(X)), the residual}
+\item{alpha}{Two-sided significance level.}
 
-\item{N}{Unlabeled sample size}
+\item{power}{Target power (\eqn{1-\beta}).}
 
-\item{alpha}{Significance level}
+\item{type}{Either \code{"mean"} for the PP mean estimator, \code{"ols"} for a linear
+contrast in PP-OLS, or \code{"custom"} to supply pre-computed variance pieces.}
 
-\item{power}{Target power (1 - β)}
+\item{var_f}{Variance of \eqn{f(X)}. Required when \code{type = "mean"}.}
+
+\item{var_res}{Variance of \eqn{Y - f(X)}. Required when \code{type = "mean"}.}
+
+\item{V_u, V_l}{Sandwich covariance matrices for the unlabeled and labeled
+PP-OLS pieces. Required when \code{type = "ols"}.}
+
+\item{c}{Numeric vector specifying the linear contrast \eqn{c^\top \beta}
+for PP-OLS. Required when \code{type = "ols"}.}
+
+\item{var_unlabeled, var_labeled}{Optional scalar variance components when
+\code{type = "custom"}. These correspond to \eqn{\mathrm{Var}_u} and
+\eqn{\mathrm{Var}_l} so that the standard error is
+\eqn{\sqrt{\mathrm{Var}_u/N  \mathrm{Var}_l/n}}.}
+
+\item{warn_smallN}{Logical; warn if \code{N} is below \code{smallN_threshold}.}
+
+\item{smallN_threshold}{Threshold for triggering the small-\code{N} warning.}
+
+\item{mode}{Either \code{"error"} (default) to throw when the required \eqn{n}
+exceeds \code{N}, or \code{"cap"} to return \code{n = N} with the achieved power
+attached as an attribute.}
 }
 \value{
-Required labeled sample size n
+Integer labeled sample size meeting the target power, possibly with an
+\code{"achieved_power"} attribute when \code{mode = "cap"}.
 }
 \description{
-Solve for required n (labeled sample size) for a desired power
+Computes the minimum labeled sample size \eqn{n} needed to attain a target
+two-sided power when using prediction-powered inference, covering both the
+mean estimator and linear-regression (OLS) contrasts.
 }
 \examples{
-n_required_PP(delta = 0.1, var_f = 0.2, var_res = 0.5, N = 5000, alpha = 0.05, power = 0.8)
+# Mean estimator
+n_required_PP(
+  delta = 0.1, N = 5000, var_f = 0.2, var_res = 0.5,
+  alpha = 0.05, power = 0.8, type = "mean"
+)
+
+# PP-OLS contrast
+V_u <- diag(c(0.8, 0.6)); V_l <- diag(c(0.5, 0.7))
+n_required_PP(
+  delta = 0.15, N = 4000, V_u = V_u, V_l = V_l, c = c(1, 0),
+  alpha = 0.05, power = 0.85, type = "ols"
+)
 }
