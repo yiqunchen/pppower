@@ -9,13 +9,30 @@ test_that("n_required_PP correctly detects infeasible configurations", {
   power <- 0.8
 
   expect_error(
-    n_required_PP(delta, var_f, var_res, N, alpha, power),
+    n_required_PP(
+      delta = delta,
+      N = N,
+      alpha = alpha,
+      power = power,
+      type = "mean",
+      var_f = var_f,
+      var_res = var_res
+    ),
     regexp = "Infeasible"
   )
 
   delta2 <- 0.5
   expect_warning(
-    n_required_PP(delta2, var_f, var_res, N, alpha, power, mode = "cap"),
+    n_required_PP(
+      delta = delta2,
+      N = N,
+      alpha = alpha,
+      power = power,
+      type = "mean",
+      var_f = var_f,
+      var_res = var_res,
+      mode = "cap"
+    ),
     regexp = "small|Unlabeled N is too small"
   )
 
@@ -26,11 +43,27 @@ test_that("n_required_PP correctly detects infeasible configurations", {
   N <- 1000
 
   expect_no_error(
-    n_required_PP(delta, var_f, var_res, N, alpha, power)
+    n_required_PP(
+      delta = delta,
+      N = N,
+      alpha = alpha,
+      power = power,
+      type = "mean",
+      var_f = var_f,
+      var_res = var_res
+    )
   )
 
   N_big <- 1e6
   expect_no_error(
-    n_required_PP(delta, var_f, var_res, N_big, alpha, power)
+    n_required_PP(
+      delta = delta,
+      N = N_big,
+      alpha = alpha,
+      power = power,
+      type = "mean",
+      var_f = var_f,
+      var_res = var_res
+    )
   )
 })

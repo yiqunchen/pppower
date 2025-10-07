@@ -48,7 +48,9 @@ power_ppi_ols <- function(delta, V_u, V_l, N, n, c, alpha = 0.05) {
   1 - pnorm(z_alpha - mu) + pnorm(-z_alpha - mu)
 }
 
-# Monte Carlo power for PPI-OLS (superpopulation view)
+
+#' @keywords Internal
+#' Monte Carlo power for PPI-OLS (superpopulation view)
 simulate_power_ppi_ols <- function(df,
                                    formula,
                                    N,
