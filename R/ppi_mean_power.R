@@ -1,5 +1,6 @@
 #' Power for prediction-powered mean estimator
 #'
+#' @description 
 #' Computes two-sided test power for the PP mean estimator under
 #' normal approximation.
 #'

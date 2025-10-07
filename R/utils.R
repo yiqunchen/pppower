@@ -61,29 +61,3 @@ bread_inv <- function(X) {
   n <- nrow(X)
   solve(crossprod(X) / n, tol = 1e-12)
 }
-
-
-# Wald CI / test for linear contrasts c' beta
-wald_contrast <- function(theta_hat, V_theta, c, alpha = 0.05,
-                          alternative = c("two.sided","less","greater")) {
-  alternative <- match.arg(alternative)
-  est <- as.numeric(drop(c %*% theta_hat))
-  var <- as.numeric(drop(c %*% V_theta %*% c))
-  se  <- sqrt(var)
-  z   <- est / se
-
-  if (alternative == "two.sided") {
-    zcrit <- qnorm(1 - alpha/2)
-    ci    <- c(est - zcrit*se, est + zcrit*se)
-    pval  <- 2*pnorm(-abs(z))
-  } else if (alternative == "greater") {
-    zcrit <- qnorm(1 - alpha)
-    ci    <- c(est - qnorm(1 - alpha)*se, Inf)
-    pval  <- 1 - pnorm(z)
-  } else {
-    zcrit <- qnorm(1 - alpha)
-    ci    <- c(-Inf, est + qnorm(1 - alpha)*se)
-    pval  <- pnorm(z)
-  }
-  list(estimate = est, se = se, z = z, ci = ci, p.value = pval)
-}

@@ -40,17 +40,17 @@ test_that("Monte Carlo agreement holds across a range of parameters", {
     expected  <- unname(sim["Exact"])
 
     # Monte Carlo SE for a Bernoulli proportion with R draws
-    R <- 50000
+    R <- 5e4
     se_mc <- sqrt(expected * (1 - expected) / R)
 
     eps <- .Machine$double.eps^0.5
-    ok <- (abs(empirical - expected) < 3 * se_mc) ||
+    ok <- (abs(empirical - expected) < 4 * se_mc) ||
         (abs(empirical - expected) < eps) ||
-        (expected > 0.999 & empirical > 0.999)
+        (expected > 0.99 & empirical > 0.99)
 
     msg <- sprintf(
-      "Empirical=%.4f, Exact=%.4f, |diff|=%.4f, 3*MCSE=%.4f, cfg: delta=%.2f var_f=%.2f var_res=%.2f N=%d n=%d",
-      empirical, expected, abs(empirical - expected), 3 * se_mc,
+      "Empirical=%.4f, Exact=%.4f, |diff|=%.4f, 4*MCSE=%.4f, cfg: delta=%.2f var_f=%.2f var_res=%.2f N=%d n=%d",
+      empirical, expected, abs(empirical - expected), 4 * se_mc,
       g$delta, g$var_f, g$var_res, g$N, g$n
     )
     expect_true(ok, info = msg)

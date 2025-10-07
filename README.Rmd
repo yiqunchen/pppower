@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of pppower is to ...
+The goal of `pppower` is to conduct power analysis based on the Prediction-Powered Inference framework...
 
 ## Installation
 
@@ -26,7 +26,7 @@ You can install the development version of pppower from [GitHub](https://github.
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("yiqunchen/Priors4Bio")
+devtools::install_github("yiqunchen/predpower")
 ```
 
 ## Example

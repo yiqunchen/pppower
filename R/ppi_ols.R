@@ -1,3 +1,31 @@
+#' PPI–OLS: Internal estimator and sandwich variance
+#'
+#' Fits the Prediction-Powered Inference (PPI) OLS estimator
+#' \eqn{\hat\theta = \tilde\theta - \hat\delta}, where
+#' \eqn{\hat\delta} comes from regressing \eqn{f_l - Y_l} on \eqn{X_l}
+#' (labeled data) and \eqn{\tilde\theta} comes from regressing \eqn{f_u} on
+#' \eqn{X_u} (unlabeled data). Returns the estimate and a sandwich covariance
+#' \eqn{\mathrm{Var}(\hat\theta) = V_u/N + V_l/n}.
+#'
+#' @param X_l Matrix of labeled covariates (n × p).
+#' @param Y_l Vector of labeled outcomes (length n).
+#' @param f_l Vector of predictions on labeled covariates (length n).
+#' @param X_u Matrix of unlabeled covariates (N × p).
+#' @param f_u Vector of predictions on unlabeled covariates (length N).
+#'
+#' @return A list with:
+#' \item{theta_hat}{Numeric vector of coefficients \eqn{\hat\theta}.}
+#' \item{V_theta}{Estimated covariance matrix of \eqn{\hat\theta}.}
+#' \item{se}{Standard errors (diagonal of \code{V_theta}).}
+#' \item{pieces}{List with \code{V_u}, \code{V_l}, \code{n}, \code{N}.}
+#'
+#' @details
+#' Internals rely on helpers: \code{ols_fit()}, \code{bread_inv()},
+#' and \code{meat_matrix()}.
+#'
+#' @keywords internal
+#' @noRd
+
 ppi_ols <- function(X_l, Y_l, f_l, X_u, f_u) {
   # labeled (n): regress f_l - Y_l on X_l  -> delta_hat
   fit_l <- ols_fit(X_l, f_l - Y_l)
@@ -31,17 +59,4 @@ ppi_ols <- function(X_l, Y_l, f_l, X_u, f_u) {
        V_theta   = V_theta,
        se        = se,
        pieces    = list(V_u = V_u, V_l = V_l, n = n, N = N))
-}
-
-
-# Analytical power for OLS
-# Under H1: c' beta = c' beta0 + delta; test H0: c' beta = c' beta0 (two-sided)
-power_ppi_ols <- function(delta, V_u, V_l, N, n, c, alpha = 0.05) {
-  # variance of c' theta_hat: v = c'(V_u/N + V_l/n)c
-  v <- as.numeric(drop(c %*% (V_u/N + V_l/n) %*% c))
-  se <- sqrt(v)
-  z_alpha <- qnorm(1 - alpha/2)
-  mu <- abs(delta) / se
-  # exact two-sided normal power
-  1 - pnorm(z_alpha - mu) + pnorm(-z_alpha - mu)
 }
