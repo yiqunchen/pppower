@@ -1,66 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/404.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/404.html</loc>
   </url>
   <url>
-    <loc>/LICENSE-text.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/LICENSE-text.html</loc>
   </url>
   <url>
-    <loc>/LICENSE.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/LICENSE.html</loc>
   </url>
   <url>
-    <loc>/authors.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/articles/articles/intro-ppi.html</loc>
   </url>
   <url>
-    <loc>/index.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/articles/index.html</loc>
   </url>
   <url>
-    <loc>/reference/index.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/articles/intro-ppi.html</loc>
   </url>
   <url>
-    <loc>/reference/n_required_PP.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/authors.html</loc>
   </url>
   <url>
-    <loc>/reference/plot_type1_error_curve.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/index.html</loc>
   </url>
   <url>
-    <loc>/reference/power_curve_binomial.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/index.html</loc>
   </url>
   <url>
-    <loc>/reference/power_curve_gaussian.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/n_required_PP.html</loc>
   </url>
   <url>
-    <loc>/reference/power_curve_mean.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/plot_type1_error_curve.html</loc>
   </url>
   <url>
-    <loc>/reference/power_curve_mean_dgp.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/power_curve_binomial.html</loc>
   </url>
   <url>
-    <loc>/reference/power_ppi_mean.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/power_curve_gaussian.html</loc>
   </url>
   <url>
-    <loc>/reference/power_ppi_ols.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/power_curve_mean.html</loc>
   </url>
   <url>
-    <loc>/reference/ppi_ols_fit.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/power_curve_mean_dgp.html</loc>
   </url>
   <url>
-    <loc>/reference/ppi_ols_wald.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/power_ppi_mean.html</loc>
   </url>
   <url>
-    <loc>/reference/pppower.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/power_ppi_ols.html</loc>
   </url>
   <url>
-    <loc>/reference/simulate_crossfit_data.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/ppi_ols_fit.html</loc>
   </url>
   <url>
-    <loc>/reference/simulate_power.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/ppi_ols_wald.html</loc>
   </url>
   <url>
-    <loc>/reference/type1_error_curve_mean.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/pppower.html</loc>
   </url>
   <url>
-    <loc>/reference/type1_error_curve_mean_dgp.html</loc>
+    <loc>https://yiqunchen.github.io/pppower/reference/simulate_crossfit_data.html</loc>
+  </url>
+  <url>
+    <loc>https://yiqunchen.github.io/pppower/reference/simulate_power.html</loc>
+  </url>
+  <url>
+    <loc>https://yiqunchen.github.io/pppower/reference/type1_error_curve_mean.html</loc>
+  </url>
+  <url>
+    <loc>https://yiqunchen.github.io/pppower/reference/type1_error_curve_mean_dgp.html</loc>
   </url>
 </urlset>

@@ -4,7 +4,6 @@
 # pppower
 
 <!-- badges: start -->
-
 <!-- badges: end -->
 
 The goal of `pppower` is to conduct power analysis based on the
@@ -290,7 +289,6 @@ overlay empirical/analytical curves and nominal reference lines.
 Each example above is self-contained; adjust Monte Carlo replicates (R)
 upward for production studies.
 
-6.  Contributing
-
-- Issues and pull requests are welcome. Please add tests under
-  tests/testthat/ and run `devtools::test()` before submitting changes.
+**Contributing** - Issues and pull requests are welcome. Please add
+tests under tests/testthat/ and run `devtools::test()` before submitting
+changes.

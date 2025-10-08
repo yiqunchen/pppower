@@ -257,5 +257,5 @@ plot_type1_error_curve(
 
   Each example above is self-contained; adjust Monte Carlo replicates (R) upward for production studies.
 
-6. Contributing
+**Contributing**
   - Issues and pull requests are welcome. Please add tests under tests/testthat/ and run `devtools::test()` before submitting changes.

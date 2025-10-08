@@ -1,0 +1,303 @@
+---
+title: "Prediction-Powered Power Planning"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Prediction-Powered Power Planning}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup-chunk, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4,
+  fig.path = "man/figures/intro-ppi-"
+)
+```
+
+## Overview
+
+`pppower` provides analytical and Monte Carlo tools for **prediction-powered inference (PPI)**. We cover two main workflows:
+
+* **Prediction-powered mean estimator** - the target parameter is the population mean \(\theta = \mathbb{E}[Y]\) corrected via predictions \(f(X)\).
+* **Prediction-powered linear regression (PPI-OLS)** - the estimand is a linear contrast \(c^\top \beta\) from a PPI-adjusted OLS estimator.
+
+Both workflows rely on a synthetic “superpopulation” that mimics the joint distribution of \((X, Y)\) and their cross-fitted predictions. The helper `simulate_crossfit_data()` generates such a data set.
+
+```{r setup}
+library(pppower)
+set.seed(123)
+
+df <- pppower:::simulate_crossfit_data(
+  n = 4000,
+  p = 5,
+  family = gaussian(),
+  K = 5
+)
+str(df)
+```
+
+---
+
+## 1. Prediction-Powered Mean Estimation
+
+### Notation
+
+We test \(H_0: \theta = \theta_0\) versus a two-sided alternative, with:
+
+- \(\delta = \theta - \theta_0\) - effect size of interest.
+- \(N\) - unlabeled sample size used to evaluate predictions \(f(X)\).
+- \(n\) - labeled sample size used to correct prediction error.
+- \(\sigma_f^2 = \mathrm{Var}(f(X))\) and \(\sigma_{\text{res}}^2 = \mathrm{Var}(Y - f(X))\).
+
+These can be estimated from the superpopulation.
+
+```{r mean-inputs}
+theta_true <- mean(df$y)
+theta0 <- theta_true - 0.45
+delta <- theta_true - theta0
+var_f <- var(df$fhat_cf)
+var_res <- var(df$y - df$fhat_cf)
+N <- 2000
+n <- 200
+alpha <- 0.05
+
+sim <- 2000
+```
+
+### Analytical power
+
+`power_ppi_mean()` implements the normal-theory power formula, using the standard error \(\sqrt{\sigma_f^2 / N + \sigma_{\text{res}}^2 / n}\).
+
+```{r mean-analytic}
+power_ppi_mean(delta, var_f, var_res, N, n, alpha)
+```
+
+### Monte Carlo calibration (parametric)
+
+`simulate_power()` mimics the null distribution with Monte Carlo samples of the test statistic.
+
+```{r mean-simulate}
+simulate_power(delta, var_f, var_res, N, n, alpha, R = sim)
+```
+
+### Monte Carlo calibration (resampling superpopulation)
+
+`pppower:::simulate_power_ppi_mean()` repeatedly resamples labeled/unlabeled splits from the synthetic population, recomputing the PPI estimator each time.
+
+```{r mean-pp}
+mc_pp <- pppower:::simulate_power_ppi_mean(
+  df = df,
+  N = N,
+  n = n,
+  alpha = alpha,
+  R = sim,
+  theta0 = theta0,
+  seed = 2024
+)
+mc_pp$empirical_power
+mc_pp$analytical_power
+```
+
+### Sample-size planning
+
+`n_required_PP()` solves for the labeled sample size that meets a power target.
+
+```{r mean-n}
+n_required_PP(
+  delta = delta,
+  N = N,
+  alpha = alpha,
+  power = 0.80,
+  type = "mean",
+  var_f = var_f,
+  var_res = var_res
+)
+```
+
+### Power and Type I error curves
+
+`power_curve_mean()` sweeps over candidate labeled sample sizes, while `plot_type1_error_curve()` draws empirical vs. analytical rejection probabilities.
+
+```{r mean-power-curve}
+curve_fixed <- pppower:::power_curve_mean(
+  n_grid = seq(50, 250, by = 50),
+  delta = delta,
+  N = N,
+  var_f = var_f,
+  var_res = var_res,
+  alpha = alpha,
+  R = sim
+)
+
+curve_fixed
+
+plot(
+  curve_fixed$n,
+  curve_fixed$power_empirical,
+  type = "b",
+  pch = 19,
+  col = "steelblue",
+  xlab = "Labeled sample size n",
+  ylab = "Power",
+  main = "Power curve (mean estimator)"
+)
+lines(curve_fixed$n, curve_fixed$power_exact, col = "firebrick", lwd = 2, lty = 2)
+legend("bottomright", legend = c("Empirical", "Analytical"),
+       col = c("steelblue", "firebrick"), lty = c(1, 2), pch = c(19, NA), lwd = c(1, 2), bty = "n")
+```
+
+To study Type I error and power as a function of \(\delta\), use `type1_error_curve_mean()` or, for a fully simulated DGP, `type1_error_curve_mean_dgp()`:
+
+```{r mean-type1}
+effect_grid <- seq(-0.3, 0.3, by = 0.05)
+curve_dgp <- pppower:::type1_error_curve_mean_dgp(
+  effect_grid = effect_grid,
+  N = N,
+  n = n,
+  family = gaussian(),
+  superpop_n = 20000,
+  p = 5,
+  K = 5,
+  alpha = alpha,
+  R = sim
+)
+
+curve_dgp
+
+pppower:::plot_type1_error_curve(
+  curve_dgp,
+  main = "Type I error / power (DGP)"
+)
+```
+
+---
+
+## 2. Prediction-Powered OLS (PPI-OLS)
+
+### Notation
+
+Let \(\beta\) be the PPI-adjusted coefficient vector and \(c\) the contrast of interest.
+
+- Estimand: \(c^\top \beta\).
+- Variance: \(c^\top (V_u / N + V_l / n) c\), where `V_u`/`V_l` are per-observation sandwich covariances for the unlabeled (imputation) and labeled (rectifier) regressions.
+
+### Fit the model
+
+```{r ols-fit}
+fit_ols <- ppi_ols_fit(
+  y = "y",
+  f_col = "fhat_cf",
+  formula = ~ x1 + x2 + x3 + x4 + x5,
+  data_l = df[1:n, ],
+  data_u = df[(n + 1):(n + N), ]
+)
+
+summary(fit_ols)
+pieces <- fit_ols$pieces
+```
+
+`summary()` reports coefficient, standard error, and z-statistic. The `pieces` list exposes `V_u`, `V_l`, `n`, and `N` for power formulas.
+
+### Construct a contrast
+
+Suppose we focus on `x1`:
+
+```{r ols-contrast}
+coef_names <- colnames(pieces$V_u)
+c_vec <- numeric(length(coef_names))
+names(c_vec) <- coef_names
+c_vec["x1"] <- 1
+
+delta_ols <- sum(c_vec * fit_ols$coef)
+delta_ols
+```
+
+`ppi_ols_wald()` provides the Wald test summary:
+
+```{r ols-wald}
+wald_x1 <- pppower:::ppi_ols_wald(fit_ols, A = matrix(c_vec, nrow = 1))
+wald_x1
+```
+
+### Analytical power
+
+```{r ols-analytic}
+power_ppi_ols(
+  delta = delta_ols,
+  V_u = pieces$V_u,
+  V_l = pieces$V_l,
+  N = pieces$N,
+  n = pieces$n,
+  c = c_vec,
+  alpha = alpha
+)
+```
+
+### Monte Carlo calibration
+
+`simulate_power_ppi_ols()` resamples from the superpopulation and recomputes the PPI-OLS estimator. Align the null value so the effect size matches the analytic call.
+
+```{r ols-mc}
+theta0 <- sum(c_vec * fit_ols$coef) - delta_ols
+
+pppower:::simulate_power_ppi_ols(
+  df = df,
+  formula = ~ x1 + x2 + x3 + x4 + x5,
+  N = pieces$N,
+  n = pieces$n,
+  c = c_vec,
+  theta0 = theta0,
+  alpha = alpha,
+  R = sim,
+  seed = 4321
+)$analytical_power
+
+pppower:::simulate_power_ppi_ols(
+  df = df,
+  formula = ~ x1 + x2 + x3 + x4 + x5,
+  N = pieces$N,
+  n = pieces$n,
+  c = c_vec,
+  theta0 = theta0,
+  alpha = alpha,
+  R = sim,
+  seed = 4321
+)$empirical_power
+```
+
+### Sample-size solver
+
+```{r ols-n}
+n_required_PP(
+  delta = delta_ols,
+  N = pieces$N,
+  alpha = alpha,
+  power = 0.80,
+  type = "ols",
+  V_u = pieces$V_u,
+  V_l = pieces$V_l,
+  c = c_vec
+)
+```
+
+---
+
+## Summary Table
+
+| Task                                          | Functions                                                            |
+|-----------------------------------------------|-----------------------------------------------------------------------|
+| Generate cross-fitted superpopulation         | `simulate_crossfit_data()`                                           |
+| Mean estimator power & calibration            | `power_ppi_mean()`, `simulate_power()`, `pppower:::simulate_power_ppi_mean()` |
+| Mean estimator sample size                    | `n_required_PP(type = "mean", ...)`                                   |
+| Mean estimator curves                         | `power_curve_mean()`, `type1_error_curve_mean[_dgp]()`, `plot_type1_error_curve()` |
+| Fit prediction-powered OLS                    | `ppi_ols_fit()`, `summary()`                                          |
+| OLS contrasts and power                       | `pppower:::ppi_ols_wald()`, `power_ppi_ols()`, `pppower:::simulate_power_ppi_ols()`       |
+| OLS sample size                               | `n_required_PP(type = "ols", ...)`                                    |
+
+Together these tools help you explore prediction quality, diagnose finite-sample effects, and plan labeled sample sizes for both mean and regression targets.
