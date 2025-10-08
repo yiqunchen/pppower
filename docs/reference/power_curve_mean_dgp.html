@@ -128,12 +128,28 @@ variance components.</p></dd>
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">power_curve_mean_dgp</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  n_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">200</span>, by <span class="op">=</span> <span class="fl">25</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  N <span class="op">=</span> <span class="fl">5000</span>,</span></span>
+<span class="r-in"><span>  N <span class="op">=</span> <span class="fl">3000</span>,</span></span>
 <span class="r-in"><span>  theta0 <span class="op">=</span> <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>  family <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  superpop_n <span class="op">=</span> <span class="fl">6000</span>,</span></span>
 <span class="r-in"><span>  R <span class="op">=</span> <span class="fl">1000</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in sample.int(nrow(df), size = N + n, replace = FALSE):</span> cannot take a sample larger than the population when 'replace = FALSE'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     n power_empirical power_exact      delta    N alpha    var_f var_res</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  50           0.063  0.05069918 0.02253259 3000  0.05 11.14837 3.97508</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  75           0.045  0.05102607 0.02253259 3000  0.05 11.14837 3.97508</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 100           0.043  0.05133910 0.02253259 3000  0.05 11.14837 3.97508</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 125           0.050  0.05163915 0.02253259 3000  0.05 11.14837 3.97508</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 150           0.043  0.05192699 0.02253259 3000  0.05 11.14837 3.97508</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 175           0.043  0.05220337 0.02253259 3000  0.05 11.14837 3.97508</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 200           0.045  0.05246895 0.02253259 3000  0.05 11.14837 3.97508</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     family      theta theta0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 gaussian 0.02253259      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 gaussian 0.02253259      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 gaussian 0.02253259      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 gaussian 0.02253259      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 gaussian 0.02253259      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 gaussian 0.02253259      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 gaussian 0.02253259      0</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

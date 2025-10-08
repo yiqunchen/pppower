@@ -260,3 +260,8 @@ plot_type1_error_curve(
 
 **Contributing**
   - Issues and pull requests are welcome. Please add tests under tests/testthat/ and run `devtools::test()` before submitting changes.
+
+
+```{r session-info, echo = FALSE}
+devtools::session_info()
+```
