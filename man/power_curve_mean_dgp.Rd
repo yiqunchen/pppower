@@ -52,9 +52,10 @@ labeled sample sizes using \code{simulate_power_ppi_mean()}.
 \examples{
 power_curve_mean_dgp(
   n_grid = seq(50, 200, by = 25),
-  N = 5000,
+  N = 3000,
   theta0 = 0,
   family = stats::gaussian(),
+  superpop_n = 6000,
   R = 1000
 )
 

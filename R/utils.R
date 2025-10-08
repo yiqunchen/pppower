@@ -39,7 +39,7 @@ pp_once <- function(df, N, n, use_sample_var = TRUE, seed = NULL) {
 ols_fit <- function(X, y) {
   # X: n x p (already includes intercept column if desired)
   # y: n vector
-  fit <- lm.fit(X, y)
+  fit <- stats::lm.fit(X, y)
   # residuals and QR object come for free
   list(coef = fit$coefficients,
        resid = fit$residuals,

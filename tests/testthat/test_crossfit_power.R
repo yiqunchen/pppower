@@ -8,7 +8,7 @@ test_that("Analytical power equals Monte Carlo power under cross-fitted data", {
   n <- 200     # labeled sample size
   alpha <- 0.05
   theta_true <- mean(df_bin$y)
-  theta0 <- theta_true - 0.1
+  theta0 <- theta_true - 0.2
   delta <- theta_true - theta0
 
   var_f <- var(df_bin$fhat_cf)

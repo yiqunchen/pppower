@@ -10,8 +10,8 @@
 ppi_ols_fit <- function(y, f_col, formula, data_l, data_u) {
   y <- rlang::as_name(rlang::ensym(y))
 
-  X_l <- model.matrix(formula, data_l)
-  X_u <- model.matrix(formula, data_u)
+  X_l <- stats::model.matrix(formula, data_l)
+  X_u <- stats::model.matrix(formula, data_u)
 
   Y_l <- data_l[[y]]
   f_l <- data_l[[f_col]]
@@ -58,6 +58,12 @@ confint.ppi_ols_fit <- function(object, parm = seq_along(object$coef), level = 0
 }
 
 #' Wald test for a linear contrast of OLS
+#'
+#' @param fit A `ppi_ols_fit` object returned by [ppi_ols_fit()].
+#' @param A Numeric matrix whose rows encode the linear contrast(s).
+#' @param b Numeric value or vector specifying the null hypothesis (defaults to 0).
+#'
+#' @return A list with elements `estimate`, `se`, `z`, and `p.value`.
 #' @export
 ppi_ols_wald <- function(fit, A, b = 0) {
   th <- drop(A %*% fit$coef)

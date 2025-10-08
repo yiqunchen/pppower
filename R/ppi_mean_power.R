@@ -22,10 +22,10 @@
 #' @export
 power_ppi_mean <- function(delta, var_f, var_res, N, n, alpha = 0.05) {
   se <- sqrt(var_f / N + var_res / n)
-  z_alpha <- qnorm(1 - alpha / 2)
+  z_alpha <- stats::qnorm(1 - alpha / 2)
   mu <- abs(delta) / se
   # Exact two-sided normal-theory power
-  power <- 1 - pnorm(z_alpha - mu) + pnorm(-z_alpha - mu)
+  power <- 1 - stats::pnorm(z_alpha - mu) + stats::pnorm(-z_alpha - mu)
   power
 }
 

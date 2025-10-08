@@ -12,11 +12,9 @@ vignette: >
 
 ```{r setup-chunk, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 6,
-  fig.height = 4,
-  fig.path = "man/figures/intro-ppi-"
+  fig.path = "figures/intro-ppi-",
+  fig.width = 6, fig.height = 4,
+  collapse = TRUE, comment = "#>"
 )
 ```
 

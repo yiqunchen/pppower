@@ -124,9 +124,10 @@ power_curve_mean <- function(n_grid,
 #' @examples
 #' power_curve_mean_dgp(
 #'   n_grid = seq(50, 200, by = 25),
-#'   N = 5000,
+#'   N = 3000,
 #'   theta0 = 0,
 #'   family = stats::gaussian(),
+#'   superpop_n = 6000,
 #'   R = 1000
 #' )
 #'
@@ -163,6 +164,11 @@ power_curve_mean_dgp <- function(n_grid,
   n_grid <- as.integer(sort(unique(n_grid)))
   if (any(is.na(n_grid)) || any(n_grid <= 0)) {
     stop("n_grid must contain positive integers only.", call. = FALSE)
+  }
+
+  total_needed <- N + max(n_grid)
+  if (superpop_n < total_needed) {
+    superpop_n <- total_needed
   }
 
   df <- simulate_crossfit_data(

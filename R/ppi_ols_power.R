@@ -42,10 +42,10 @@ power_ppi_ols <- function(delta, V_u, V_l, N, n, c, alpha = 0.05) {
   # variance of c' theta_hat: v = c'(V_u/N + V_l/n)c
   v <- as.numeric(drop(c %*% (V_u/N + V_l/n) %*% c))
   se <- sqrt(v)
-  z_alpha <- qnorm(1 - alpha/2)
+  z_alpha <- stats::qnorm(1 - alpha/2)
   mu <- abs(delta) / se
   # exact two-sided normal power
-  1 - pnorm(z_alpha - mu) + pnorm(-z_alpha - mu)
+  1 - stats::pnorm(z_alpha - mu) + stats::pnorm(-z_alpha - mu)
 }
 
 
