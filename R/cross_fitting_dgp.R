@@ -1,16 +1,9 @@
-kfold_split <- function(n, K = 5, seed = 1) {
-  set.seed(seed)
-  idx <- sample.int(n)
-  folds <- split(idx, rep(1:K, length.out = n))
-  lapply(folds, sort)
-}
-
 crossfit_glm <- function(X, y, K = 5, family = stats::binomial(), seed = 1) {
   n <- nrow(X)
   folds <- kfold_split(n, K, seed)
   fhat <- numeric(n)
 
-  fam_name <- family$family  # "binomial" or "gaussian", etc.
+  fam_name <- family$family  # "binomial" or "gaussian" currently
 
   for (k in seq_along(folds)) {
     te <- folds[[k]]

@@ -32,7 +32,7 @@ power_ppi_mean <- function(delta, var_f, var_res, N, n, alpha = 0.05) {
 #' @keywords Internal
 #' Monte Carlo power using the df (superpopulation view)
 #' theta0: null; delta = theta - theta0 (if you prefer to pass delta directly)
-simulate_power_PP <- function(df, N, n, alpha = 0.05,
+simulate_power_ppi_mean <- function(df, N, n, alpha = 0.05,
                               R = 2000, theta0 = NULL,
                               use_sample_var = TRUE, seed = 1) {
   set.seed(seed)

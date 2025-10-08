@@ -61,3 +61,11 @@ bread_inv <- function(X) {
   n <- nrow(X)
   solve(crossprod(X) / n, tol = 1e-12)
 }
+
+# k-fold splitting
+kfold_split <- function(n, K = 5, seed = 1) {
+  set.seed(seed)
+  idx <- sample.int(n)
+  folds <- split(idx, rep(1:K, length.out = n))
+  lapply(folds, sort)
+}

@@ -19,15 +19,19 @@ ppi_ols_fit <- function(y, f_col, formula, data_l, data_u) {
 
   fit <- ppi_ols(X_l, Y_l, f_l, X_u, f_u)
 
-  structure(list(
-    coef  = fit$theta_hat,
-    vcov  = fit$V_theta,
-    se    = fit$se,
-    n     = nrow(X_l),
-    N     = nrow(X_u),
-    call  = match.call(),
-    terms = stats::terms(formula)
-  ), class = "ppi_ols_fit")
+  structure(
+    list(
+      coef   = fit$theta_hat,
+      vcov   = fit$V_theta,
+      se     = fit$se,
+      pieces = fit$pieces,  # keeps V_u, V_l, n, N for downstream power calcs
+      n      = nrow(X_l),
+      N      = nrow(X_u),
+      call   = match.call(),
+      terms  = stats::terms(formula)
+    ),
+    class = "ppi_ols_fit"
+  )
 }
 
 #' @export

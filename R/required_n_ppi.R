@@ -10,7 +10,8 @@
 #' @param alpha Two-sided significance level.
 #' @param power Target power (\eqn{1-\beta}).
 #' @param type Either \code{"mean"} for the PP mean estimator, \code{"ols"} for a linear
-#'   contrast in PP-OLS, or \code{"custom"} to supply pre-computed variance pieces.
+#'   contrast in PP-OLS, or \code{"custom"} to supply pre-computed variance pieces 
+#'   (logistic regression in the future).
 #' @param var_f Variance of \eqn{f(X)}. Required when \code{type = "mean"}.
 #' @param var_res Variance of \eqn{Y - f(X)}. Required when \code{type = "mean"}.
 #' @param V_u,V_l Sandwich covariance matrices for the unlabeled and labeled
@@ -20,7 +21,7 @@
 #' @param var_unlabeled,var_labeled Optional scalar variance components when
 #'   \code{type = "custom"}. These correspond to \eqn{\mathrm{Var}_u} and
 #'   \eqn{\mathrm{Var}_l} so that the standard error is
-#'   \eqn{\sqrt{\mathrm{Var}_u/N  \mathrm{Var}_l/n}}.
+#'   \eqn{\sqrt{\mathrm{Var}_u/N + \mathrm{Var}_l/n}}.
 #' @param warn_smallN Logical; warn if \code{N} is below \code{smallN_threshold}.
 #' @param smallN_threshold Threshold for triggering the small-\code{N} warning.
 #' @param mode Either \code{"error"} (default) to throw when the required \eqn{n}

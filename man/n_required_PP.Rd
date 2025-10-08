@@ -32,7 +32,8 @@ n_required_PP(
 \item{power}{Target power (\eqn{1-\beta}).}
 
 \item{type}{Either \code{"mean"} for the PP mean estimator, \code{"ols"} for a linear
-contrast in PP-OLS, or \code{"custom"} to supply pre-computed variance pieces.}
+contrast in PP-OLS, or \code{"custom"} to supply pre-computed variance pieces
+(logistic regression in the future).}
 
 \item{var_f}{Variance of \eqn{f(X)}. Required when \code{type = "mean"}.}
 
@@ -47,7 +48,7 @@ for PP-OLS. Required when \code{type = "ols"}.}
 \item{var_unlabeled, var_labeled}{Optional scalar variance components when
 \code{type = "custom"}. These correspond to \eqn{\mathrm{Var}_u} and
 \eqn{\mathrm{Var}_l} so that the standard error is
-\eqn{\sqrt{\mathrm{Var}_u/N  \mathrm{Var}_l/n}}.}
+\eqn{\sqrt{\mathrm{Var}_u/N + \mathrm{Var}_l/n}}.}
 
 \item{warn_smallN}{Logical; warn if \code{N} is below \code{smallN_threshold}.}
 
