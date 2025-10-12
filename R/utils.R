@@ -137,7 +137,7 @@ derive_vars_binary <- function(metric_type = c("hard", "prob", "precision_recall
         precision <= 0 || precision > 1 ||
         recall < 0 || recall > 1 ||
         p_y < 0 || p_y > 1) {
-      stop("For metric_type = 'precision_recall', precision ∈ (0,1], recall ∈ [0,1], p_y ∈ [0,1].")
+      stop("For metric_type = 'precision_recall', precision in (0,1], recall in [0,1], p_y in [0,1].")
     }
 
     tp     <- recall * p_y * m_obs
