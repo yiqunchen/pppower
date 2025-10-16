@@ -178,9 +178,17 @@ formula, using the standard error
 <p><code><a href="../reference/simulate_power.html">simulate_power()</a></code> mimics the null distribution with Monte
 Carlo samples of the test statistic.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/simulate_power.html">simulate_power</a></span><span class="op">(</span><span class="va">delta</span>, <span class="va">var_f</span>, <span class="va">var_res</span>, <span class="va">N</span>, <span class="va">n</span>, <span class="va">alpha</span>, R <span class="op">=</span> <span class="va">sim</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     Exact Empirical </span></span>
-<span><span class="co">#&gt;  0.804664  0.818500</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/simulate_power.html">simulate_power</a></span><span class="op">(</span></span>
+<span>  delta <span class="op">=</span> <span class="va">delta</span>,</span>
+<span>  N <span class="op">=</span> <span class="va">N</span>,</span>
+<span>  n <span class="op">=</span> <span class="va">n</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
+<span>  var_f <span class="op">=</span> <span class="va">var_f</span>,</span>
+<span>  var_res <span class="op">=</span> <span class="va">var_res</span>,</span>
+<span>  R <span class="op">=</span> <span class="va">sim</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;     Exact_PP Empirical_PP </span></span>
+<span><span class="co">#&gt;     0.804664     0.818500</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="monte-carlo-calibration-resampling-superpopulation">Monte Carlo calibration (resampling superpopulation)<a class="anchor" aria-label="anchor" href="#monte-carlo-calibration-resampling-superpopulation"></a>
