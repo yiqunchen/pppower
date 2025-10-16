@@ -81,7 +81,15 @@ power_ppi_mean(delta, var_f, var_res, N, n, alpha)
 `simulate_power()` mimics the null distribution with Monte Carlo samples of the test statistic.
 
 ```{r mean-simulate}
-simulate_power(delta, var_f, var_res, N, n, alpha, R = sim)
+simulate_power(
+  delta = delta,
+  N = N,
+  n = n,
+  alpha = alpha,
+  var_f = var_f,
+  var_res = var_res,
+  R = sim
+)
 ```
 
 ### Monte Carlo calibration (resampling superpopulation)

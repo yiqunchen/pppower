@@ -84,8 +84,8 @@ power_curve_mean <- function(n_grid,
       )
     }
   )
-  powers_empirical <- vapply(sims, function(x) unname(x["Empirical"]), numeric(1L))
-  powers_exact <- vapply(sims, function(x) unname(x["Exact"]), numeric(1L))
+  powers_empirical <- vapply(sims, function(x) unname(x["Empirical_PP"]), numeric(1L))
+  powers_exact <- vapply(sims, function(x) unname(x["Exact_PP"]), numeric(1L))
 
   data.frame(
     n = n_grid,
