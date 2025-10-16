@@ -1,3 +1,7 @@
+`%||%` <- function(x, y) {
+  if (!is.null(x)) x else y
+}
+
 # Compute PP estimate + SE from a single draw (superpopulation)
 pp_once <- function(df, N, n, use_sample_var = TRUE, seed = NULL) {
   # df must have columns: y, fhat_cf
@@ -33,6 +37,74 @@ pp_once <- function(df, N, n, use_sample_var = TRUE, seed = NULL) {
   list(theta_hat = theta_hat, se = se,
        var_f = var_f, var_res = var_res,
        A_N = A_N, B_n = B_n)
+}
+
+ppplus_once <- function(df,
+                        N,
+                        n,
+                        lambda = NULL,
+                        lambda_type = c("oracle", "plugin", "user"),
+                        use_sample_var = TRUE,
+                        seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  stopifnot(all(c("y", "fhat_cf") %in% names(df)))
+  lambda_type <- match.arg(lambda_type)
+
+  idx <- sample.int(nrow(df), size = N + n, replace = FALSE)
+  idx_u <- idx[seq_len(N)]
+  idx_l <- idx[seq_len(n) + N]
+
+  y_l <- df$y[idx_l]
+  f_l <- df$fhat_cf[idx_l]
+  f_u <- df$fhat_cf[idx_u]
+
+  ybar_l <- mean(y_l)
+  fbar_l <- mean(f_l)
+  fbar_u <- mean(f_u)
+
+  if (is.null(lambda)) {
+    if (lambda_type == "oracle") {
+      sigma_f2_pop <- stats::var(df$fhat_cf)
+      cov_yf_pop   <- stats::cov(df$y, df$fhat_cf)
+      lambda <- cov_yf_pop / ((1 + n / N) * sigma_f2_pop) # keep the same labmda
+    } else if (lambda_type == "plugin") {
+      sigma_f2_s <- stats::var(c(f_u, f_l))
+      cov_yf_s   <- stats::cov(y_l, f_l)
+      lambda <- cov_yf_s / ((1 + n / N) * sigma_f2_s) # substitute lambda within each draw
+    } else {
+      stop("Supply lambda when lambda_type = 'user'.", call. = FALSE)
+    }
+  }
+
+  if (use_sample_var) {
+    sigma_y2 <- stats::var(y_l)
+    sigma_f2 <- stats::var(c(f_u, f_l))
+    cov_yf   <- stats::cov(y_l, f_l)
+  } else {
+    sigma_y2 <- stats::var(df$y)
+    sigma_f2 <- stats::var(df$fhat_cf)
+    cov_yf   <- stats::cov(df$y, df$fhat_cf)
+  }
+
+  theta_hat <- ybar_l + lambda * (fbar_u - fbar_l)
+
+  var_hat <- sigma_y2 / n +
+    lambda^2 * sigma_f2 * (1 / N + 1 / n) -
+    2 * lambda * cov_yf / n
+  se <- sqrt(pmax(var_hat, 0))
+
+  list(
+    theta_hat = theta_hat,
+    se = se,
+    lambda = lambda,
+    lambda_type = lambda_type,
+    ybar_l = ybar_l,
+    fbar_l = fbar_l,
+    fbar_u = fbar_u,
+    sigma_y2 = sigma_y2,
+    sigma_f2 = sigma_f2,
+    cov_yf = cov_yf
+  )
 }
 
 # stable least-squares via lm.fit
@@ -216,4 +288,61 @@ derive_vars_binary <- function(metric_type = c("hard", "prob", "precision_recall
 brier_score <- function(y, p) {
   stopifnot(length(y) == length(p))
   mean((y - p)^2)
+}
+
+resolve_ppi_variances <- function(var_f = NULL,
+                                  var_res = NULL,
+                                  metrics = NULL,
+                                  metric_type = NULL,
+                                  m_labeled = NULL,
+                                  correction = TRUE) {
+  if (!is.null(var_f) && !is.null(var_res)) {
+    return(list(var_f = as.numeric(var_f), var_res = as.numeric(var_res)))
+  }
+
+  if (is.null(metrics)) {
+    stop("Supply either (var_f, var_res) or a metrics list.", call. = FALSE)
+  }
+
+  # allow the metrics list itself to carry the type or sample size
+  if (is.null(metric_type) && !is.null(metrics$type)) {
+    metric_type <- metrics$type
+  }
+  if (is.null(m_labeled) && !is.null(metrics$m_obs)) {
+    m_labeled <- metrics$m_obs
+  }
+  if (is.null(metric_type)) {
+    stop("metric_type must be provided (or stored in metrics$type).", call. = FALSE)
+  }
+  if (is.null(m_labeled)) {
+    stop("m_labeled must be provided (or stored in metrics$m_obs).", call. = FALSE)
+  }
+
+  stats <- metrics
+  stats$type <- NULL
+  stats$m_obs <- NULL
+
+  if (metric_type %in% c("hard", "prob", "precision_recall")) {
+    vars <- derive_vars_binary(
+      metric_type = metric_type,
+      stats = stats,
+      m_obs = m_labeled,
+      correction = correction
+    )
+    return(list(var_f = vars$var_f, var_res = vars$var_res))
+  }
+
+  if (metric_type %in% c("continuous", "regression")) {
+    vars <- derive_vars_continuous(
+      mse        = stats$mse,
+      r2         = stats$r2,
+      var_y      = stats$var_y,
+      bias       = stats$bias %||% 0,
+      m_obs      = m_labeled,
+      correction = correction
+    )
+    return(list(var_f = vars$var_f, var_res = vars$var_res))
+  }
+
+  stop(sprintf("Unsupported metric_type: %s", metric_type), call. = FALSE)
 }
