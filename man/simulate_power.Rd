@@ -4,14 +4,25 @@
 \alias{simulate_power}
 \title{Monte Carlo power for the PP mean estimator}
 \usage{
-simulate_power(delta, var_f, var_res, N, n, alpha = 0.05, R = 1e+05)
+simulate_power(
+  delta,
+  N,
+  n,
+  alpha = 0.05,
+  R = 1e+05,
+  var_f = NULL,
+  var_res = NULL,
+  sigma_y2 = NULL,
+  sigma_f2 = NULL,
+  cov_y_f = NULL,
+  metrics = NULL,
+  metric_type = NULL,
+  m_labeled = n,
+  correction = TRUE
+)
 }
 \arguments{
 \item{delta}{Effect size \eqn{\theta - \theta_0}.}
-
-\item{var_f}{Variance of the predictor function \eqn{f(X)}.}
-
-\item{var_res}{Variance of the residuals \eqn{Y - f(X)}.}
 
 \item{N}{Unlabeled sample size used for imputation.}
 
@@ -20,6 +31,32 @@ simulate_power(delta, var_f, var_res, N, n, alpha = 0.05, R = 1e+05)
 \item{alpha}{Two-sided significance level (default 0.05).}
 
 \item{R}{Number of Monte Carlo draws (default 100000).}
+
+\item{var_f}{Variance of the predictor function \eqn{f(X)}.}
+
+\item{var_res}{Variance of the residuals \eqn{Y - f(X)}.}
+
+\item{sigma_y2}{Optional outcome variance; overrides anything implied by
+\code{metrics}.}
+
+\item{sigma_f2}{Optional prediction variance; overrides anything implied by
+\code{metrics}.}
+
+\item{cov_y_f}{Optional covariance \eqn{\Cov(Y, f(X))}. When supplied (directly
+or via \code{metrics$cov_y_f}) the PPI++ power is returned in addition to the PP
+quantities.}
+
+\item{metrics}{Optional list of predictive-performance summaries (e.g.,
+\code{mse}, \code{var_y}, \code{cov_y_f}, etc.) used to back out missing variance pieces.}
+
+\item{metric_type}{Character string identifying the metric bundle supplied in
+\code{metrics} (e.g., \code{"continuous"}, \code{"hard"}, \code{"prob"}, \code{"precision_recall"}).}
+
+\item{m_labeled}{Sample size associated with the metrics (defaults to \code{n});
+needed for finite-sample corrections when pulling variances from metrics.}
+
+\item{correction}{Logical; apply the unbiased finite-sample correction to
+the variance estimates (default \code{TRUE}).}
 }
 \value{
 Named numeric vector of length two with entries \code{Exact} (analytical power)
@@ -27,5 +64,5 @@ and \code{Empirical} (Monte Carlo estimate).
 }
 \description{
 Simulates two-sided test power under the normal approximation, returning both
-the empirical Monte Carlo estimate and the analytical power from \code{power_ppi_mean()}.
+the empirical Monte Carlo estimate and the analytical power from \code{power_ppi_mean()} and \code{power_ppplus_mean()}.
 }

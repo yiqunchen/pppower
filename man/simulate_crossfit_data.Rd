@@ -5,7 +5,7 @@
 \title{Simulate cross-fitted predictive data}
 \usage{
 simulate_crossfit_data(
-  n = 2000,
+  n = 20000,
   p = 5,
   family = stats::binomial(),
   K = 5,
