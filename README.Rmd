@@ -71,7 +71,16 @@ alpha      <- 0.05
 sim        <- 2000
 
 power_ppi_mean(delta, var_f, var_res, N, n, alpha)
-simulate_power(delta, var_f, var_res, N, n, alpha, R = sim)
+
+simulate_power(
+  delta   = delta,
+  N       = N,
+  n       = n,
+  alpha   = alpha,
+  var_f   = var_f,
+  var_res = var_res,
+  R       = sim
+)
 ```
 
 - `power_ppi_mean()` returns the exact normal-theory power.
