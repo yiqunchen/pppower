@@ -13,6 +13,131 @@ test_that("power_ppi_mean approaches 1 when delta is large", {
   expect_gt(out, 0.999)
 })
 
+test_that("power resolvers handle metrics input across metric types", {
+  delta <- 0.28
+  N <- 1200
+  n <- 150
+  alpha <- 0.05
+
+  scenarios <- list(
+    list(
+      metric_type = "continuous",
+      metrics = list(
+        type = "continuous",
+        mse = 0.55,
+        var_y = 1.0,
+        cov_y_f = 0.30,
+        bias = 0,
+        m_obs = n
+      )
+    ),
+    list(
+      metric_type = "hard",
+      metrics = {
+        accuracy <- 0.76
+        p_y <- 0.40
+        p_hat <- 0.43
+        list(
+          type = "hard",
+          accuracy = accuracy,
+          p_y = p_y,
+          p_hat = p_hat,
+          bias = p_y - p_hat,
+          m_obs = n
+        )
+      }
+    ),
+    list(
+      metric_type = "precision_recall",
+      metrics = {
+        precision <- 0.78
+        recall <- 0.60
+        p_y <- 0.30
+        tp <- recall * p_y * n
+        fp <- tp * (1 / precision - 1)
+        fn <- p_y * n - tp
+        p_hat <- (tp + fp) / n
+        list(
+          type = "precision_recall",
+          precision = precision,
+          recall = recall,
+          p_y = p_y,
+          tp = tp,
+          fp = fp,
+          fn = fn,
+          p_hat = p_hat,
+          m_obs = n
+        )
+      }
+    )
+  )
+
+  for (sc in scenarios) {
+    metric_type <- sc$metric_type
+    metrics <- sc$metrics
+    info_msg <- paste("metric_type =", metric_type)
+
+    resolved_pp <- resolve_ppi_variances(
+      metrics = metrics,
+      metric_type = metric_type,
+      m_labeled = metrics$m_obs,
+      correction = TRUE
+    )
+
+    moments_ppplus <- resolve_ppi_pp_moments(
+      var_f = resolved_pp$var_f,
+      var_res = resolved_pp$var_res,
+      metrics = metrics,
+      metric_type = metric_type,
+      m_labeled = metrics$m_obs,
+      correction = TRUE
+    )
+
+    expect_equal(
+      power_ppi_mean(
+        delta = delta,
+        N = N,
+        n = n,
+        alpha = alpha,
+        metrics = metrics,
+        metric_type = metric_type
+      ),
+      power_ppi_mean(
+        delta = delta,
+        var_f = resolved_pp$var_f,
+        var_res = resolved_pp$var_res,
+        N = N,
+        n = n,
+        alpha = alpha
+      ),
+      tolerance = 1e-10,
+      info = info_msg
+    )
+
+    expect_equal(
+      power_ppi_pp_mean(
+        delta = delta,
+        N = N,
+        n = n,
+        metrics = metrics,
+        metric_type = metric_type
+      ),
+      power_ppi_pp_mean(
+        delta = delta,
+        N = N,
+        n = n,
+        sigma_y2 = moments_ppplus$sigma_y2,
+        sigma_f2 = moments_ppplus$sigma_f2,
+        cov_y_f = moments_ppplus$cov_y_f,
+        var_f = moments_ppplus$var_f,
+        var_res = moments_ppplus$var_res
+      ),
+      tolerance = 1e-10,
+      info = info_msg
+    )
+  }
+})
+
 
 test_that("Monte Carlo agreement holds across a range of parameters", {
   set.seed(as.integer(format(Sys.Date(), "%Y%m%d")))

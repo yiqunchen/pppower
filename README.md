@@ -75,9 +75,16 @@ var_res    <- var(df$y - df$fhat_cf)
 N          <- 3000
 n          <- 200
 alpha      <- 0.05
-sim        <- 2000
+sim        <- 20000
 
-power_ppi_mean(delta, var_f, var_res, N, n, alpha)
+power_ppi_mean(
+  delta = delta,
+  var_f = var_f,
+  var_res = var_res,
+  N = N,
+  n = n,
+  alpha = alpha
+)
 #> [1] 0.6169984
 
 simulate_power(
@@ -90,7 +97,7 @@ simulate_power(
   R       = sim
 )
 #>     Exact_PP Empirical_PP 
-#>    0.6169984    0.6055000
+#>    0.6169984    0.6192500
 ```
 
 - `power_ppi_mean()` returns the exact normal-theory power.
@@ -110,7 +117,7 @@ mc_pp <- pppower:::simulate_power_ppi_mean(
   seed    = 20251007
 )
 mc_pp$empirical_power
-#> [1] 0.61
+#> [1] 0.63
 mc_pp$analytical_power
 #> [1] 0.6169984
 ```
@@ -203,7 +210,7 @@ pppower:::simulate_power_ppi_ols(
   R       = sim,
   seed    = 20251007
 )$empirical_power
-#> [1] 0.3285
+#> [1] 0.33565
 ```
 
 #### Sample-size planning for PP-OLS
@@ -304,7 +311,7 @@ upward for production studies.
 tests under tests/testthat/ and run `devtools::test()` before submitting
 changes.
 
-    #> ─ Session info ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    #> ─ Session info ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     #>  setting  value
     #>  version  R version 4.3.1 Patched (2023-07-19 r84711)
     #>  os       Rocky Linux 9.4 (Blue Onyx)
@@ -315,10 +322,10 @@ changes.
     #>  ctype    en_US.UTF-8
     #>  tz       US/Eastern
     #>  date     2025-10-16
-    #>  pandoc   3.8 @ /users/mguo/conda/pandoc-env/bin/ (via rmarkdown)
+    #>  pandoc   3.1.3 @ /jhpce/shared/community/core/conda_R/4.3/bin/ (via rmarkdown)
     #>  quarto   NA
     #> 
-    #> ─ Packages ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    #> ─ Packages ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     #>  ! package     * version    date (UTC) lib source
     #>    brio          1.1.3      2021-11-30 [2] CRAN (R 4.3.1)
     #>    cachem        1.0.8      2023-05-01 [2] CRAN (R 4.3.1)
@@ -350,6 +357,7 @@ changes.
     #>    pillar        1.9.0      2023-03-22 [2] CRAN (R 4.3.1)
     #>    pkgbuild      1.4.8      2025-05-26 [1] CRAN (R 4.3.1)
     #>    pkgconfig     2.0.3      2019-09-22 [2] CRAN (R 4.3.1)
+    #>    pkgdown       2.0.7      2022-12-14 [2] CRAN (R 4.3.1)
     #>    pkgload       1.4.1      2025-09-23 [1] CRAN (R 4.3.1)
     #>  P pppower     * 0.0.0.9000 2025-10-08 [?] load_all()
     #>    prettyunits   1.1.1      2020-01-24 [2] CRAN (R 4.3.1)
@@ -392,4 +400,4 @@ changes.
     #>  * ── Packages attached to the search path.
     #>  P ── Loaded and on-disk path mismatch.
     #> 
-    #> ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    #> ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

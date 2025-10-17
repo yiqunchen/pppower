@@ -290,6 +290,21 @@ brier_score <- function(y, p) {
   mean((y - p)^2)
 }
 
+#' Resolve PP variance components from metrics
+#'
+#' @param var_f Optional numeric scalars supplying \eqn{\operatorname{Var}(f)} directly.
+#' @param var_res Optional numeric scalars supplying \eqn{\operatorname{Var}(Y-f)} directly.
+#' @param metrics Optional named list of predictive-performance summaries; must contain the
+#'   entries expected for the chosen `metric_type`.
+#' @param metric_type Character string describing the metric bundle (e.g. `"continuous"`,
+#'   `"hard"`, `"prob"`, `"precision_recall"`).
+#' @param m_labeled Labeled sample size associated with `metrics`; if omitted, the helper
+#'   looks for `metrics$m_obs`.
+#' @param correction Logical; apply the finite-sample adjustment when deriving moments
+#'   from metrics (default `TRUE`).
+#'
+#' @return List with numeric elements `var_f` and `var_res`.
+#' @keywords internal
 resolve_ppi_variances <- function(var_f = NULL,
                                   var_res = NULL,
                                   metrics = NULL,

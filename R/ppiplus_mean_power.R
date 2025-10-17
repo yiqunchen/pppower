@@ -71,7 +71,7 @@ resolve_ppi_pp_moments <- function(sigma_y2 = NULL,
   }
 
   if (is.null(cov_y_f)) stop("Unable to infer cov_y_f; pass it directly or via metrics.")
-  
+
   list(
     sigma_y2 = sigma_y2,
     sigma_f2 = sigma_f2,
@@ -81,6 +81,35 @@ resolve_ppi_pp_moments <- function(sigma_y2 = NULL,
   )
 }
 
+#' Power for the PPI++ mean estimator
+#'
+#' @description
+#' Computes two-sided normal-theory power for the PPI++ mean estimator. You can
+#' supply raw variance pieces (`sigma_y2`, `sigma_f2`, `cov_y_f`, `var_f`,
+#' `var_res`) or reuse the metrics interface (`metrics`, `metric_type`,
+#' `m_labeled`, `correction`) to back out the required inputs.
+#'
+#' @param delta Effect size \eqn{\theta - \theta_0}.
+#' @param N Unlabeled sample size.
+#' @param n Labeled sample size.
+#' @param alpha Two-sided significance level (default 0.05).
+#' @param sigma_y2 Variance of the outcome Y; overrides the value inferred from `metrics`.
+#' @param sigma_f2 Variance of the predictions f(X); overrides the value inferred from `metrics`.
+#' @param cov_y_f Optional population moments. These override
+#'   values inferred from `metrics` or `var_f`/`var_res`.
+#' @param var_f,var_res Optional variance pieces for the vanilla PP estimator.
+#' @param metrics Optional list of predictive-performance summaries.
+#' @param metric_type Character string describing the metric bundle (e.g.,
+#'   `"continuous"`, `"hard"`, `"prob"`).
+#' @param m_labeled Labeled sample size associated with the metrics (defaults to `n`).
+#' @param correction Logical; apply finite-sample variance corrections (default `TRUE`).
+#' @param lambda Optional user-specified blend weight.
+#' @param lambda_type `"oracle"` (default) uses the closed-form blend; `"user"`
+#'   evaluates power at the supplied `lambda`.
+#'
+#' @return Scalar power in \[0, 1\].
+#' @export
+#' 
 power_ppi_pp_mean <- function(delta,
                               N,
                               n,
@@ -123,6 +152,29 @@ power_ppi_pp_mean <- function(delta,
   1 - stats::pnorm(z_alpha - mu) + stats::pnorm(-z_alpha - mu)
 }
 
+#' Monte Carlo power for the PPI++ mean estimator
+#'
+#' @description
+#' Resamples labeled/unlabeled splits from a superpopulation data frame and
+#' recomputes the PPI++ estimator to estimate power empirically, while also
+#' reporting the oracle analytical power.
+#'
+#' @param df Data frame containing columns `y` and `fhat_cf`.
+#' @param N Unlabeled sample size.
+#' @param n Labeled sample size.
+#' @param theta0 Null value for the mean.
+#' @param alpha Two-sided significance level (default 0.05).
+#' @param R Number of Monte Carlo replicates (default 2000).
+#' @param lambda Optional user-specified blend weight.
+#' @param lambda_type `"oracle"` (default), `"plugin"`, or `"user"` to define
+#'   how the blend is chosen inside each draw.
+#' @param use_sample_var Logical; use draw-level variance estimates (`TRUE`) or
+#'   plug in full-population variances (`FALSE`).
+#' @param seed RNG seed.
+#'
+#' @return List with empirical and analytical power, average SE, oracle blend,
+#'   and per-draw details.
+#' @export
 simulate_power_ppiplus_mean <- function(df,
                                         N,
                                         n,

@@ -64,7 +64,6 @@ var_res <- var(df$y - df$fhat_cf)
 N <- 2000
 n <- 200
 alpha <- 0.05
-
 sim <- 2000
 ```
 
@@ -73,7 +72,14 @@ sim <- 2000
 `power_ppi_mean()` implements the normal-theory power formula, using the standard error \(\sqrt{\sigma_f^2 / N + \sigma_{\text{res}}^2 / n}\).
 
 ```{r mean-analytic}
-power_ppi_mean(delta, var_f, var_res, N, n, alpha)
+power_ppi_mean(
+  delta = delta,
+  var_f = var_f,
+  var_res = var_res,
+  N = N,
+  n = n,
+  alpha = alpha
+)
 ```
 
 ### Monte Carlo calibration (parametric)

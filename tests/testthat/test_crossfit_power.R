@@ -16,8 +16,15 @@ test_that("Analytical power equals Monte Carlo power under cross-fitted data", {
   var_f <- var(df_bin$fhat_cf)
   var_res <- var(df_bin$y - df_bin$fhat_cf)
 
-  power_exact <- power_ppi_mean(delta, var_f, var_res, N, n, alpha)
-
+  power_exact <- power_ppi_mean(
+  delta = delta,
+  var_f = var_f,
+  var_res = var_res,
+  N = N,
+  n = n,
+  alpha = alpha
+  )
+  
   res_mc <- simulate_power_ppi_mean(
     df_bin, N, n, alpha = alpha, R = sim,
     theta0 = theta0, seed = as.integer(Sys.time())

@@ -68,9 +68,16 @@ var_res    <- var(df$y - df$fhat_cf)
 N          <- 3000
 n          <- 200
 alpha      <- 0.05
-sim        <- 2000
+sim        <- 20000
 
-power_ppi_mean(delta, var_f, var_res, N, n, alpha)
+power_ppi_mean(
+  delta = delta,
+  var_f = var_f,
+  var_res = var_res,
+  N = N,
+  n = n,
+  alpha = alpha
+)
 
 simulate_power(
   delta   = delta,
