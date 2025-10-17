@@ -218,12 +218,16 @@ PPI estimator each time.</p>
 <span><span class="co">#&gt; [1] 0.804664</span></span></code></pre></div>
 </div>
 <div class="section level3">
+<h3 id="ppi-mean-estimation">PPI++ Mean Estimation<a class="anchor" aria-label="anchor" href="#ppi-mean-estimation"></a>
+</h3>
+</div>
+<div class="section level3">
 <h3 id="sample-size-planning">Sample-size planning<a class="anchor" aria-label="anchor" href="#sample-size-planning"></a>
 </h3>
-<p><code><a href="../reference/n_required_PP.html">n_required_PP()</a></code> solves for the labeled sample size that
+<p><code><a href="../reference/n_required_pp.html">n_required_pp()</a></code> solves for the labeled sample size that
 meets a power target.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/n_required_PP.html">n_required_PP</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/n_required_pp.html">n_required_pp</a></span><span class="op">(</span></span>
 <span>  delta <span class="op">=</span> <span class="va">delta</span>,</span>
 <span>  N <span class="op">=</span> <span class="va">N</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
@@ -459,7 +463,7 @@ value so the effect size matches the analytic call.</p>
 <h3 id="sample-size-solver">Sample-size solver<a class="anchor" aria-label="anchor" href="#sample-size-solver"></a>
 </h3>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/n_required_PP.html">n_required_PP</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/n_required_pp.html">n_required_pp</a></span><span class="op">(</span></span>
 <span>  delta <span class="op">=</span> <span class="va">delta_ols</span>,</span>
 <span>  N <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">N</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
@@ -499,7 +503,7 @@ value so the effect size matches the analytic call.</p>
 </tr>
 <tr class="odd">
 <td>Mean estimator sample size</td>
-<td><code>n_required_PP(type = "mean", ...)</code></td>
+<td><code>n_required_pp(type = "mean", ...)</code></td>
 </tr>
 <tr class="even">
 <td>Mean estimator curves</td>
@@ -524,7 +528,7 @@ value so the effect size matches the analytic call.</p>
 </tr>
 <tr class="odd">
 <td>OLS sample size</td>
-<td><code>n_required_PP(type = "ols", ...)</code></td>
+<td><code>n_required_pp(type = "ols", ...)</code></td>
 </tr>
 </tbody>
 </table>

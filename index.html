@@ -174,7 +174,7 @@
 <h4 id="sample-size-planning">Sample-size planning<a class="anchor" aria-label="anchor" href="#sample-size-planning"></a>
 </h4>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">n_mean</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/n_required_PP.html">n_required_PP</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">n_mean</span> <span class="op">&lt;-</span> <span class="fu">n_required_PP</span><span class="op">(</span></span>
 <span>  delta   <span class="op">=</span> <span class="va">delta</span>,</span>
 <span>  N       <span class="op">=</span> <span class="va">N</span>,</span>
 <span>  alpha   <span class="op">=</span> <span class="va">alpha</span>,</span>
@@ -185,7 +185,7 @@
 <span><span class="op">)</span></span>
 <span><span class="va">n_mean</span></span>
 <span><span class="co">#&gt; [1] 340</span></span></code></pre></div>
-<p><code><a href="reference/n_required_PP.html">n_required_PP()</a></code> now supports the PP mean, PP-OLS, and custom variance decompositions through the type switch (logistic regression in the future).</p>
+<p><code>n_required_PP()</code> now supports the PP mean, PP-OLS, and custom variance decompositions through the type switch (logistic regression in the future).</p>
 <p><strong>Linear Regression</strong></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_ols</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ppi_ols_fit.html">ppi_ols_fit</a></span><span class="op">(</span></span>
@@ -256,7 +256,7 @@
 <h4 id="sample-size-planning-for-pp-ols">Sample-size planning for PP-OLS<a class="anchor" aria-label="anchor" href="#sample-size-planning-for-pp-ols"></a>
 </h4>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">n_ols</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/n_required_PP.html">n_required_PP</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">n_ols</span> <span class="op">&lt;-</span> <span class="fu">n_required_PP</span><span class="op">(</span></span>
 <span>  delta <span class="op">=</span> <span class="va">delta_ols</span>,</span>
 <span>  N     <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">N</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
@@ -320,7 +320,7 @@
 <ul>
 <li><p>Analytical power: <code><a href="reference/power_ppi_mean.html">power_ppi_mean()</a></code>: PP mean estimator. <code><a href="reference/power_ppi_ols.html">power_ppi_ols()</a></code>: Linear contrasts in PP-OLS.</p></li>
 <li><p>Estimation &amp; inference: <code>ppi_ols()</code> (<em>currently internal</em>), <code><a href="reference/ppi_ols_fit.html">ppi_ols_fit()</a></code>, <code><a href="reference/ppi_ols_wald.html">ppi_ols_wald()</a></code> (<em>currently internal</em>).</p></li>
-<li><p>Planning: <code><a href="reference/n_required_PP.html">n_required_PP()</a></code>: unified sample-size solver (type = “mean”, “ols”, or “custom”).</p></li>
+<li><p>Planning: <code>n_required_PP()</code>: unified sample-size solver (type = “mean”, “ols”, or “custom”).</p></li>
 <li><p>Plotting: <code><a href="reference/power_curve_mean.html">power_curve_mean()</a></code>, <code><a href="reference/power_curve_mean_dgp.html">power_curve_mean_dgp()</a></code>, <code><a href="reference/power_curve_gaussian.html">power_curve_gaussian()</a></code>, <code><a href="reference/power_curve_binomial.html">power_curve_binomial()</a></code>. <code><a href="reference/type1_error_curve_mean.html">type1_error_curve_mean()</a></code>, <code><a href="reference/type1_error_curve_mean_dgp.html">type1_error_curve_mean_dgp()</a></code>, <code><a href="reference/plot_type1_error_curve.html">plot_type1_error_curve()</a></code>.</p></li>
 </ul>
 <p>Each example above is self-contained; adjust Monte Carlo replicates (R) upward for production studies.</p>
