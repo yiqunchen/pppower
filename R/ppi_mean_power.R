@@ -9,8 +9,8 @@
 #' @param N Unlabeled sample size.
 #' @param n Labeled sample size.
 #' @param alpha Two-sided significance level.
-#' @param var_f,var_res Optional variance components of \eqn{f(X)} and the
-#'   residual \eqn{Y - f(X)}.
+#' @param var_f Optional variance of \eqn{f(X)}.
+#' @param var_res Optional residual variance of residual \eqn{Y - f(X)}.
 #' @param metrics Optional list of predictive-performance summaries.
 #' @param metric_type Character string describing `metrics` (e.g. `"continuous"`, `"hard"`, `"prob"`, `"precision_recall"`).
 #' @param m_labeled Labeled sample size associated with `metrics` (defaults to `n`).

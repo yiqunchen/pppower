@@ -16,19 +16,19 @@
 #' 
 #' @return Scalar power in \eqn{[0,1]}.
 #' @export
-power_ppi_plus_ols <- function(delta,
-                               contrast,
-                               H_L,
-                               H_U,
-                               Sigma_YY,
-                               Sigma_ff_l,
-                               Sigma_ff_u,
-                               Sigma_Yf,
-                               N,
-                               n,
-                               lambda,
-                               alpha = 0.05,
-                               tol = 1e-12) {
+power_ppi_pp_ols <- function(delta,
+                             contrast,
+                             H_L,
+                             H_U,
+                             Sigma_YY,
+                             Sigma_ff_l,
+                             Sigma_ff_u,
+                             Sigma_Yf,
+                             N,
+                             n,
+                             lambda,
+                             alpha = 0.05,
+                             tol = 1e-12) {
   stopifnot(length(lambda) == 1L, is.finite(lambda))
   H_mix <- (1 - lambda) * H_L + lambda * H_U
   bread_inv <- solve(H_mix, tol = tol)
@@ -65,7 +65,7 @@ power_ppi_plus_ols <- function(delta,
 #'
 #' @return List with empirical/analytical power, lambda summary, and per-draw details.
 #' @export
-simulate_power_ppi_plus_ols <- function(df,
+simulate_power_ppi_pp_ols <- function(df,
                                         formula,
                                         N,
                                         n,
@@ -130,7 +130,7 @@ simulate_power_ppi_plus_ols <- function(df,
     }
   )
 
-  power_exact <- power_ppi_plus_ols(
+  power_exact <- power_ppi_pp_ols(
     delta = delta,
     contrast = contrast,
     H_L = H_pop,

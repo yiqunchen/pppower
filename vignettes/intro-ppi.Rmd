@@ -116,12 +116,52 @@ mc_pp$empirical_power
 mc_pp$analytical_power
 ```
 
+### PPI++ Mean Estimation
+
+```{r ppiplusplus, eval = FALSE, include = FALSE}
+metrics_pp <- list(
+  type   = "continuous",
+  mse    = 0.55,
+  var_y  = 1.10,
+  cov_y_f = 0.22,
+  m_obs  = 300
+)
+
+# analytical power with oracle λ
+power_ppi_pp_mean(
+  delta = 0.25,
+  N = N,
+  n = n,
+  metrics = metrics_pp,
+  metric_type = "continuous"
+)
+
+# compare with Monte Carlo
+set.seed(as.integer(Sys.time()))
+ppplusplus_mc <- simulate_power_ppi_pp_ols(
+  df = df,                     # y / fhat_cf columns
+  formula = ~ x1 + x2,         # matches cross-fitting
+  N = N,
+  n = n,
+  c = c(0, 1, 0),
+  theta0 = mean(df$y) - 0.25,
+  R = 2000
+)
+
+ppplusplus_mc[c("empirical_power", "analytical_power", "avg_lambda_draw")]
+
+ppplusplus_mc$lambda_population
+# compare with
+mean(ppplusplus_mc$details$lambda)
+```
+
+
 ### Sample-size planning
 
-`n_required_PP()` solves for the labeled sample size that meets a power target.
+`n_required_pp()` solves for the labeled sample size that meets a power target.
 
 ```{r mean-n}
-n_required_PP(
+n_required_pp(
   delta = delta,
   N = N,
   alpha = alpha,
@@ -286,7 +326,7 @@ pppower:::simulate_power_ppi_ols(
 ### Sample-size solver
 
 ```{r ols-n}
-n_required_PP(
+n_required_pp(
   delta = delta_ols,
   N = pieces$N,
   alpha = alpha,
@@ -306,10 +346,10 @@ n_required_PP(
 |-----------------------------------------------|-----------------------------------------------------------------------|
 | Generate cross-fitted superpopulation         | `simulate_crossfit_data()`                                           |
 | Mean estimator power & calibration            | `power_ppi_mean()`, `simulate_power()`, `pppower:::simulate_power_ppi_mean()` |
-| Mean estimator sample size                    | `n_required_PP(type = "mean", ...)`                                   |
+| Mean estimator sample size                    | `n_required_pp(type = "mean", ...)`                                   |
 | Mean estimator curves                         | `power_curve_mean()`, `type1_error_curve_mean[_dgp]()`, `plot_type1_error_curve()` |
 | Fit prediction-powered OLS                    | `ppi_ols_fit()`, `summary()`                                          |
 | OLS contrasts and power                       | `pppower:::ppi_ols_wald()`, `power_ppi_ols()`, `pppower:::simulate_power_ppi_ols()`       |
-| OLS sample size                               | `n_required_PP(type = "ols", ...)`                                    |
+| OLS sample size                               | `n_required_pp(type = "ols", ...)`                                    |
 
 Together these tools help you explore prediction quality, diagnose finite-sample effects, and plan labeled sample sizes for both mean and regression targets.

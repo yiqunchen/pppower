@@ -80,7 +80,7 @@ test_that("Monte Carlo power aligns with analytical power for PPI and PPI++ OLS"
     )
   )
 
-  res_ppiplus <- simulate_power_ppi_plus_ols(
+  res_ppiplus <- simulate_power_ppi_pp_ols(
     df = df,
     formula = formula,
     N = N,

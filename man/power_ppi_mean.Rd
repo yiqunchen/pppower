@@ -26,8 +26,9 @@ power_ppi_mean(
 
 \item{alpha}{Two-sided significance level.}
 
-\item{var_f, var_res}{Optional variance components of \eqn{f(X)} and the
-residual \eqn{Y - f(X)}.}
+\item{var_f}{Optional variance of \eqn{f(X)}.}
+
+\item{var_res}{Optional residual variance of residual \eqn{Y - f(X)}.}
 
 \item{metrics}{Optional list of predictive-performance summaries.}
 
