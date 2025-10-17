@@ -159,7 +159,6 @@ and
 <span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">2000</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
 <span><span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">0.05</span></span>
-<span></span>
 <span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="fl">2000</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -169,7 +168,14 @@ and
 formula, using the standard error
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msqrt><mrow><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup><mi>/</mi><mi>N</mi><mo>+</mo><msubsup><mi>σ</mi><mtext mathvariant="normal">res</mtext><mn>2</mn></msubsup><mi>/</mi><mi>n</mi></mrow></msqrt><annotation encoding="application/x-tex">\sqrt{\sigma_f^2 / N + \sigma_{\text{res}}^2 / n}</annotation></semantics></math>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span><span class="va">delta</span>, <span class="va">var_f</span>, <span class="va">var_res</span>, <span class="va">N</span>, <span class="va">n</span>, <span class="va">alpha</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
+<span>  delta <span class="op">=</span> <span class="va">delta</span>,</span>
+<span>  var_f <span class="op">=</span> <span class="va">var_f</span>,</span>
+<span>  var_res <span class="op">=</span> <span class="va">var_res</span>,</span>
+<span>  N <span class="op">=</span> <span class="va">N</span>,</span>
+<span>  n <span class="op">=</span> <span class="va">n</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="va">alpha</span></span>
+<span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.804664</span></span></code></pre></div>
 </div>
 <div class="section level3">
