@@ -69,26 +69,28 @@
 
 
 <dl><dt id="arg-var-f">var_f<a class="anchor" aria-label="anchor" href="#arg-var-f"></a></dt>
-<dd><p>Optional numeric scalars supplying \(\operatorname{Var}(f)\) directly.</p></dd>
+<dd><p>Optional numeric scalar supplying \(\operatorname{Var}(f)\) directly.</p></dd>
 
 
 <dt id="arg-var-res">var_res<a class="anchor" aria-label="anchor" href="#arg-var-res"></a></dt>
-<dd><p>Optional numeric scalars supplying \(\operatorname{Var}(Y-f)\) directly.</p></dd>
+<dd><p>Optional numeric scalar supplying \(\operatorname{Var}(Y-f)\) directly.</p></dd>
 
 
 <dt id="arg-metrics">metrics<a class="anchor" aria-label="anchor" href="#arg-metrics"></a></dt>
-<dd><p>Optional named list of predictive-performance summaries; must contain the
-entries expected for the chosen <code>metric_type</code>.</p></dd>
+<dd><p>Optional named list of predictive-performance summaries. The required
+fields depend on <code>metric_type</code>.</p></dd>
 
 
 <dt id="arg-metric-type">metric_type<a class="anchor" aria-label="anchor" href="#arg-metric-type"></a></dt>
-<dd><p>Character string describing the metric bundle (e.g. <code>"continuous"</code>,
-<code>"hard"</code>, <code>"prob"</code>, <code>"precision_recall"</code>).</p></dd>
+<dd><p>Character string identifying the metric bundle. Supported values are:
+<code>"continuous"</code> (regression-style metrics), <code>"prob"</code> (binary probabilistic metrics such
+as the Brier score), and <code>"classification"</code> (binary classification metrics such as a
+confusion matrix or precision/recall).</p></dd>
 
 
 <dt id="arg-m-labeled">m_labeled<a class="anchor" aria-label="anchor" href="#arg-m-labeled"></a></dt>
-<dd><p>Labeled sample size associated with <code>metrics</code>; if omitted, the helper
-looks for <code>metrics$m_obs</code>.</p></dd>
+<dd><p>Labeled sample size associated with <code>metrics</code>; defaults to
+<code>metrics$m_obs</code> when present.</p></dd>
 
 
 <dt id="arg-correction">correction<a class="anchor" aria-label="anchor" href="#arg-correction"></a></dt>
