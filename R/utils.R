@@ -165,7 +165,7 @@ derive_vars_continuous <- function(mse,
   list(var_f = var_f, var_res = var_res, var_y = var_y)
 }
 
-derive_vars_binary <- function(metric_type = c("hard", "prob", "precision_recall"),
+derive_vars_binary <- function(metric_type = c("classification", "prob"),
                                stats,
                                m_obs,
                                correction = TRUE) {
@@ -176,61 +176,52 @@ derive_vars_binary <- function(metric_type = c("hard", "prob", "precision_recall
   }
   adj <- if (isTRUE(correction)) m_obs / (m_obs - 1) else 1
 
-  if (metric_type == "hard") {
-    acc   <- stats$accuracy
-    p_y   <- stats$p_y
-    p_hat <- stats$p_hat
-
-    if (any(!is.numeric(c(acc, p_y, p_hat))) ||
-        any(c(acc, p_y, p_hat) < 0) ||
-        any(c(acc, p_y, p_hat) > 1)) {
-      stop("For metric_type = 'hard', accuracy, p_y, and p_hat must lie in [0, 1].")
+  if (metric_type == "classification") {
+    # Allow either confusion-matrix pieces or precision/recall
+    if (!is.null(stats$tp) && !is.null(stats$fp) && !is.null(stats$fn)) {
+      tp <- stats$tp
+      fp <- stats$fp
+      fn <- stats$fn
+      tn <- stats$tn %||% (m_obs - tp - fp - fn)
+      if (any(c(tp, fp, fn, tn) < 0) || abs(tp + fp + fn + tn - m_obs) > 1e-8) {
+        stop("Confusion-matrix counts must be non-negative and sum to m_obs.")
+      }
+      p_y   <- (tp + fn) / m_obs
+      p_hat <- (tp + fp) / m_obs
+      err_rate <- (fp + fn) / m_obs
+    } else {
+      precision <- stats$precision
+      recall    <- stats$recall
+      p_y       <- stats$p_y
+      if (any(!is.numeric(c(precision, recall, p_y))) ||
+          precision <= 0 || precision > 1 ||
+          recall < 0 || recall > 1 ||
+          p_y < 0 || p_y > 1) {
+        stop("Need precision in (0,1], recall in [0,1], and p_y in [0,1] when supplying precision/recall.")
+      }
+      tp <- recall * p_y * m_obs
+      fp <- tp * (1 / precision - 1)
+      fn <- p_y * m_obs - tp
+      if (min(tp, fp, fn) < 0) stop("Inconsistent precision/recall/p_y triple.")
+      p_hat   <- (tp + fp) / m_obs
+      err_rate <- (fp + fn) / m_obs
     }
 
-    err_rate <- 1 - acc
-    bias     <- if (!is.null(stats$bias)) stats$bias else p_y - p_hat
-    var_res  <- adj * (err_rate - bias^2)
-    var_res  <- max(var_res, 0)  # guard against numerical negatives
-    var_f    <- adj * p_hat * (1 - p_hat)
-    var_f    <- max(var_f, 0)
-
-    return(list(var_f = var_f,
-                var_res = var_res,
-                p_hat = p_hat,
-                bias = bias))
-  }
-
-  if (metric_type == "precision_recall") {
-    precision <- stats$precision
-    recall    <- stats$recall
-    p_y       <- stats$p_y
-
-    if (any(!is.numeric(c(precision, recall, p_y))) ||
-        precision <= 0 || precision > 1 ||
-        recall < 0 || recall > 1 ||
-        p_y < 0 || p_y > 1) {
-      stop("For metric_type = 'precision_recall', precision in (0,1], recall in [0,1], p_y in [0,1].")
-    }
-
-    tp     <- recall * p_y * m_obs
-    fp     <- tp * (1 / precision - 1)
-    fn     <- p_y * m_obs - tp
-    p_hat  <- (tp + fp) / m_obs
-    err_rate <- (fp + fn) / m_obs
-    bias     <- if (!is.null(stats$bias)) stats$bias else p_y - p_hat
-
+    bias <- if (!is.null(stats$bias)) stats$bias else p_y - p_hat
     var_res <- adj * (err_rate - bias^2)
     var_res <- max(var_res, 0)
     var_f   <- adj * p_hat * (1 - p_hat)
     var_f   <- max(var_f, 0)
 
-    return(list(var_f = var_f,
-                var_res = var_res,
-                p_hat = p_hat,
-                bias = bias,
-                tp = tp,
-                fp = fp,
-                fn = fn))
+    return(list(
+      var_f = var_f,
+      var_res = var_res,
+      p_hat = p_hat,
+      bias = bias,
+      tp = tp,
+      fp = fp,
+      fn = fn
+    ))
   }
 
   # metric_type == "prob"
@@ -243,7 +234,6 @@ derive_vars_binary <- function(metric_type = c("hard", "prob", "precision_recall
   var_res <- adj * (brier - bias^2)
   var_res <- max(var_res, 0)
 
-  # sanity check
   if (!is.null(stats$var_y)) {
     var_y <- stats$var_y
     if (!is.numeric(var_y) || var_y < var_res) {
@@ -271,17 +261,15 @@ derive_vars_binary <- function(metric_type = c("hard", "prob", "precision_recall
     stop("Supply at least one of var_y, r2, or p_y for metric_type = 'prob'.")
   }
 
-  if (!is.null(stats$p_hat)) {
-    p_hat <- stats$p_hat
-  } else {
-    p_hat <- NA_real_  # mean predicted probability not identifiable from Brier alone
-  }
+  p_hat <- stats$p_hat %||% NA_real_
 
-  list(var_f = max(var_f, 0),
-       var_res = var_res,
-       var_y = var_y,
-       p_hat = p_hat,
-       bias = bias)
+  list(
+    var_f = max(var_f, 0),
+    var_res = var_res,
+    var_y = var_y,
+    p_hat = p_hat,
+    bias = bias
+  )
 }
 
 # brier score for binary case
@@ -292,14 +280,16 @@ brier_score <- function(y, p) {
 
 #' Resolve PP variance components from metrics
 #'
-#' @param var_f Optional numeric scalars supplying \eqn{\operatorname{Var}(f)} directly.
-#' @param var_res Optional numeric scalars supplying \eqn{\operatorname{Var}(Y-f)} directly.
-#' @param metrics Optional named list of predictive-performance summaries; must contain the
-#'   entries expected for the chosen `metric_type`.
-#' @param metric_type Character string describing the metric bundle (e.g. `"continuous"`,
-#'   `"hard"`, `"prob"`, `"precision_recall"`).
-#' @param m_labeled Labeled sample size associated with `metrics`; if omitted, the helper
-#'   looks for `metrics$m_obs`.
+#' @param var_f Optional numeric scalar supplying \eqn{\operatorname{Var}(f)} directly.
+#' @param var_res Optional numeric scalar supplying \eqn{\operatorname{Var}(Y-f)} directly.
+#' @param metrics Optional named list of predictive-performance summaries. The required
+#'   fields depend on `metric_type`.
+#' @param metric_type Character string identifying the metric bundle. Supported values are:
+#'   `"continuous"` (regression-style metrics), `"prob"` (binary probabilistic metrics such
+#'   as the Brier score), and `"classification"` (binary classification metrics such as a
+#'   confusion matrix or precision/recall).
+#' @param m_labeled Labeled sample size associated with `metrics`; defaults to
+#'   `metrics$m_obs` when present.
 #' @param correction Logical; apply the finite-sample adjustment when deriving moments
 #'   from metrics (default `TRUE`).
 #'
@@ -337,17 +327,10 @@ resolve_ppi_variances <- function(var_f = NULL,
   stats$type <- NULL
   stats$m_obs <- NULL
 
-  if (metric_type %in% c("hard", "prob", "precision_recall")) {
-    vars <- derive_vars_binary(
-      metric_type = metric_type,
-      stats = stats,
-      m_obs = m_labeled,
-      correction = correction
-    )
-    return(list(var_f = vars$var_f, var_res = vars$var_res))
-  }
+  metric_type_clean <- match.arg(tolower(metric_type),
+                                 c("classification", "prob", "continuous"))
 
-  if (metric_type %in% c("continuous", "regression")) {
+  if (metric_type_clean == "continuous") {
     vars <- derive_vars_continuous(
       mse        = stats$mse,
       r2         = stats$r2,
@@ -356,8 +339,14 @@ resolve_ppi_variances <- function(var_f = NULL,
       m_obs      = m_labeled,
       correction = correction
     )
-    return(list(var_f = vars$var_f, var_res = vars$var_res))
+  } else {
+    vars <- derive_vars_binary(
+      metric_type = metric_type_clean,
+      stats = stats,
+      m_obs = m_labeled,
+      correction = correction
+    )
   }
 
-  stop(sprintf("Unsupported metric_type: %s", metric_type), call. = FALSE)
+  list(var_f = vars$var_f, var_res = vars$var_res)
 }

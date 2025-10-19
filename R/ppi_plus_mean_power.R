@@ -48,24 +48,35 @@ resolve_ppi_pp_moments <- function(sigma_y2 = NULL,
 
   # Didn't supply cov_y_f, supplied metric_type
   if (is.null(cov_y_f) && !is.null(metric_type)) {
-    
-    if (is.null(m_labeled) && !is.null(metrics$m_obs)) m_labeled <- metrics$m_obs
-    if (is.null(m_labeled)) stop("Need m_labeled (or metrics$m_obs) to recover covariances.")
+    metric_type_clean <- tolower(metric_type)
 
-    if (metric_type == "hard") {
-      acc <- metrics$accuracy; p_y <- metrics$p_y; p_hat <- metrics$p_hat
-      tp_rate <- (p_hat + p_y + acc - 1) / 2
-      cov_y_f <- tp_rate - p_y * p_hat
-    } 
-    
-    else if (metric_type == "precision_recall") {
-      tp <- metrics$tp %||% (metrics$recall * metrics$p_y * m_labeled)
+    if (metric_type_clean == "classification") {
+      if (is.null(m_labeled) && !is.null(metrics$m_obs)) m_labeled <- metrics$m_obs
+      if (is.null(m_labeled)) {
+        stop("Need m_labeled (or metrics$m_obs) to recover covariances.")
+      }
+
       p_y <- metrics$p_y
-      p_hat <- metrics$p_hat %||% ((tp + metrics$fp)/m_labeled)
-      cov_y_f <- (tp / m_labeled) - p_y * p_hat
-    }
-    
-    else if (metric_type == "prob") {
+      if (is.null(p_y)) stop("classification metrics require p_y (prevalence).")
+
+      if (!is.null(metrics$tp)) {
+        tp_rate <- metrics$tp / m_labeled
+        p_hat <- metrics$p_hat %||% ((metrics$tp + metrics$fp) / m_labeled)
+      } else if (!is.null(metrics$precision) && !is.null(metrics$recall)) {
+        tp_rate <- metrics$recall * p_y
+        p_hat <- metrics$p_hat %||% (tp_rate + tp_rate * (1 / metrics$precision - 1))
+      } else if (!is.null(metrics$accuracy) && !is.null(metrics$p_hat)) {
+        p_hat <- metrics$p_hat
+        acc <- metrics$accuracy
+        tp_rate <- (p_hat + p_y + acc - 1) / 2
+      } else {
+        stop("classification metrics require either (tp, fp), precision/recall, or accuracy + p_hat.")
+      }
+
+      if (is.null(p_hat)) stop("Unable to infer p_hat for classification metrics.")
+      cov_y_f <- tp_rate - p_y * p_hat
+
+    } else if (metric_type_clean == "prob") {
       cov_y_f <- sigma_f2  # cross-fitted plug-in; override by passing metrics$cov_y_f if available
     }
   }

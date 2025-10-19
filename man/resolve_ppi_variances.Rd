@@ -14,18 +14,20 @@ resolve_ppi_variances(
 )
 }
 \arguments{
-\item{var_f}{Optional numeric scalars supplying \eqn{\operatorname{Var}(f)} directly.}
+\item{var_f}{Optional numeric scalar supplying \eqn{\operatorname{Var}(f)} directly.}
 
-\item{var_res}{Optional numeric scalars supplying \eqn{\operatorname{Var}(Y-f)} directly.}
+\item{var_res}{Optional numeric scalar supplying \eqn{\operatorname{Var}(Y-f)} directly.}
 
-\item{metrics}{Optional named list of predictive-performance summaries; must contain the
-entries expected for the chosen \code{metric_type}.}
+\item{metrics}{Optional named list of predictive-performance summaries. The required
+fields depend on \code{metric_type}.}
 
-\item{metric_type}{Character string describing the metric bundle (e.g. \code{"continuous"},
-\code{"hard"}, \code{"prob"}, \code{"precision_recall"}).}
+\item{metric_type}{Character string identifying the metric bundle. Supported values are:
+\code{"continuous"} (regression-style metrics), \code{"prob"} (binary probabilistic metrics such
+as the Brier score), and \code{"classification"} (binary classification metrics such as a
+confusion matrix or precision/recall).}
 
-\item{m_labeled}{Labeled sample size associated with \code{metrics}; if omitted, the helper
-looks for \code{metrics$m_obs}.}
+\item{m_labeled}{Labeled sample size associated with \code{metrics}; defaults to
+\code{metrics$m_obs} when present.}
 
 \item{correction}{Logical; apply the finite-sample adjustment when deriving moments
 from metrics (default \code{TRUE}).}

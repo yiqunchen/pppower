@@ -319,27 +319,22 @@ test_that("n_required_ppi_pp works with binary metrics input", {
   N <- 1800
   alpha <- 0.05
   power <- 0.9
-  p_y <- 0.4
-  p_hat <- 0.42
-  accuracy <- 0.78
-  m_obs <- 240
+  tp <- 96
+  fp <- 24
+  fn <- 30
+  tn <- 90
+  m_obs <- tp + fp + fn + tn
+  p_y <- (tp + fn) / m_obs
+  p_hat <- (tp + fp) / m_obs
+  accuracy <- (tp + tn) / m_obs
   adj <- m_obs / (m_obs - 1)
   bias <- p_y - p_hat
   var_res <- adj * ((1 - accuracy) - bias^2)
   var_f <- adj * p_hat * (1 - p_hat)
   sigma_y2 <- p_y * (1 - p_y)
   sigma_f2 <- var_f
-  tp_rate <- (p_hat + p_y + accuracy - 1) / 2
+  tp_rate <- tp / m_obs
   cov_y_f <- tp_rate - p_y * p_hat
-
-  metrics <- list(
-    type = "hard",
-    accuracy = accuracy,
-    p_y = p_y,
-    p_hat = p_hat,
-    var_y = sigma_y2,
-    m_obs = m_obs
-  )
 
   direct <- n_required_ppi_pp(
     delta = delta,
@@ -354,17 +349,52 @@ test_that("n_required_ppi_pp works with binary metrics input", {
     warn_smallN = FALSE
   )
 
-  via_metrics <- n_required_ppi_pp(
+  metrics_conf <- list(
+    type = "classification",
+    tp = tp,
+    fp = fp,
+    fn = fn,
+    tn = tn,
+    p_y = p_y,
+    var_y = sigma_y2,
+    m_obs = m_obs
+  )
+
+  via_metrics_conf <- n_required_ppi_pp(
     delta = delta,
     N = N,
     alpha = alpha,
     power = power,
-    metrics = metrics,
-    metric_type = "hard",
+    metrics = metrics_conf,
+    metric_type = "classification",
     warn_smallN = FALSE
   )
 
-  expect_identical(via_metrics, direct)
+  expect_identical(via_metrics_conf, direct)
+
+  precision <- tp / (tp + fp)
+  recall <- tp / (tp + fn)
+
+  metrics_pr <- list(
+    type = "classification",
+    precision = precision,
+    recall = recall,
+    p_y = p_y,
+    var_y = sigma_y2,
+    m_obs = m_obs
+  )
+
+  via_metrics_pr <- n_required_ppi_pp(
+    delta = delta,
+    N = N,
+    alpha = alpha,
+    power = power,
+    metrics = metrics_pr,
+    metric_type = "classification",
+    warn_smallN = FALSE
+  )
+
+  expect_identical(via_metrics_pr, direct)
 })
 
 test_that("n_required_ppi_pp caps infeasible requests and records achieved power", {

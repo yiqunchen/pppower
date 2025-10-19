@@ -18,6 +18,9 @@ test_that("power resolvers handle metrics input across metric types", {
   N <- 1200
   n <- 150
   alpha <- 0.05
+  precision <- 0.78
+  recall <- 0.60
+  p_y <- 0.30
 
   scenarios <- list(
     list(
@@ -32,43 +35,23 @@ test_that("power resolvers handle metrics input across metric types", {
       )
     ),
     list(
-      metric_type = "hard",
-      metrics = {
-        accuracy <- 0.76
-        p_y <- 0.40
-        p_hat <- 0.43
-        list(
-          type = "hard",
-          accuracy = accuracy,
-          p_y = p_y,
-          p_hat = p_hat,
-          bias = p_y - p_hat,
-          m_obs = n
-        )
-      }
-    ),
-    list(
-      metric_type = "precision_recall",
-      metrics = {
-        precision <- 0.78
-        recall <- 0.60
-        p_y <- 0.30
-        tp <- recall * p_y * n
-        fp <- tp * (1 / precision - 1)
-        fn <- p_y * n - tp
-        p_hat <- (tp + fp) / n
-        list(
-          type = "precision_recall",
+      metric_type = "classification",
+      metrics = list(
           precision = precision,
           recall = recall,
           p_y = p_y,
-          tp = tp,
-          fp = fp,
-          fn = fn,
-          p_hat = p_hat,
           m_obs = n
         )
-      }
+    ),
+    list(
+      metric_type = "classification",
+      metrics = list(
+        tp = 48,
+        fp = 12,
+        fn = 10,
+        m_obs = n,
+        p_y = p_y
+      )
     )
   )
 
