@@ -262,8 +262,15 @@ test_that("ppi_plus_ols plugin lambda matches plug-in formula and user override"
   expect_equal(unname(fit_zero$coef), unname(fit_label$coef), tolerance = 1e-10)
   expect_equal(unname(as.matrix(fit_zero$vcov)), unname(expected_vcov_zero), tolerance = 1e-8)
 
-  X_u_formula <- stats::model.matrix(~ x, data_u)
-  fit_unlabel <- pppower:::ols_fit(X_u_formula, f_u)
+  X_u_formula <- stats::model.matrix(~ x, data_u)         # unlabeled design
+  H_U <- crossprod(X_u_formula) / nrow(X_u_formula)       # X_u^TX_u/N
+  G_U <- crossprod(X_u_formula, f_u) / nrow(X_u_formula)
+
+  X_l_formula <- stats::model.matrix(~ x, data_l)         # labeled design
+  H_L <- crossprod(X_l_formula) / nrow(X_l_formula)
+  G_L <- crossprod(X_l_formula, Y_l) / nrow(X_l_formula)
+  W_L <- crossprod(X_l_formula, f_l) / nrow(X_l_formula)
+
   fit_one <- ppi_plus_ols_fit(
     y = y,
     f_col = "f",
@@ -273,5 +280,8 @@ test_that("ppi_plus_ols plugin lambda matches plug-in formula and user override"
     lambda = 1,
     lambda_type = "user"
   )
-  expect_equal(unname(fit_one$coef), unname(fit_unlabel$coef), tolerance = 1e-10)
+
+  expected_coef_one <- drop(solve(H_U, G_L + G_U - W_L))
+
+  expect_equal(unname(fit_one$coef), unname(expected_coef_one), tolerance = 1e-10)
 })

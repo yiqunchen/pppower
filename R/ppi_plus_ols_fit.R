@@ -72,9 +72,10 @@ ppi_plus_ols <- function(X_l,
   H_U <- crossprod(X_u) / N
   G_L <- crossprod(X_l, Y_l) / n
   G_U <- crossprod(X_u, f_u) / N
+  W_L <- crossprod(X_l, f_l) / n
 
   H_mix <- (1 - lambda) * H_L + lambda * H_U
-  rhs <- (1 - lambda) * G_L + lambda * G_U
+  rhs   <- G_L + lambda * (G_U - W_L)
   theta_hat <- drop(solve(H_mix, rhs, tol = tol))
 
   res_Y  <- Y_l - drop(X_l %*% theta_hat)
