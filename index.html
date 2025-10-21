@@ -82,340 +82,107 @@
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"yiqunchen/pppower"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
+<h2 id="vignettes">Vignettes<a class="anchor" aria-label="anchor" href="#vignettes"></a>
 </h2>
-<p>This is a basic example which shows you how to solve a common problem:</p>
+<ul>
+<li><strong>Prediction-Powered Power Planning</strong></li>
+</ul>
+<p>Open in R:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://yiqunchen.github.io/pppower">pppower</a></span><span class="op">)</span></span>
-<span><span class="co">## basic example code</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Start with a cross-fitted superpopulation data</strong></p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Linear signal with coefficients 0.3, 0.8, ... and heavier Gaussian noise (sd = 2)</span></span>
-<span><span class="co"># Cross-fitted predictions (out-of-fold)</span></span>
-<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/simulate_crossfit_data.html">simulate_crossfit_data</a></span><span class="op">(</span></span>
-<span>  n <span class="op">=</span> <span class="fl">3500</span>, p <span class="op">=</span> <span class="fl">5</span>, family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>, <span class="co">#</span></span>
-<span>  K <span class="op">=</span> <span class="fl">5</span>, seed <span class="op">=</span> <span class="fl">20251007</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 'data.frame':    3500 obs. of  7 variables:</span></span>
-<span><span class="co">#&gt;  $ y      : num  -8.604 -0.121 2.387 1.222 1.246 ...</span></span>
-<span><span class="co">#&gt;  $ x1     : num  -0.597 -0.215 0.678 1.876 -0.864 ...</span></span>
-<span><span class="co">#&gt;  $ x2     : num  -0.156 0.543 -0.109 1.033 -1.44 ...</span></span>
-<span><span class="co">#&gt;  $ x3     : num  -0.3061 0.6888 -0.2761 -0.0526 -0.4471 ...</span></span>
-<span><span class="co">#&gt;  $ x4     : num  -1.192 -1.491 0.62 -0.268 0.453 ...</span></span>
-<span><span class="co">#&gt;  $ x5     : num  -1.508 1.196 0.64 0.307 0.343 ...</span></span>
-<span><span class="co">#&gt;  $ fhat_cf: num  -6.303 1.39 2.356 1.509 -0.385 ...</span></span>
-<span><span class="co">#&gt;  - attr(*, "family")= chr "gaussian"</span></span>
-<span><span class="co">#&gt;  - attr(*, "K")= num 5</span></span></code></pre></div>
-<p><code><a href="reference/simulate_crossfit_data.html">simulate_crossfit_data()</a></code> builds a synthetic “superpopulation” with covariates, outcomes, and out-of-fold predictions (<code>fhat_cf</code>). These serve as inputs for both analytical formulas and Monte Carlo power simulations.</p>
-<p><strong>Mean-estimation toolkit</strong></p>
-<div class="section level4">
-<h4 id="analytical-power-and-monte-carlo-calibration">Analytical power and Monte Carlo calibration<a class="anchor" aria-label="anchor" href="#analytical-power-and-monte-carlo-calibration"></a>
-</h4>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">theta_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
-<span><span class="va">theta0</span>     <span class="op">&lt;-</span> <span class="va">theta_true</span> <span class="op">-</span> <span class="fl">0.35</span></span>
-<span><span class="va">delta</span>      <span class="op">&lt;-</span> <span class="va">theta_true</span> <span class="op">-</span> <span class="va">theta0</span></span>
-<span><span class="va">var_f</span>      <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">fhat_cf</span><span class="op">)</span></span>
-<span><span class="va">var_res</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">y</span> <span class="op">-</span> <span class="va">df</span><span class="op">$</span><span class="va">fhat_cf</span><span class="op">)</span></span>
-<span><span class="va">N</span>          <span class="op">&lt;-</span> <span class="fl">3000</span></span>
-<span><span class="va">n</span>          <span class="op">&lt;-</span> <span class="fl">200</span></span>
-<span><span class="va">alpha</span>      <span class="op">&lt;-</span> <span class="fl">0.05</span></span>
-<span><span class="va">sim</span>        <span class="op">&lt;-</span> <span class="fl">20000</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
-<span>  delta <span class="op">=</span> <span class="va">delta</span>,</span>
-<span>  var_f <span class="op">=</span> <span class="va">var_f</span>,</span>
-<span>  var_res <span class="op">=</span> <span class="va">var_res</span>,</span>
-<span>  N <span class="op">=</span> <span class="va">N</span>,</span>
-<span>  n <span class="op">=</span> <span class="va">n</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.6169984</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/simulate_power.html">simulate_power</a></span><span class="op">(</span></span>
-<span>  delta   <span class="op">=</span> <span class="va">delta</span>,</span>
-<span>  N       <span class="op">=</span> <span class="va">N</span>,</span>
-<span>  n       <span class="op">=</span> <span class="va">n</span>,</span>
-<span>  alpha   <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  var_f   <span class="op">=</span> <span class="va">var_f</span>,</span>
-<span>  var_res <span class="op">=</span> <span class="va">var_res</span>,</span>
-<span>  R       <span class="op">=</span> <span class="va">sim</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt;     Exact_PP Empirical_PP </span></span>
-<span><span class="co">#&gt;    0.6169984    0.6192500</span></span></code></pre></div>
-<ul>
-<li>
-<code><a href="reference/power_ppi_mean.html">power_ppi_mean()</a></code> returns the exact normal-theory power.</li>
-<li>
-<code><a href="reference/simulate_power.html">simulate_power()</a></code> confirms the formula empirically for any variance inputs.</li>
-</ul>
-</div>
-<div class="section level4">
-<h4 id="monte-carlo-with-an-explicit-superpopulation">Monte Carlo with an explicit superpopulation<a class="anchor" aria-label="anchor" href="#monte-carlo-with-an-explicit-superpopulation"></a>
-</h4>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">mc_pp</span> <span class="op">&lt;-</span> <span class="fu">pppower</span><span class="fu">:::</span><span class="fu">simulate_power_ppi_mean</span><span class="op">(</span></span>
-<span>  df      <span class="op">=</span> <span class="va">df</span>,</span>
-<span>  N       <span class="op">=</span> <span class="va">N</span>,</span>
-<span>  n       <span class="op">=</span> <span class="va">n</span>,</span>
-<span>  alpha   <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  R       <span class="op">=</span> <span class="va">sim</span>,</span>
-<span>  theta0  <span class="op">=</span> <span class="va">theta0</span>,</span>
-<span>  seed    <span class="op">=</span> <span class="fl">20251007</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">mc_pp</span><span class="op">$</span><span class="va">empirical_power</span></span>
-<span><span class="co">#&gt; [1] 0.63</span></span>
-<span><span class="va">mc_pp</span><span class="op">$</span><span class="va">analytical_power</span></span>
-<span><span class="co">#&gt; [1] 0.6169984</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="sample-size-planning">Sample-size planning<a class="anchor" aria-label="anchor" href="#sample-size-planning"></a>
-</h4>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">n_mean</span> <span class="op">&lt;-</span> <span class="fu">n_required_PP</span><span class="op">(</span></span>
-<span>  delta   <span class="op">=</span> <span class="va">delta</span>,</span>
-<span>  N       <span class="op">=</span> <span class="va">N</span>,</span>
-<span>  alpha   <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  power   <span class="op">=</span> <span class="fl">0.8</span>,</span>
-<span>  type    <span class="op">=</span> <span class="st">"mean"</span>,</span>
-<span>  var_f   <span class="op">=</span> <span class="va">var_f</span>,</span>
-<span>  var_res <span class="op">=</span> <span class="va">var_res</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">n_mean</span></span>
-<span><span class="co">#&gt; [1] 340</span></span></code></pre></div>
-<p><code>n_required_PP()</code> now supports the PP mean, PP-OLS, and custom variance decompositions through the type switch (logistic regression in the future).</p>
-<p><strong>Linear Regression</strong></p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_ols</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ppi_ols_fit.html">ppi_ols_fit</a></span><span class="op">(</span></span>
-<span>  y      <span class="op">=</span> <span class="st">"y"</span>,</span>
-<span>  f_col  <span class="op">=</span> <span class="st">"fhat_cf"</span>,</span>
-<span>  formula <span class="op">=</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">x3</span> <span class="op">+</span> <span class="va">x4</span> <span class="op">+</span> <span class="va">x5</span>,</span>
-<span>  data_l <span class="op">=</span> <span class="va">df</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">n</span>, <span class="op">]</span>,</span>
-<span>  data_u <span class="op">=</span> <span class="va">df</span><span class="op">[</span><span class="op">(</span><span class="va">n</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">:</span><span class="op">(</span><span class="va">n</span> <span class="op">+</span> <span class="va">N</span><span class="op">)</span>, <span class="op">]</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_ols</span><span class="op">)</span></span>
-<span><span class="co">#&gt;               Estimate Std.Error          z     Pr...z..</span></span>
-<span><span class="co">#&gt; (Intercept) -0.0582027 0.1342167 -0.4336473 6.645446e-01</span></span>
-<span><span class="co">#&gt; x1           0.2154943 0.1492191  1.4441473 1.486975e-01</span></span>
-<span><span class="co">#&gt; x2           0.9815688 0.1251441  7.8435075 4.381330e-15</span></span>
-<span><span class="co">#&gt; x3           1.3205945 0.1195599 11.0454653 2.305700e-28</span></span>
-<span><span class="co">#&gt; x4           1.9493006 0.1307634 14.9070810 2.964310e-50</span></span>
-<span><span class="co">#&gt; x5           2.3846676 0.1275478 18.6962608 5.310028e-78</span></span>
-<span></span>
-<span><span class="va">pieces</span>      <span class="op">&lt;-</span> <span class="va">fit_ols</span><span class="op">$</span><span class="va">pieces</span></span>
-<span><span class="va">coef_names</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">pieces</span><span class="op">$</span><span class="va">V_u</span><span class="op">)</span>       <span class="co"># matches V_u/V_l dimension</span></span>
-<span><span class="va">c_vec</span>       <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">coef_names</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">c_vec</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">coef_names</span></span>
-<span><span class="va">c_vec</span><span class="op">[</span><span class="st">"x1"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
-<span></span>
-<span><span class="va">delta_ols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">c_vec</span> <span class="op">*</span> <span class="va">fit_ols</span><span class="op">$</span><span class="va">coef</span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="reference/ppi_ols_fit.html">ppi_ols_fit()</a></code> returns coefficient estimates, sandwich covariance, and the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mi>u</mi></msub><annotation encoding="application/x-tex">V_u</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mi>l</mi></msub><annotation encoding="application/x-tex">V_l</annotation></semantics></math> components required for power calculations.</p>
-<p><code><a href="reference/ppi_ols_wald.html">ppi_ols_wald()</a></code> offers Wald tests for arbitrary contrasts.</p>
-</div>
-<div class="section level4">
-<h4 id="analytical-and-monte-carlo-power">Analytical and Monte Carlo power<a class="anchor" aria-label="anchor" href="#analytical-and-monte-carlo-power"></a>
-</h4>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># superpopulation contrast for the given c</span></span>
-<span><span class="va">X_full</span>      <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">x3</span> <span class="op">+</span> <span class="va">x4</span> <span class="op">+</span> <span class="va">x5</span>, <span class="va">df</span><span class="op">)</span></span>
-<span><span class="va">beta_true</span>   <span class="op">&lt;-</span> <span class="fu">pppower</span><span class="fu">:::</span><span class="fu">ols_fit</span><span class="op">(</span><span class="va">X_full</span>, <span class="va">df</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">coef</span></span>
-<span><span class="va">contrast_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">c_vec</span> <span class="op">*</span> <span class="va">beta_true</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># the effect size you want to study</span></span>
-<span><span class="va">delta_target</span> <span class="op">&lt;-</span> <span class="va">delta_ols</span>         <span class="co"># if you want to stick with the sample estimate</span></span>
-<span><span class="va">theta0</span>       <span class="op">&lt;-</span> <span class="va">contrast_true</span> <span class="op">-</span> <span class="va">delta_target</span></span>
-<span></span>
-<span><span class="fu">pppower</span><span class="fu">:::</span><span class="fu"><a href="reference/power_ppi_ols.html">power_ppi_ols</a></span><span class="op">(</span></span>
-<span>  delta <span class="op">=</span> <span class="va">delta_target</span>,</span>
-<span>  V_u   <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">V_u</span>,</span>
-<span>  V_l   <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">V_l</span>,</span>
-<span>  N     <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">N</span>,</span>
-<span>  n     <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">n</span>,</span>
-<span>  c     <span class="op">=</span> <span class="va">c_vec</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.3033231</span></span>
-<span></span>
-<span><span class="fu">pppower</span><span class="fu">:::</span><span class="fu">simulate_power_ppi_ols</span><span class="op">(</span></span>
-<span>  df      <span class="op">=</span> <span class="va">df</span>,</span>
-<span>  formula <span class="op">=</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">x3</span> <span class="op">+</span> <span class="va">x4</span> <span class="op">+</span> <span class="va">x5</span>,</span>
-<span>  N       <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">N</span>,</span>
-<span>  n       <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">n</span>,</span>
-<span>  c       <span class="op">=</span> <span class="va">c_vec</span>,</span>
-<span>  theta0  <span class="op">=</span> <span class="va">theta0</span>,</span>
-<span>  alpha   <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  R       <span class="op">=</span> <span class="va">sim</span>,</span>
-<span>  seed    <span class="op">=</span> <span class="fl">20251007</span></span>
-<span><span class="op">)</span><span class="op">$</span><span class="va">empirical_power</span></span>
-<span><span class="co">#&gt; [1] 0.33565</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="sample-size-planning-for-pp-ols">Sample-size planning for PP-OLS<a class="anchor" aria-label="anchor" href="#sample-size-planning-for-pp-ols"></a>
-</h4>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">n_ols</span> <span class="op">&lt;-</span> <span class="fu">n_required_PP</span><span class="op">(</span></span>
-<span>  delta <span class="op">=</span> <span class="va">delta_ols</span>,</span>
-<span>  N     <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">N</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  power <span class="op">=</span> <span class="fl">0.8</span>,</span>
-<span>  type  <span class="op">=</span> <span class="st">"ols"</span>,</span>
-<span>  V_u   <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">V_u</span>,</span>
-<span>  V_l   <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">V_l</span>,</span>
-<span>  c     <span class="op">=</span> <span class="va">c_vec</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">n_ols</span></span>
-<span><span class="co">#&gt; [1] 753</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="power-curves">Power Curves<a class="anchor" aria-label="anchor" href="#power-curves"></a>
-</h4>
-<p><strong>Mean Estimation</strong></p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">effect_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.4</span>, <span class="fl">0.4</span>, by <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
-<span><span class="va">curve_fixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/type1_error_curve_mean.html">type1_error_curve_mean</a></span><span class="op">(</span></span>
-<span>  effect_grid <span class="op">=</span> <span class="va">effect_grid</span>,</span>
-<span>  N <span class="op">=</span> <span class="va">N</span>,</span>
-<span>  n <span class="op">=</span> <span class="va">n</span>,</span>
-<span>  var_f <span class="op">=</span> <span class="va">var_f</span>,</span>
-<span>  var_res <span class="op">=</span> <span class="va">var_res</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  R <span class="op">=</span> <span class="va">sim</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">20251007</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/plot_type1_error_curve.html">plot_type1_error_curve</a></span><span class="op">(</span></span>
-<span>  <span class="va">curve_fixed</span>,</span>
-<span>  main <span class="op">=</span> <span class="st">"Power curve from variance inputs"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-2-1.png" width="100%"></p>
-<p><strong>Cross-fitted Data Generation Processes</strong></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">curve_dgp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/type1_error_curve_mean_dgp.html">type1_error_curve_mean_dgp</a></span><span class="op">(</span></span>
-<span>  effect_grid <span class="op">=</span> <span class="va">effect_grid</span>,</span>
-<span>  N <span class="op">=</span> <span class="va">N</span>,</span>
-<span>  n <span class="op">=</span> <span class="va">n</span>,</span>
-<span>  family <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  superpop_n <span class="op">=</span> <span class="fl">10000</span>,</span>
-<span>  p <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  K <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  R <span class="op">=</span> <span class="va">sim</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">20251007</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/plot_type1_error_curve.html">plot_type1_error_curve</a></span><span class="op">(</span></span>
-<span>  <span class="va">curve_dgp</span>,</span>
-<span>  main <span class="op">=</span> <span class="st">"Power curve with cross-fitted DGP (Gaussian)"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-dgp-power-curve-1.png" width="100%"></p>
-<p><code><a href="reference/plot_type1_error_curve.html">plot_type1_error_curve()</a></code> is shared by both outputs and lets you overlay empirical/analytical curves and nominal reference lines.</p>
-<p><strong>Reference of key functions</strong></p>
-<ul>
-<li>Simulation: <code><a href="reference/simulate_crossfit_data.html">simulate_crossfit_data()</a></code>: synthetic GLM data with cross-fitted predictions.</li>
-</ul>
-<p><code><a href="reference/simulate_power.html">simulate_power()</a></code> / <code>simulate_power_ppi_mean()</code> / <code>simulate_power_ppi_ols()</code>: Monte Carlo power.</p>
-<ul>
-<li><p>Analytical power: <code><a href="reference/power_ppi_mean.html">power_ppi_mean()</a></code>: PP mean estimator. <code><a href="reference/power_ppi_ols.html">power_ppi_ols()</a></code>: Linear contrasts in PP-OLS.</p></li>
-<li><p>Estimation &amp; inference: <code>ppi_ols()</code> (<em>currently internal</em>), <code><a href="reference/ppi_ols_fit.html">ppi_ols_fit()</a></code>, <code><a href="reference/ppi_ols_wald.html">ppi_ols_wald()</a></code> (<em>currently internal</em>).</p></li>
-<li><p>Planning: <code>n_required_PP()</code>: unified sample-size solver (type = “mean”, “ols”, or “custom”).</p></li>
-<li><p>Plotting: <code><a href="reference/power_curve_mean.html">power_curve_mean()</a></code>, <code><a href="reference/power_curve_mean_dgp.html">power_curve_mean_dgp()</a></code>, <code><a href="reference/power_curve_gaussian.html">power_curve_gaussian()</a></code>, <code><a href="reference/power_curve_binomial.html">power_curve_binomial()</a></code>. <code><a href="reference/type1_error_curve_mean.html">type1_error_curve_mean()</a></code>, <code><a href="reference/type1_error_curve_mean_dgp.html">type1_error_curve_mean_dgp()</a></code>, <code><a href="reference/plot_type1_error_curve.html">plot_type1_error_curve()</a></code>.</p></li>
-</ul>
-<p>Each example above is self-contained; adjust Monte Carlo replicates (R) upward for production studies.</p>
-<p><strong>Contributing</strong> - Issues and pull requests are welcome. Please add tests under tests/testthat/ and run <code>devtools::test()</code> before submitting changes.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co">#&gt; ─ Session info ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span></span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co">#&gt;  setting  value</span></span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co">#&gt;  version  R version 4.3.1 Patched (2023-07-19 r84711)</span></span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co">#&gt;  os       Rocky Linux 9.4 (Blue Onyx)</span></span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="co">#&gt;  system   x86_64, linux-gnu</span></span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co">#&gt;  ui       X11</span></span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="co">#&gt;  language (EN)</span></span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt;  collate  en_US.UTF-8</span></span>
-<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt;  ctype    en_US.UTF-8</span></span>
-<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt;  tz       US/Eastern</span></span>
-<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt;  date     2025-10-16</span></span>
-<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt;  pandoc   3.1.3 @ /jhpce/shared/community/core/conda_R/4.3/bin/ (via rmarkdown)</span></span>
-<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt;  quarto   NA</span></span>
-<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt; ─ Packages ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span></span>
-<span id="cb12-16"><a href="#cb12-16" tabindex="-1"></a><span class="co">#&gt;  ! package     * version    date (UTC) lib source</span></span>
-<span id="cb12-17"><a href="#cb12-17" tabindex="-1"></a><span class="co">#&gt;    brio          1.1.3      2021-11-30 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-18"><a href="#cb12-18" tabindex="-1"></a><span class="co">#&gt;    cachem        1.0.8      2023-05-01 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-19"><a href="#cb12-19" tabindex="-1"></a><span class="co">#&gt;    callr         3.7.3      2022-11-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-20"><a href="#cb12-20" tabindex="-1"></a><span class="co">#&gt;    cli           3.6.1      2023-03-23 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-21"><a href="#cb12-21" tabindex="-1"></a><span class="co">#&gt;    commonmark    1.9.0      2023-03-17 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-22"><a href="#cb12-22" tabindex="-1"></a><span class="co">#&gt;    crayon        1.5.2      2022-09-29 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-23"><a href="#cb12-23" tabindex="-1"></a><span class="co">#&gt;    curl          7.0.0      2025-08-19 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-24"><a href="#cb12-24" tabindex="-1"></a><span class="co">#&gt;    desc          1.4.3      2023-12-10 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-25"><a href="#cb12-25" tabindex="-1"></a><span class="co">#&gt;    devtools      2.4.5      2022-10-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-26"><a href="#cb12-26" tabindex="-1"></a><span class="co">#&gt;    diffobj       0.3.5      2021-10-05 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-27"><a href="#cb12-27" tabindex="-1"></a><span class="co">#&gt;    digest        0.6.33     2023-07-07 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-28"><a href="#cb12-28" tabindex="-1"></a><span class="co">#&gt;    ellipsis      0.3.2      2021-04-29 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-29"><a href="#cb12-29" tabindex="-1"></a><span class="co">#&gt;    evaluate      1.0.5      2025-08-27 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-30"><a href="#cb12-30" tabindex="-1"></a><span class="co">#&gt;    fansi         1.0.4      2023-01-22 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-31"><a href="#cb12-31" tabindex="-1"></a><span class="co">#&gt;    fastmap       1.1.1      2023-02-24 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-32"><a href="#cb12-32" tabindex="-1"></a><span class="co">#&gt;    fs            1.6.3      2023-07-20 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-33"><a href="#cb12-33" tabindex="-1"></a><span class="co">#&gt;    glue          1.6.2      2022-02-24 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-34"><a href="#cb12-34" tabindex="-1"></a><span class="co">#&gt;    htmltools     0.5.6      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-35"><a href="#cb12-35" tabindex="-1"></a><span class="co">#&gt;    htmlwidgets   1.6.2      2023-03-17 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-36"><a href="#cb12-36" tabindex="-1"></a><span class="co">#&gt;    httpuv        1.6.11     2023-05-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-37"><a href="#cb12-37" tabindex="-1"></a><span class="co">#&gt;    knitr         1.44       2023-09-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-38"><a href="#cb12-38" tabindex="-1"></a><span class="co">#&gt;    later         1.3.1      2023-05-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-39"><a href="#cb12-39" tabindex="-1"></a><span class="co">#&gt;    lifecycle     1.0.4      2023-11-07 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-40"><a href="#cb12-40" tabindex="-1"></a><span class="co">#&gt;    magrittr      2.0.3      2022-03-30 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-41"><a href="#cb12-41" tabindex="-1"></a><span class="co">#&gt;    memoise       2.0.1      2021-11-26 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-42"><a href="#cb12-42" tabindex="-1"></a><span class="co">#&gt;    mime          0.12       2021-09-28 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-43"><a href="#cb12-43" tabindex="-1"></a><span class="co">#&gt;    miniUI        0.1.2      2025-04-17 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-44"><a href="#cb12-44" tabindex="-1"></a><span class="co">#&gt;    pillar        1.9.0      2023-03-22 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-45"><a href="#cb12-45" tabindex="-1"></a><span class="co">#&gt;    pkgbuild      1.4.8      2025-05-26 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-46"><a href="#cb12-46" tabindex="-1"></a><span class="co">#&gt;    pkgconfig     2.0.3      2019-09-22 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-47"><a href="#cb12-47" tabindex="-1"></a><span class="co">#&gt;    pkgdown       2.0.7      2022-12-14 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-48"><a href="#cb12-48" tabindex="-1"></a><span class="co">#&gt;    pkgload       1.4.1      2025-09-23 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-49"><a href="#cb12-49" tabindex="-1"></a><span class="co">#&gt;  P pppower     * 0.0.0.9000 2025-10-08 [?] load_all()</span></span>
-<span id="cb12-50"><a href="#cb12-50" tabindex="-1"></a><span class="co">#&gt;    prettyunits   1.1.1      2020-01-24 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-51"><a href="#cb12-51" tabindex="-1"></a><span class="co">#&gt;    processx      3.8.2      2023-06-30 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-52"><a href="#cb12-52" tabindex="-1"></a><span class="co">#&gt;    profvis       0.3.8      2023-05-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-53"><a href="#cb12-53" tabindex="-1"></a><span class="co">#&gt;    promises      1.2.1      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-54"><a href="#cb12-54" tabindex="-1"></a><span class="co">#&gt;    ps            1.7.5      2023-04-18 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-55"><a href="#cb12-55" tabindex="-1"></a><span class="co">#&gt;    purrr         1.0.2      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-56"><a href="#cb12-56" tabindex="-1"></a><span class="co">#&gt;    R6            2.5.1      2021-08-19 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-57"><a href="#cb12-57" tabindex="-1"></a><span class="co">#&gt;    rcmdcheck     1.4.0      2021-09-27 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-58"><a href="#cb12-58" tabindex="-1"></a><span class="co">#&gt;    Rcpp          1.0.11     2023-07-06 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-59"><a href="#cb12-59" tabindex="-1"></a><span class="co">#&gt;    remotes       2.5.0      2024-03-17 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-60"><a href="#cb12-60" tabindex="-1"></a><span class="co">#&gt;    rlang         1.1.1      2023-04-28 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-61"><a href="#cb12-61" tabindex="-1"></a><span class="co">#&gt;    rmarkdown     2.30       2025-09-28 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-62"><a href="#cb12-62" tabindex="-1"></a><span class="co">#&gt;    roxygen2      7.2.3      2022-12-08 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-63"><a href="#cb12-63" tabindex="-1"></a><span class="co">#&gt;    rprojroot     2.1.1      2025-08-26 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-64"><a href="#cb12-64" tabindex="-1"></a><span class="co">#&gt;    rstudioapi    0.15.0     2023-07-07 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-65"><a href="#cb12-65" tabindex="-1"></a><span class="co">#&gt;    sessioninfo   1.2.3      2025-02-05 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-66"><a href="#cb12-66" tabindex="-1"></a><span class="co">#&gt;    shiny         1.7.5      2023-08-12 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-67"><a href="#cb12-67" tabindex="-1"></a><span class="co">#&gt;    stringi       1.7.12     2023-01-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-68"><a href="#cb12-68" tabindex="-1"></a><span class="co">#&gt;    stringr       1.5.0      2022-12-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-69"><a href="#cb12-69" tabindex="-1"></a><span class="co">#&gt;    testthat    * 3.1.10     2023-07-06 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-70"><a href="#cb12-70" tabindex="-1"></a><span class="co">#&gt;    tibble        3.2.1      2023-03-20 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-71"><a href="#cb12-71" tabindex="-1"></a><span class="co">#&gt;    urlchecker    1.0.1      2021-11-30 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-72"><a href="#cb12-72" tabindex="-1"></a><span class="co">#&gt;    usethis       3.2.1      2025-09-06 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-73"><a href="#cb12-73" tabindex="-1"></a><span class="co">#&gt;    utf8          1.2.3      2023-01-31 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-74"><a href="#cb12-74" tabindex="-1"></a><span class="co">#&gt;    vctrs         0.6.3      2023-06-14 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-75"><a href="#cb12-75" tabindex="-1"></a><span class="co">#&gt;    waldo         0.6.2      2025-07-11 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-76"><a href="#cb12-76" tabindex="-1"></a><span class="co">#&gt;    withr         3.0.2      2024-10-28 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb12-77"><a href="#cb12-77" tabindex="-1"></a><span class="co">#&gt;    xfun          0.40       2023-08-09 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-78"><a href="#cb12-78" tabindex="-1"></a><span class="co">#&gt;    xml2          1.3.5      2023-07-06 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-79"><a href="#cb12-79" tabindex="-1"></a><span class="co">#&gt;    xopen         1.0.0      2018-09-17 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-80"><a href="#cb12-80" tabindex="-1"></a><span class="co">#&gt;    xtable        1.8-4      2019-04-21 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-81"><a href="#cb12-81" tabindex="-1"></a><span class="co">#&gt;    yaml          2.3.7      2023-01-23 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb12-82"><a href="#cb12-82" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb12-83"><a href="#cb12-83" tabindex="-1"></a><span class="co">#&gt;  [1] /users/mguo/R/4.3</span></span>
-<span id="cb12-84"><a href="#cb12-84" tabindex="-1"></a><span class="co">#&gt;  [2] /jhpce/shared/community/core/conda_R/4.3/R/lib64/R/site-library</span></span>
-<span id="cb12-85"><a href="#cb12-85" tabindex="-1"></a><span class="co">#&gt;  [3] /jhpce/shared/community/core/conda_R/4.3/R/lib64/R/library</span></span>
-<span id="cb12-86"><a href="#cb12-86" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb12-87"><a href="#cb12-87" tabindex="-1"></a><span class="co">#&gt;  * ── Packages attached to the search path.</span></span>
-<span id="cb12-88"><a href="#cb12-88" tabindex="-1"></a><span class="co">#&gt;  P ── Loaded and on-disk path mismatch.</span></span>
-<span id="cb12-89"><a href="#cb12-89" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb12-90"><a href="#cb12-90" tabindex="-1"></a><span class="co">#&gt; ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span></span></code></pre></div>
-</div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"intro-ppi"</span>, package <span class="op">=</span> <span class="st">"pppower"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co">#&gt; ─ Session info ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt;  setting  value</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;  version  R version 4.3.1 Patched (2023-07-19 r84711)</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt;  os       Rocky Linux 9.4 (Blue Onyx)</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt;  system   x86_64, linux-gnu</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;  ui       X11</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;  language (EN)</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;  collate  en_US.UTF-8</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;  ctype    en_US.UTF-8</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;  tz       US/Eastern</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;  date     2025-10-21</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt;  pandoc   3.1.3 @ /jhpce/shared/community/core/conda_R/4.3/bin/ (via rmarkdown)</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt;  quarto   NA</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; ─ Packages ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;  ! package     * version    date (UTC) lib source</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt;    brio          1.1.3      2021-11-30 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;    bslib         0.5.1      2023-08-11 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;    cachem        1.0.8      2023-05-01 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;    callr         3.7.3      2022-11-02 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt;    cli           3.6.1      2023-03-23 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt;    commonmark    1.9.0      2023-03-17 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt;    crayon        1.5.2      2022-09-29 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt;    curl          7.0.0      2025-08-19 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt;    desc          1.4.3      2023-12-10 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt;    devtools      2.4.5      2022-10-11 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt;    diffobj       0.3.5      2021-10-05 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt;    digest        0.6.33     2023-07-07 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt;    ellipsis      0.3.2      2021-04-29 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt;    evaluate      1.0.5      2025-08-27 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt;    fansi         1.0.4      2023-01-22 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;    fastmap       1.1.1      2023-02-24 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt;    fs            1.6.3      2023-07-20 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt;    glue          1.6.2      2022-02-24 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt;    htmltools     0.5.6      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt;    htmlwidgets   1.6.2      2023-03-17 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt;    httpuv        1.6.11     2023-05-11 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt;    jquerylib     0.1.4      2021-04-26 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt;    jsonlite      1.8.7      2023-06-29 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt;    knitr         1.44       2023-09-11 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt;    later         1.3.1      2023-05-02 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt;    lifecycle     1.0.4      2023-11-07 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;    magrittr      2.0.3      2022-03-30 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt;    memoise       2.0.1      2021-11-26 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt;    mime          0.12       2021-09-28 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt;    miniUI        0.1.2      2025-04-17 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="co">#&gt;    pillar        1.9.0      2023-03-22 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a><span class="co">#&gt;    pkgbuild      1.4.8      2025-05-26 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a><span class="co">#&gt;    pkgconfig     2.0.3      2019-09-22 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a><span class="co">#&gt;    pkgload       1.4.1      2025-09-23 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a><span class="co">#&gt;  P pppower     * 0.0.0.9000 2025-10-08 [?] load_all()</span></span>
+<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a><span class="co">#&gt;    prettyunits   1.1.1      2020-01-24 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a><span class="co">#&gt;    processx      3.8.2      2023-06-30 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a><span class="co">#&gt;    profvis       0.3.8      2023-05-02 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a><span class="co">#&gt;    promises      1.2.1      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a><span class="co">#&gt;    ps            1.7.5      2023-04-18 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a><span class="co">#&gt;    purrr         1.0.2      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a><span class="co">#&gt;    R6            2.5.1      2021-08-19 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a><span class="co">#&gt;    rcmdcheck     1.4.0      2021-09-27 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a><span class="co">#&gt;    Rcpp          1.0.11     2023-07-06 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a><span class="co">#&gt;    remotes       2.5.0      2024-03-17 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a><span class="co">#&gt;    rlang         1.1.1      2023-04-28 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a><span class="co">#&gt;    rmarkdown     2.30       2025-09-28 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a><span class="co">#&gt;    roxygen2      7.2.3      2022-12-08 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a><span class="co">#&gt;    rprojroot     2.1.1      2025-08-26 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a><span class="co">#&gt;    rstudioapi    0.15.0     2023-07-07 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-67"><a href="#cb3-67" tabindex="-1"></a><span class="co">#&gt;    sass          0.4.7      2023-07-15 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-68"><a href="#cb3-68" tabindex="-1"></a><span class="co">#&gt;    sessioninfo   1.2.3      2025-02-05 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-69"><a href="#cb3-69" tabindex="-1"></a><span class="co">#&gt;    shiny         1.7.5      2023-08-12 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-70"><a href="#cb3-70" tabindex="-1"></a><span class="co">#&gt;    stringi       1.7.12     2023-01-11 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-71"><a href="#cb3-71" tabindex="-1"></a><span class="co">#&gt;    stringr       1.5.0      2022-12-02 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-72"><a href="#cb3-72" tabindex="-1"></a><span class="co">#&gt;    testthat    * 3.1.10     2023-07-06 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-73"><a href="#cb3-73" tabindex="-1"></a><span class="co">#&gt;    tibble        3.2.1      2023-03-20 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-74"><a href="#cb3-74" tabindex="-1"></a><span class="co">#&gt;    urlchecker    1.0.1      2021-11-30 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-75"><a href="#cb3-75" tabindex="-1"></a><span class="co">#&gt;    usethis       3.2.1      2025-09-06 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-76"><a href="#cb3-76" tabindex="-1"></a><span class="co">#&gt;    utf8          1.2.3      2023-01-31 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-77"><a href="#cb3-77" tabindex="-1"></a><span class="co">#&gt;    vctrs         0.6.3      2023-06-14 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-78"><a href="#cb3-78" tabindex="-1"></a><span class="co">#&gt;    waldo         0.6.2      2025-07-11 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-79"><a href="#cb3-79" tabindex="-1"></a><span class="co">#&gt;    withr         3.0.2      2024-10-28 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-80"><a href="#cb3-80" tabindex="-1"></a><span class="co">#&gt;    xfun          0.40       2023-08-09 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-81"><a href="#cb3-81" tabindex="-1"></a><span class="co">#&gt;    xml2          1.3.5      2023-07-06 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-82"><a href="#cb3-82" tabindex="-1"></a><span class="co">#&gt;    xopen         1.0.0      2018-09-17 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-83"><a href="#cb3-83" tabindex="-1"></a><span class="co">#&gt;    xtable        1.8-4      2019-04-21 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-84"><a href="#cb3-84" tabindex="-1"></a><span class="co">#&gt;    yaml          2.3.7      2023-01-23 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-85"><a href="#cb3-85" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-86"><a href="#cb3-86" tabindex="-1"></a><span class="co">#&gt;  [1] /users/mguo/R/4.3</span></span>
+<span id="cb3-87"><a href="#cb3-87" tabindex="-1"></a><span class="co">#&gt;  [2] /jhpce/shared/community/core/conda_R/4.3/R/lib64/R/site-library</span></span>
+<span id="cb3-88"><a href="#cb3-88" tabindex="-1"></a><span class="co">#&gt;  [3] /jhpce/shared/community/core/conda_R/4.3/R/lib64/R/library</span></span>
+<span id="cb3-89"><a href="#cb3-89" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-90"><a href="#cb3-90" tabindex="-1"></a><span class="co">#&gt;  * ── Packages attached to the search path.</span></span>
+<span id="cb3-91"><a href="#cb3-91" tabindex="-1"></a><span class="co">#&gt;  P ── Loaded and on-disk path mismatch.</span></span>
+<span id="cb3-92"><a href="#cb3-92" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-93"><a href="#cb3-93" tabindex="-1"></a><span class="co">#&gt; ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span></span></code></pre></div>
 </div>
 </div>
   </div>

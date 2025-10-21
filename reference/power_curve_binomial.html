@@ -54,17 +54,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">power_curve_binomial</span><span class="op">(</span></span>
-<span>  <span class="va">n_grid</span>,</span>
-<span>  <span class="va">N</span>,</span>
-<span>  theta0 <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  superpop_n <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>  p <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  K <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  R <span class="op">=</span> <span class="fl">2000</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">power_curve_binomial</span><span class="op">(</span><span class="va">n_grid</span>, <span class="va">N</span>, theta0 <span class="op">=</span> <span class="fl">0</span>, seed <span class="op">=</span> <span class="fl">1</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, R <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -83,19 +73,6 @@
 <dd><p>Null value for the mean estimand.</p></dd>
 
 
-<dt id="arg-superpop-n">superpop_n<a class="anchor" aria-label="anchor" href="#arg-superpop-n"></a></dt>
-<dd><p>Size of the synthetic superpopulation used to estimate
-variance components.</p></dd>
-
-
-<dt id="arg-p">p<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
-<dd><p>Number of covariates in the DGP.</p></dd>
-
-
-<dt id="arg-k">K<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
-<dd><p>Number of folds for cross-fitting.</p></dd>
-
-
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Random seed forwarded to <code><a href="simulate_crossfit_data.html">simulate_crossfit_data()</a></code>.</p></dd>
 
@@ -105,7 +82,7 @@ variance components.</p></dd>
 
 
 <dt id="arg-r">R<a class="anchor" aria-label="anchor" href="#arg-r"></a></dt>
-<dd><p>Number of Monte Carlo replicates passed to <code>simulate_power_ppi_mean()</code>.</p></dd>
+<dd><p>Number of Monte Carlo replicates passed to <code><a href="simulate_power_ppi_mean.html">simulate_power_ppi_mean()</a></code>.</p></dd>
 
 </dl></div>
     <div id="value">

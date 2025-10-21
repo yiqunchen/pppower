@@ -54,21 +54,21 @@ labeled sample sizes using simulate_power_ppi_mean()."><!-- mathjax --><script s
     <div class="ref-description">
     <p>Generates a synthetic superpopulation via <code><a href="simulate_crossfit_data.html">simulate_crossfit_data()</a></code> and
 computes Monte Carlo power curves for the PP mean estimator over a grid of
-labeled sample sizes using <code>simulate_power_ppi_mean()</code>.</p>
+labeled sample sizes using <code><a href="simulate_power_ppi_mean.html">simulate_power_ppi_mean()</a></code>.</p>
     </div>
 
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">power_curve_mean_dgp</span><span class="op">(</span></span>
-<span>  <span class="va">n_grid</span>,</span>
+<span>  n_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">200</span>, by <span class="op">=</span> <span class="fl">25</span><span class="op">)</span>,</span>
 <span>  <span class="va">N</span>,</span>
 <span>  theta0 <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  var_f <span class="op">=</span> <span class="fl">0.45</span>,</span>
+<span>  var_res <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>  delta <span class="op">=</span> <span class="fl">0.2</span>,</span>
 <span>  family <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  superpop_n <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>  p <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  K <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  R <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  R <span class="op">=</span> <span class="fl">2000</span></span>
+<span>  seed <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -88,34 +88,33 @@ labeled sample sizes using <code>simulate_power_ppi_mean()</code>.</p>
 <dd><p>Null value for the mean estimand.</p></dd>
 
 
+<dt id="arg-var-f">var_f<a class="anchor" aria-label="anchor" href="#arg-var-f"></a></dt>
+<dd><p>Variance of \(f(X)\).</p></dd>
+
+
+<dt id="arg-var-res">var_res<a class="anchor" aria-label="anchor" href="#arg-var-res"></a></dt>
+<dd><p>Variance of residuals \(Y - f(X)\).</p></dd>
+
+
+<dt id="arg-delta">delta<a class="anchor" aria-label="anchor" href="#arg-delta"></a></dt>
+<dd><p>Effect size \(\theta - \theta_0\).</p></dd>
+
+
 <dt id="arg-family">family<a class="anchor" aria-label="anchor" href="#arg-family"></a></dt>
 <dd><p>GLM family passed to the DGP; defaults to <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">stats::gaussian()</a></code>
 (with identity link) or <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">stats::binomial()</a></code> (logistic).</p></dd>
 
 
-<dt id="arg-superpop-n">superpop_n<a class="anchor" aria-label="anchor" href="#arg-superpop-n"></a></dt>
-<dd><p>Size of the synthetic superpopulation used to estimate
-variance components.</p></dd>
-
-
-<dt id="arg-p">p<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
-<dd><p>Number of covariates in the DGP.</p></dd>
-
-
-<dt id="arg-k">K<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
-<dd><p>Number of folds for cross-fitting.</p></dd>
-
-
-<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Random seed forwarded to <code><a href="simulate_crossfit_data.html">simulate_crossfit_data()</a></code>.</p></dd>
+<dt id="arg-r">R<a class="anchor" aria-label="anchor" href="#arg-r"></a></dt>
+<dd><p>Number of Monte Carlo replicates passed to <code><a href="simulate_power_ppi_mean.html">simulate_power_ppi_mean()</a></code>.</p></dd>
 
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
 <dd><p>Two-sided significance level.</p></dd>
 
 
-<dt id="arg-r">R<a class="anchor" aria-label="anchor" href="#arg-r"></a></dt>
-<dd><p>Number of Monte Carlo replicates passed to <code>simulate_power_ppi_mean()</code>.</p></dd>
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
+<dd><p>Random seed forwarded to <code><a href="simulate_crossfit_data.html">simulate_crossfit_data()</a></code>.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -130,26 +129,19 @@ variance components.</p></dd>
 <span class="r-in"><span>  n_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">200</span>, by <span class="op">=</span> <span class="fl">25</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  N <span class="op">=</span> <span class="fl">3000</span>,</span></span>
 <span class="r-in"><span>  theta0 <span class="op">=</span> <span class="fl">0</span>,</span></span>
-<span class="r-in"><span>  family <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  superpop_n <span class="op">=</span> <span class="fl">6000</span>,</span></span>
+<span class="r-in"><span>  var_f <span class="op">=</span> <span class="fl">0.45</span>,</span></span>
+<span class="r-in"><span>  var_res <span class="op">=</span> <span class="fl">0.80</span>,</span></span>
+<span class="r-in"><span>  delta <span class="op">=</span> <span class="fl">0.2</span>,</span></span>
 <span class="r-in"><span>  R <span class="op">=</span> <span class="fl">1000</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     n power_empirical power_exact      delta    N alpha    var_f var_res</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  50           0.063  0.05069918 0.02253259 3000  0.05 11.14837 3.97508</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  75           0.045  0.05102607 0.02253259 3000  0.05 11.14837 3.97508</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 100           0.043  0.05133910 0.02253259 3000  0.05 11.14837 3.97508</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 125           0.050  0.05163915 0.02253259 3000  0.05 11.14837 3.97508</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 150           0.043  0.05192699 0.02253259 3000  0.05 11.14837 3.97508</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 175           0.043  0.05220337 0.02253259 3000  0.05 11.14837 3.97508</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 200           0.045  0.05246895 0.02253259 3000  0.05 11.14837 3.97508</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     family      theta theta0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 gaussian 0.02253259      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 gaussian 0.02253259      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 gaussian 0.02253259      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 gaussian 0.02253259      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 gaussian 0.02253259      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 gaussian 0.02253259      0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 gaussian 0.02253259      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     n analytical empirical     abs_diff</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  50  0.3498847     0.373 0.0231153218</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  75  0.4853155     0.510 0.0246845069</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 100  0.6008198     0.582 0.0188198063</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 125  0.6954147     0.696 0.0005853261</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 150  0.7706339     0.754 0.0166338854</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 175  0.8291243     0.836 0.0068757262</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 200  0.8738207     0.871 0.0028206571</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
