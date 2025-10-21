@@ -103,15 +103,25 @@ simulate_power(
 `pppower:::simulate_power_ppi_mean()` repeatedly resamples labeled/unlabeled splits from the synthetic population, recomputing the PPI estimator each time.
 
 ```{r mean-pp}
+moments_ppi <- list(
+  delta   = delta,
+  var_f   = var_f,
+  var_res = var_res
+)
+
+# Run the full Monte Carlo simulation and compare with analytical power
 mc_pp <- pppower:::simulate_power_ppi_mean(
-  df = df,
-  N = N,
-  n = n,
-  alpha = alpha,
   R = sim,
+  n = n,
+  N = N,
+  alpha = alpha,
+  family = gaussian(),
+  moments = moments_ppi,
   theta0 = theta0,
   seed = 2024
 )
+
+# Results: empirical rejection rate (Monte Carlo) vs. analytical formula
 mc_pp$empirical_power
 mc_pp$analytical_power
 ```
@@ -119,42 +129,222 @@ mc_pp$analytical_power
 ### PPI++ Mean Estimation
 
 ```{r ppiplusplus, eval = FALSE, include = FALSE}
-metrics_pp <- list(
-  type   = "continuous",
-  mse    = 0.55,
-  var_y  = 1.10,
-  cov_y_f = 0.22,
-  m_obs  = 300
+moments_ppiplus <- list(
+  delta     = 0.15,
+  sigma_y2  = 1.10,     # total variance of Y
+  sigma_f2  = 0.45,     # variance of f(X)
+  cov_y_f   = 0.45,     # Cov(Y, f(X)), equals var_f if unbiased
+  var_f     = 0.45,
+  var_res   = 0.65      # residual variance
 )
 
-# analytical power with oracle λ
-power_ppi_pp_mean(
-  delta = 0.25,
-  N = N,
-  n = n,
-  metrics = metrics_pp,
-  metric_type = "continuous"
+# Analytical power based on population moments and optimal lambda
+analytical_ppiplus <- power_ppi_pp_mean(
+  delta      = moments_ppiplus$delta,
+  N          = N,
+  n          = n,
+  sigma_y2   = moments_ppiplus$sigma_y2,
+  sigma_f2   = moments_ppiplus$sigma_f2,
+  cov_y_f    = moments_ppiplus$cov_y_f,
+  var_f      = moments_ppiplus$var_f,
+  var_res    = moments_ppiplus$var_res,
+  alpha      = alpha
+)
+analytical_ppiplus
+
+# Monte Carlo calibration (repeated simulation from the population)
+set.seed(20240623L)
+ppplusplus_mc <- pppower:::simulate_power_ppiplus_mean(
+  R          = 2000,
+  n          = n,
+  N          = N,
+  alpha      = alpha,
+  family     = gaussian(),
+  moments    = moments_ppiplus,
+  lambda_type = "plugin",
+  seed       = 20240623L
 )
 
-# compare with Monte Carlo
-set.seed(as.integer(Sys.time()))
-ppplusplus_mc <- simulate_power_ppi_pp_ols(
-  df = df,                     # y / fhat_cf columns
-  formula = ~ x1 + x2,         # matches cross-fitting
-  N = N,
-  n = n,
-  c = c(0, 1, 0),
-  theta0 = mean(df$y) - 0.25,
-  R = 2000
-)
+# Compare analytical and empirical power
+ppplusplus_mc$analytical_power
+ppplusplus_mc$empirical_power
 
-ppplusplus_mc[c("empirical_power", "analytical_power", "avg_lambda_draw")]
-
-ppplusplus_mc$lambda_population
-# compare with
-mean(ppplusplus_mc$details$lambda)
+# Inspect lambda used and average across simulations
+ppplusplus_mc$avg_lambda
 ```
 
+
+### PPI/PPI++ OLS
+
+```{r PPI OLS}
+c_list <- list(
+  c1 = c(1, 0, 0),        # intercept
+  c2 = c(0, 1, 0),        # slope on x1
+  c3 = c(0, 0, 1),        # slope on x2
+  c4 = c(0, 1, -1),       # difference x1 - x2
+  c5 = c(0, 0.5, 0.5)     # average (x1 + x2)/2
+)
+
+beta_true <- c(0.7, 0.4, -0.3)
+p <- length(beta_true)
+
+# Choose a null for each contrast
+theta0_map <- c(
+  c1 = 0.0,
+  c2 = 0.25,
+  c3 = 0.0,
+  c4 = 0.0,
+  c5 = 0.0
+)
+
+# Variance components and matrices
+sigma_y2_pop <- 1.0
+sigma_f2_pop <- 0.45
+
+H_pop         <- diag(p)
+Sigma_YY_pop  <- sigma_y2_pop * H_pop
+Sigma_ff_pop  <- sigma_f2_pop * H_pop
+Sigma_Yf_pop  <- matrix(0, nrow = p, ncol = p)
+
+set.seed(20240625L)
+
+run_one_contrast <- function(name, c_vec, theta0) {
+  delta_c <- as.numeric(c(c_vec %*% beta_true) - theta0)
+
+  moments_ols <- list(
+    delta    = delta_c,
+    H        = H_pop,
+    Sigma_YY = Sigma_YY_pop,
+    Sigma_ff = Sigma_ff_pop,
+    Sigma_Yf = Sigma_Yf_pop
+  )
+
+  res <- pppower:::simulate_power_ppi_ols(
+    R        = sim,
+    n        = n,
+    N        = N,
+    contrast = c_vec,
+    alpha    = alpha,
+    family   = gaussian(),
+    moments  = moments_ols,
+    seed     = sample.int(.Machine$integer.max, 1)
+  )
+
+  mc_se <- sqrt(res$analytical_power * (1 - res$analytical_power) / sim)
+  tol   <- max(3 * mc_se, 0.01)
+  diff  <- abs(res$empirical_power - res$analytical_power)
+
+  data.frame(
+    contrast   = name,
+    theta0     = theta0,
+    delta      = delta_c,
+    analytical = res$analytical_power,
+    empirical  = res$empirical_power,
+    abs_diff   = diff,
+    tol        = tol,
+    pass       = diff < tol,
+    stringsAsFactors = FALSE
+  )
+}
+
+res_list <- mapply(
+  run_one_contrast,
+  name  = names(c_list),
+  c_vec = c_list,
+  theta0 = theta0_map[names(c_list)],
+  SIMPLIFY = FALSE
+)
+
+ols_multi <- do.call(rbind, res_list)
+ols_multi
+```
+
+```{r PPI++ OLS}
+c_list <- list(
+  c1 = c(1, 0, 0),        
+  c2 = c(0, 1, 0),        
+  c3 = c(0, 0, 1),        
+  c4 = c(0, 1, -1),       
+  c5 = c(0, 0.5, 0.5)     
+)
+
+beta_true <- c(0.7, 0.4, -0.3)
+p <- length(beta_true)
+
+theta0_map <- c(
+  c1 = 0.0,
+  c2 = 0.25,
+  c3 = 0.0,
+  c4 = 0.0,
+  c5 = 0.0
+)
+
+sigma_y2_pop <- 1.0
+sigma_f2_pop <- 0.45
+
+H_pop         <- diag(p)
+Sigma_YY_pop  <- sigma_y2_pop * H_pop
+Sigma_ff_L_pop <- sigma_f2_pop * H_pop
+Sigma_ff_U_pop <- sigma_f2_pop * H_pop
+Sigma_Yf_pop  <- sigma_f2_pop * H_pop
+
+set.seed(20240626L)
+
+run_one_contrast_ppiplus <- function(name, c_vec, theta0) {
+  delta_c <- as.numeric(c(c_vec %*% beta_true) - theta0)
+
+  moments_ppiplus <- list(
+    delta      = delta_c,
+    H_L        = H_pop,
+    H_U        = H_pop,
+    Sigma_YY   = Sigma_YY_pop,
+    Sigma_ff_l = Sigma_ff_L_pop,
+    Sigma_ff_u = Sigma_ff_U_pop,
+    Sigma_Yf   = Sigma_Yf_pop
+  )
+
+  res <- pppower:::simulate_power_ppi_pp_ols(
+    R        = sim,
+    n        = n,
+    N        = N,
+    contrast = c_vec,
+    alpha    = alpha,
+    family   = gaussian(),
+    lambda_type = "plugin",
+    moments  = moments_ppiplus,
+    seed     = sample.int(.Machine$integer.max, 1)
+  )
+
+  mc_se <- sqrt(res$analytical_power * (1 - res$analytical_power) / sim)
+  tol   <- max(3 * mc_se, 0.01)
+  diff  <- abs(res$empirical_power - res$analytical_power)
+
+  data.frame(
+    contrast   = name,
+    theta0     = theta0,
+    delta      = delta_c,
+    analytical = res$analytical_power,
+    empirical  = res$empirical_power,
+    abs_diff   = diff,
+    tol        = tol,
+    pass       = diff < tol,
+    avg_lambda = res$avg_lambda,
+    stringsAsFactors = FALSE
+  )
+}
+
+res_list_ppiplus <- mapply(
+  run_one_contrast_ppiplus,
+  name  = names(c_list),
+  c_vec = c_list,
+  theta0 = theta0_map[names(c_list)],
+  SIMPLIFY = FALSE
+)
+
+ols_ppiplus_multi <- do.call(rbind, res_list_ppiplus)
+ols_ppiplus_multi
+
+```
 
 ### Sample-size planning
 
@@ -206,25 +396,22 @@ legend("bottomright", legend = c("Empirical", "Analytical"),
 
 To study Type I error and power as a function of \(\delta\), use `type1_error_curve_mean()` or, for a fully simulated DGP, `type1_error_curve_mean_dgp()`:
 
-```{r mean-type1}
-effect_grid <- seq(-0.3, 0.3, by = 0.05)
-curve_dgp <- pppower:::type1_error_curve_mean_dgp(
-  effect_grid = effect_grid,
-  N = N,
-  n = n,
-  family = gaussian(),
-  superpop_n = 20000,
-  p = 5,
-  K = 5,
-  alpha = alpha,
-  R = sim
+```{r mean-type1, eval = TRUE}
+curve_parametric <- type1_error_curve_mean_dgp(
+  effect_grid = seq(-0.5, 0.5, by = 0.05),
+  N = 2000,
+  n = 200,
+  var_f = var_f,
+  var_res = var_res,
+  theta = 1.0,
+  alpha = 0.05,
+  R = 2000,
+  seed = 20240627L
 )
 
-curve_dgp
-
 pppower:::plot_type1_error_curve(
-  curve_dgp,
-  main = "Type I error / power (DGP)"
+  curve_parametric,
+  main = "Type I Error / Power Curve (Parametric, No Superpopulation)"
 )
 ```
 
@@ -291,37 +478,6 @@ power_ppi_ols(
 )
 ```
 
-### Monte Carlo calibration
-
-`simulate_power_ppi_ols()` resamples from the superpopulation and recomputes the PPI-OLS estimator. Align the null value so the effect size matches the analytic call.
-
-```{r ols-mc}
-theta0 <- sum(c_vec * fit_ols$coef) - delta_ols
-
-pppower:::simulate_power_ppi_ols(
-  df = df,
-  formula = ~ x1 + x2 + x3 + x4 + x5,
-  N = pieces$N,
-  n = pieces$n,
-  c = c_vec,
-  theta0 = theta0,
-  alpha = alpha,
-  R = sim,
-  seed = 4321
-)$analytical_power
-
-pppower:::simulate_power_ppi_ols(
-  df = df,
-  formula = ~ x1 + x2 + x3 + x4 + x5,
-  N = pieces$N,
-  n = pieces$n,
-  c = c_vec,
-  theta0 = theta0,
-  alpha = alpha,
-  R = sim,
-  seed = 4321
-)$empirical_power
-```
 
 ### Sample-size solver
 

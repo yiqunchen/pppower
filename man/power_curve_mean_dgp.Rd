@@ -5,16 +5,16 @@
 \title{Power curve using Gaussian/Binomial DGPs}
 \usage{
 power_curve_mean_dgp(
-  n_grid,
+  n_grid = seq(50, 200, by = 25),
   N,
   theta0 = 0,
+  var_f = 0.45,
+  var_res = 0.8,
+  delta = 0.2,
   family = stats::gaussian(),
-  superpop_n = 5000,
-  p = 5,
-  K = 5,
-  seed = 1,
+  R = 1000,
   alpha = 0.05,
-  R = 2000
+  seed = 1
 )
 }
 \arguments{
@@ -24,21 +24,20 @@ power_curve_mean_dgp(
 
 \item{theta0}{Null value for the mean estimand.}
 
+\item{var_f}{Variance of \eqn{f(X)}.}
+
+\item{var_res}{Variance of residuals \eqn{Y - f(X)}.}
+
+\item{delta}{Effect size \eqn{\theta - \theta_0}.}
+
 \item{family}{GLM family passed to the DGP; defaults to \code{stats::gaussian()}
 (with identity link) or \code{stats::binomial()} (logistic).}
 
-\item{superpop_n}{Size of the synthetic superpopulation used to estimate
-variance components.}
-
-\item{p}{Number of covariates in the DGP.}
-
-\item{K}{Number of folds for cross-fitting.}
-
-\item{seed}{Random seed forwarded to \code{simulate_crossfit_data()}.}
+\item{R}{Number of Monte Carlo replicates passed to \code{simulate_power_ppi_mean()}.}
 
 \item{alpha}{Two-sided significance level.}
 
-\item{R}{Number of Monte Carlo replicates passed to \code{simulate_power_ppi_mean()}.}
+\item{seed}{Random seed forwarded to \code{simulate_crossfit_data()}.}
 }
 \value{
 Data frame with the columns produced by \code{power_curve_mean()} plus
@@ -54,8 +53,9 @@ power_curve_mean_dgp(
   n_grid = seq(50, 200, by = 25),
   N = 3000,
   theta0 = 0,
-  family = stats::gaussian(),
-  superpop_n = 6000,
+  var_f = 0.45,
+  var_res = 0.80,
+  delta = 0.2,
   R = 1000
 )
 

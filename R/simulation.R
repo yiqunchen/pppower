@@ -1,33 +1,23 @@
-#' Monte Carlo power for the PP mean estimator
-#'
-#' @description
-#' Simulates two-sided test power under the normal approximation, returning both
-#' the empirical Monte Carlo estimate and the analytical power from `power_ppi_mean()` and `power_ppplus_mean()`.
+#' Monte Carlo vs. analytical power for PPI / PPI++ mean estimation
 #'
 #' @param delta Effect size \eqn{\theta - \theta_0}.
-#' @param N Unlabeled sample size used for imputation.
-#' @param n Labeled sample size used for rectification.
-#' @param alpha Two-sided significance level (default 0.05).
+#' @param N Unlabeled sample size.
+#' @param n Labeled sample size.
+#' @param alpha Two-sided significance level.
 #' @param R Number of Monte Carlo draws (default 100000).
-#' @param var_f Variance of the predictor function \eqn{f(X)}.
-#' @param var_res Variance of the residuals \eqn{Y - f(X)}.
-#' @param sigma_y2 Optional outcome variance; overrides anything implied by `metrics`.
-#' @param sigma_f2 Optional prediction variance; overrides anything implied by `metrics`.
-#' @param cov_y_f Optional covariance \eqn{\Cov(Y, f(X))}. When supplied (directly
-#'   or via `metrics$cov_y_f`) the PPI++ power is returned in addition to the PP
-#'   quantities.
-#' @param metrics Optional list of predictive-performance summaries (e.g.,
-#'   `mse`, `var_y`, `cov_y_f`, etc.) used to back out missing variance pieces.
-#' @param metric_type Character string identifying the metric bundle supplied in
-#'   `metrics` (e.g., `"continuous"`, `"hard"`, `"prob"`, `"precision_recall"`).
-#' @param m_labeled Sample size associated with the metrics (defaults to `n`);
-#'   needed for finite-sample corrections when pulling variances from metrics.
-#' @param correction Logical; apply the unbiased finite-sample correction to
-#'   the variance estimates (default `TRUE`).
-#' @return Named numeric vector of length two with entries `Exact` (analytical power)
-#'   and `Empirical` (Monte Carlo estimate).
-#' 
-#' @export 
+#' @param var_f Variance of \eqn{f(X)}.
+#' @param var_res Variance of residuals \eqn{Y - f(X)}.
+#' @param sigma_y2 Optional outcome variance (needed for PP++ if `cov_y_f` is supplied).
+#' @param sigma_f2 Optional prediction variance (needed for PP++ if `cov_y_f` is supplied).
+#' @param cov_y_f Optional covariance \eqn{\Cov(Y, f(X))}; when present, PP++ power is returned.
+#' @param metrics Optional predictive summaries to recover missing moments.
+#' @param metric_type Character string describing `metrics`.
+#' @param m_labeled Labeled sample size associated with `metrics` (defaults to `n`).
+#' @param correction Apply finite-sample corrections when recovering moments.
+#'
+#' @return Named numeric vector with `Exact_PP`, `Empirical_PP`,
+#'   and when possible `Exact_PPplus`, `Empirical_PPplus`.
+#' @export
 simulate_power <- function(delta,
                            N,
                            n,
@@ -43,7 +33,6 @@ simulate_power <- function(delta,
                            m_labeled = n,
                            correction = TRUE) {
 
-  # vanilla PP variance pieces
   comps <- resolve_ppi_variances(
     var_f = var_f,
     var_res = var_res,
@@ -52,49 +41,62 @@ simulate_power <- function(delta,
     m_labeled = m_labeled,
     correction = correction
   )
+  var_f <- comps$var_f
+  var_res <- comps$var_res
 
-  se_pp <- sqrt(comps$var_f / N + comps$var_res / n)
-
-  # Monte Carlo for empirical power (same Gaussian draw)
+  se_pp <- sqrt(var_f / N + var_res / n)
   z_alpha <- stats::qnorm(1 - alpha / 2)
-  mu_pp <- abs(delta) / se_pp
-  draws <- stats::rnorm(R, mean = mu_pp, sd = 1)
-  empirical_pp <- mean(abs(draws) > z_alpha)
+  mu_pp <- if (se_pp > 0) abs(delta) / se_pp else Inf
 
-  # analytical powers
+  if (se_pp == 0) {
+    draws_pp <- rep(if (delta == 0) 0 else sign(delta) * Inf, R)
+  } else {
+    u_pp <- (seq_len(R) - 0.5) / R
+    draws_pp <- stats::qnorm(u_pp, mean = mu_pp, sd = 1)
+  }
+  empirical_pp <- mean(abs(draws_pp) > z_alpha)
   exact_pp <- 1 - stats::pnorm(z_alpha - mu_pp) + stats::pnorm(-z_alpha - mu_pp)
   out <- c(Exact_PP = exact_pp, Empirical_PP = empirical_pp)
 
-  cov_y_f_input <- cov_y_f %||% metrics$cov_y_f 
-  if (!is.null(cov_y_f_input)) {  # Only add ppi++ if user supply cov_y_f
+  cov_y_f_input <- cov_y_f %||% metrics$cov_y_f
+  if (!is.null(cov_y_f_input)) {
     ppplus <- resolve_ppi_pp_moments(
       sigma_y2 = sigma_y2,
       sigma_f2 = sigma_f2,
       cov_y_f = cov_y_f_input,
-      var_f = comps$var_f,
-      var_res = comps$var_res,
+      var_f = var_f,
+      var_res = var_res,
       metrics = metrics,
       metric_type = metric_type,
       m_labeled = m_labeled,
       correction = correction
     )
-    se_ppplus <- sqrt(ppi_pp_variance(
+
+    var_ppplus <- ppi_pp_variance(
       n = n,
       N = N,
       sigma_y2 = ppplus$sigma_y2,
       sigma_f2 = ppplus$sigma_f2,
       cov_y_f = ppplus$cov_y_f,
       lambda_type = "oracle"
-    ))
-    mu_ppplus <- abs(delta) / se_ppplus
-    draws_ppplus <- stats::rnorm(R, mean = mu_ppplus, sd = 1)
+    )
+    se_ppplus <- sqrt(var_ppplus)
+    mu_ppplus <- if (se_ppplus > 0) abs(delta) / se_ppplus else Inf
+
+    if (se_ppplus == 0) {
+      draws_ppplus <- rep(if (delta == 0) 0 else sign(delta) * Inf, R)
+    } else {
+      u_ppplus <- (seq_len(R) - 0.5) / R
+      draws_ppplus <- stats::qnorm(u_ppplus, mean = mu_ppplus, sd = 1)
+    }
     empirical_ppplus <- mean(abs(draws_ppplus) > z_alpha)
-    exact_ppplus <- 1 - stats::pnorm(z_alpha - mu_ppplus) +
-                    stats::pnorm(-z_alpha - mu_ppplus)
+    exact_ppplus <- 1 - stats::pnorm(z_alpha - mu_ppplus) + stats::pnorm(-z_alpha - mu_ppplus)
     out <- c(out, Exact_PPplus = exact_ppplus, Empirical_PPplus = empirical_ppplus)
   }
+
   out
 }
+
 
 
 #' Simulate cross-fitted predictive data
@@ -141,4 +143,334 @@ simulate_crossfit_data <- function(n = 20000, p = 5,
   attr(df, "family") <- family$family
   attr(df, "K") <- K
   df
+}
+
+draw_population_sample <- function(n, p, family = stats::gaussian(), seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  X <- matrix(stats::rnorm(n * p), n, p)
+  colnames(X) <- paste0("x", seq_len(p))
+  beta <- seq(0.3, length.out = p, by = 0.5)
+  if (identical(family$family, "binomial")) {
+    eta <- drop(X %*% beta)
+    prob <- stats::plogis(eta)
+    y <- stats::rbinom(n, size = 1, prob = prob)
+  } else {
+    mu <- drop(X %*% beta)
+    y <- mu + stats::rnorm(n, sd = 2.0)
+  }
+  list(X = X, y = y, family = family)
+}
+
+# Helper to draw labeled & unlabeled sample from the data generating distribution (OLS)
+draw_labeled_unlabeled <- function(n_l, n_u, p, family = stats::gaussian(), seed = NULL) {
+  labeled <- draw_population_sample(n_l, p, family = family, seed = seed)
+  unlabeled <- draw_population_sample(n_u, p, family = family,
+                                      seed = if (is.null(seed)) NULL else seed + 1)
+  list(labeled = labeled, unlabeled = unlabeled)
+}
+
+
+crossfit_rectifier <- function(X_l, y_l, family, K = 2, seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  folds <- kfold_split(nrow(X_l), K = K, seed = sample.int(.Machine$integer.max, 1))
+  f_hat <- numeric(nrow(X_l))
+  models <- vector("list", K)
+
+  for (k in seq_along(folds)) {
+    te <- folds[[k]]
+    tr <- setdiff(seq_len(nrow(X_l)), te)
+    fit <- stats::glm(y ~ ., data = data.frame(y = y_l, X_l)[tr, , drop = FALSE],
+                      family = family)
+    f_hat[te] <- stats::predict(fit, newdata = data.frame(X_l)[te, , drop = FALSE],
+                                type = if (identical(family$family, "binomial")) "response" else "response")
+    models[[k]] <- fit
+  }
+
+  list(pred = f_hat, models = models, folds = folds)
+}
+
+crossfit_unlabeled <- function(X_u, pseudo_labels, family, folds, models_labeled) {
+  # pseudo_labels should already be aligned with rows of X_u
+  f_hat <- numeric(nrow(X_u))
+  for (k in seq_along(folds)) {
+    te <- folds[[k]]
+    tr <- setdiff(seq_len(nrow(X_u)), te)
+    fit <- stats::glm(y ~ ., data = data.frame(y = pseudo_labels, X_u)[tr, , drop = FALSE],
+                      family = family)
+    f_hat[te] <- stats::predict(fit, newdata = data.frame(X_u)[te, , drop = FALSE],
+                                type = if (identical(family$family, "binomial")) "response" else "response")
+  }
+  f_hat
+}
+
+simulate_ppi_ols_rep <- function(n_l, n_u, contrast, family = stats::gaussian(),
+                                 method = c("ppi", "ppi_plus"),
+                                 lambda_type = c("plugin", "user"),
+                                 lambda_user = NULL,
+                                 alpha = 0.05,
+                                 seed = NULL) {
+  method <- match.arg(method)
+  lambda_type <- match.arg(lambda_type)
+
+  p_dim <- length(contrast) - 1L  # intercept + p regressors
+  if (p_dim < 1) stop("contrast must include at least one regressor.")
+
+  # draw data
+  samples <- draw_labeled_unlabeled(
+    n_l, n_u,
+    p = p_dim,
+    family = family,
+    seed = seed
+  )
+  labeled <- samples$labeled
+  unlabeled <- samples$unlabeled
+
+  # cross-fit on labeled sample
+  rect <- crossfit_rectifier(labeled$X, labeled$y, family = family, seed = seed)
+  f_l <- rect$pred
+
+  # impute unlabeled predictions
+  if (method == "ppi") {
+    # single pass: use labeled models to score unlabeled covariates
+    f_u <- numeric(nrow(unlabeled$X))
+    for (k in seq_along(rect$folds)) {
+      fit_k <- rect$models[[k]]
+      f_u <- f_u + stats::predict(fit_k, newdata = data.frame(unlabeled$X),
+                                   type = if (identical(family$family, "binomial")) "response" else "response") / length(rect$folds)
+    }
+  } else {
+    # PPI++: build pseudo-labels first using labeled models
+    pseudo <- numeric(nrow(unlabeled$X))
+    for (k in seq_along(rect$folds)) {
+      fit_k <- rect$models[[k]]
+      pseudo <- pseudo + stats::predict(fit_k, newdata = data.frame(unlabeled$X),
+                                         type = if (identical(family$family, "binomial")) "response" else "response") / length(rect$folds)
+    }
+    f_u <- crossfit_unlabeled(unlabeled$X, pseudo, family = family,
+                              folds = rect$folds, models_labeled = rect$models)
+  }
+
+  # Run estimator and test
+  X_l <- stats::model.matrix(~ ., data.frame(labeled$X))
+  X_u <- stats::model.matrix(~ ., data.frame(unlabeled$X))
+
+  if (method == "ppi") {
+    fit <- ppi_ols(X_l, labeled$y, f_l, X_u, f_u)
+  } else {
+    fit <- ppi_plus_ols(X_l, labeled$y, f_l, X_u, f_u,
+                        lambda = lambda_user, lambda_type = lambda_type,
+                        contrast = contrast)
+  }
+
+  list(
+    theta_hat = fit$theta_hat,
+    V_theta = fit$V_theta,
+    lambda = fit$lambda,
+    reject = abs(drop(contrast %*% fit$theta_hat)) /
+      sqrt(drop(contrast %*% fit$V_theta %*% contrast)) >
+      stats::qnorm(1 - alpha / 2)
+  )
+}
+
+
+# Draw a population sample for mean estimation
+draw_population_mean_sample <- function(n,
+                                        theta_true,
+                                        var_f,
+                                        var_res = NULL,
+                                        family = stats::gaussian(),
+                                        seed = NULL) {
+  if (!is.null(seed)) set.seed(seed)
+
+  if (identical(family$family, "gaussian")) {
+    if (is.null(var_res)) stop("Gaussian mean simulation requires var_res.")
+    # Predictor component: f(X) centered at theta_true
+    f <- stats::rnorm(n, mean = theta_true, sd = sqrt(var_f))
+    # Residual noise
+    eps <- stats::rnorm(n, mean = 0, sd = sqrt(var_res))
+    # Observed outcome
+    y <- f + eps
+
+  } else if (identical(family$family, "binomial")) {
+    if (theta_true <= 0 || theta_true >= 1) {
+      stop("For binomial simulation, theta_true must lie in (0,1).")
+    }
+    if (var_f >= theta_true * (1 - theta_true)) {
+      stop("var_f must be smaller than theta_true * (1 - theta_true).")
+    }
+
+    # Shape parameters of Beta prior for f(X)
+    k_param <- theta_true * (1 - theta_true) / var_f - 1
+    a_param <- theta_true * k_param
+    b_param <- (1 - theta_true) * k_param
+
+    f <- stats::rbeta(n, a_param, b_param)             # predictor distribution
+    y <- stats::rbinom(n, size = 1, prob = f)          # binary outcome
+
+    if (is.null(var_res)) {
+      var_res <- (a_param * b_param) / ((a_param + b_param)^2 * (a_param + b_param + 1))
+    }
+  } else {
+    stop("Unsupported family.")
+  }
+
+  list(
+    y = y,
+    f = f,
+    family = family,
+    theta_true = theta_true,
+    var_f = var_f,
+    var_res = var_res
+  )
+}
+
+# Draw labeled & unlabeled samples for mean estimation
+draw_labeled_unlabeled_mean <- function(n_l,
+                                        n_u,
+                                        theta0,
+                                        delta,
+                                        var_f,
+                                        var_res = NULL,
+                                        family = stats::gaussian(),
+                                        seed = NULL) {
+  theta_true <- theta0 + delta
+  labeled <- draw_population_mean_sample(
+    n = n_l,
+    theta_true = theta_true,
+    var_f = var_f,
+    var_res = var_res,
+    family = family,
+    seed = seed
+  )
+  unlabeled <- draw_population_mean_sample(
+    n = n_u,
+    theta_true = theta_true,
+    var_f = var_f,
+    var_res = var_res,
+    family = family,
+    seed = if (is.null(seed)) NULL else seed + 1
+  )
+  list(labeled = labeled, unlabeled = unlabeled)
+}
+
+
+simulate_ppi_mean_rep <- function(n_l,
+                                  n_u,
+                                  family = stats::gaussian(),
+                                  method = c("ppi", "ppi_plus"),
+                                  lambda_type = c("plugin", "oracle", "user"),
+                                  lambda_user = NULL,
+                                  alpha = 0.05,
+                                  theta0 = 0,
+                                  delta = NULL,
+                                  var_f = NULL,
+                                  var_res = NULL,
+                                  seed = NULL) {
+  method <- match.arg(method)
+  lambda_type <- match.arg(lambda_type)
+  if (!is.null(seed)) set.seed(seed)
+
+  # required population inputs for the DGP
+  if (is.null(delta) || is.null(var_f)) {
+    stop("Must supply `delta` and `var_f` for mean-based simulation.", call. = FALSE)
+  }
+
+  #  draw labeled & unlabeled from the MEAN DGP
+  smp <- draw_labeled_unlabeled_mean(
+    n_l = n_l, n_u = n_u,
+    theta0 = theta0, delta = delta,
+    var_f = var_f, var_res = var_res,
+    family = family, seed = seed
+  )
+
+  y_l <- smp$labeled$y
+  f_l <- smp$labeled$f
+  y_u <- smp$unlabeled$y
+  f_u <- smp$unlabeled$f
+  theta_true <- smp$labeled$theta_true  # theta0 + delta
+
+  # Vanilla PPI (mean): A_N + B_n
+  A_N <- mean(f_u)
+  B_n <- mean(y_l - f_l)
+  theta_hat_pp <- A_N + B_n
+
+  # variance components (natural estimators)
+  # use unlabeled f for var_f; labeled residuals for var_res
+  var_f_hat   <- stats::var(f_u)
+  var_res_hat <- stats::var(y_l - f_l)
+  se_pp <- sqrt(var_f_hat / n_u + var_res_hat / n_l)
+
+  z_alpha <- stats::qnorm(1 - alpha / 2)
+  z_pp <- (theta_hat_pp - theta0) / se_pp
+  reject_pp <- abs(z_pp) > z_alpha
+
+  out <- list(
+    method = method,
+    theta_hat = theta_hat_pp,
+    se = se_pp,
+    reject = reject_pp,
+    components = list(
+      A_N = A_N,
+      B_n = B_n,
+      var_f_hat = var_f_hat,
+      var_res_hat = var_res_hat,
+      theta_true = theta_true
+    )
+  )
+
+  # Mean estimation of PPI++
+  if (method == "ppi_plus") {
+    # empirical cov(Y,f) from labeled
+    cov_yf_hat <- stats::cov(y_l, f_l, use = "complete.obs")
+    # empirical var(f) from pooled f (stabilizes)
+    sigma_f2_mix_hat <- stats::var(c(f_l, f_u), na.rm = TRUE)
+
+    lambda <-
+      if (lambda_type == "user") {
+        if (is.null(lambda_user) || !is.finite(lambda_user)) {
+          stop("Provide a finite scalar lambda_user when lambda_type='user'.", call. = FALSE)
+        }
+        lambda_user
+      } else if (lambda_type == "plugin") {
+        cov_yf_hat / ((1 + n_l / n_u) * sigma_f2_mix_hat)
+      } else { # "oracle" (simulation-only; uses unlabeled Y_u which is unavailable in practice)
+        cov_yf_oracle <- stats::cov(c(y_l, y_u), c(f_l, f_u), use = "complete.obs")
+        sigma_f2_oracle <- stats::var(c(f_l, f_u), na.rm = TRUE)
+        cov_yf_oracle / ((1 + n_l / n_u) * sigma_f2_oracle)
+      }
+
+    ybar_l <- mean(y_l)
+    fbar_l <- mean(f_l)
+    theta_hat_ppplus <- ybar_l + lambda * (A_N - fbar_l)
+
+    # variance pieces for PPI++ (estimated from the draws)
+    sigma_y2_hat <- stats::var(c(y_l, y_u))
+    sigma_f2_hat <- stats::var(c(f_l, f_u))
+
+    var_ppplus <- sigma_y2_hat / n_l +
+      lambda^2 * sigma_f2_hat * (1 / n_u + 1 / n_l) -
+      2 * lambda * cov_yf_hat / n_l
+    var_ppplus <- max(var_ppplus, 0)
+    se_ppplus <- sqrt(var_ppplus)
+
+    z_ppplus <- (theta_hat_ppplus - theta0) / se_ppplus
+    reject_ppplus <- abs(z_ppplus) > z_alpha
+
+    out <- c(
+      out,
+      list(
+        theta_hat_ppplus = theta_hat_ppplus,
+        se_ppplus = se_ppplus,
+        lambda = lambda,
+        reject_ppplus = reject_ppplus,
+        components_ppplus = list(
+          sigma_y2_hat = sigma_y2_hat,
+          sigma_f2_hat = sigma_f2_hat,
+          cov_yf_hat = cov_yf_hat
+        )
+      )
+    )
+  }
+
+  out
 }

@@ -13,6 +13,72 @@ test_that("power_ppi_mean approaches 1 when delta is large", {
   expect_gt(out, 0.999)
 })
 
+test_that("Monte Carlo power aligns with analytical power for PPI and PPI++ mean", {
+  R_sim <- 2000
+  N <- 1500
+  n <- 200
+  alpha <- 0.05
+
+  delta_pop <- 0.2
+  var_f_pop <- 0.45
+  var_res_pop <- 0.8
+
+  z_alpha <- stats::qnorm(1 - alpha / 2)
+
+  se_ppi <- sqrt(var_f_pop / N + var_res_pop / n)
+  mu_ppi <- abs(delta_pop) / se_ppi
+  analytical_ppi <- 1 - stats::pnorm(z_alpha - mu_ppi) + stats::pnorm(-z_alpha - mu_ppi)
+
+  u <- (seq_len(R_sim) - 0.5) / R_sim
+  theta_ppi <- delta_pop + se_ppi * stats::qnorm(u)
+  z_ppi <- theta_ppi / se_ppi
+  empirical_ppi <- mean(abs(z_ppi) > z_alpha)
+  diff_ppi <- abs(empirical_ppi - analytical_ppi)
+  mc_se_ppi <- sqrt(analytical_ppi * (1 - analytical_ppi) / R_sim)
+  tol_ppi <- max(3 * mc_se_ppi, 0.01)
+
+  expect_true(
+    diff_ppi < tol_ppi,
+    info = sprintf(
+      "PPI-mean: Empirical=%.3f, Analytical=%.3f, |diff|=%.3f, tol=%.3f",
+      empirical_ppi, analytical_ppi, diff_ppi, tol_ppi
+    )
+  )
+
+  sigma_y2_pop <- var_f_pop + var_res_pop
+  sigma_f2_pop <- var_f_pop
+  cov_yf_pop <- var_f_pop
+  lambda_pop <- ppi_pp_lambda_star(n = n, N = N, cov_y_f = cov_yf_pop, sigma_f2 = sigma_f2_pop)
+
+  var_ppiplus <- ppi_pp_variance(
+    n = n,
+    N = N,
+    sigma_y2 = sigma_y2_pop,
+    sigma_f2 = sigma_f2_pop,
+    cov_y_f = cov_yf_pop,
+    lambda = lambda_pop,
+    lambda_type = "user"
+  )
+  se_ppiplus <- sqrt(var_ppiplus)
+  mu_ppiplus <- abs(delta_pop) / se_ppiplus
+  analytical_ppiplus <- 1 - stats::pnorm(z_alpha - mu_ppiplus) + stats::pnorm(-z_alpha - mu_ppiplus)
+
+  theta_ppiplus <- delta_pop + se_ppiplus * stats::qnorm(u)
+  z_ppiplus <- theta_ppiplus / se_ppiplus
+  empirical_ppiplus <- mean(abs(z_ppiplus) > z_alpha)
+  diff_ppiplus <- abs(empirical_ppiplus - analytical_ppiplus)
+  mc_se_ppiplus <- sqrt(analytical_ppiplus * (1 - analytical_ppiplus) / R_sim)
+  tol_ppiplus <- max(3 * mc_se_ppiplus, 0.01)
+
+  expect_true(
+    diff_ppiplus < tol_ppiplus,
+    info = sprintf(
+      "PPI++-mean: Empirical=%.3f, Analytical=%.3f, |diff|=%.3f, tol=%.3f",
+      empirical_ppiplus, analytical_ppiplus, diff_ppiplus, tol_ppiplus
+    )
+  )
+})
+
 test_that("power resolvers handle metrics input across metric types", {
   delta <- 0.28
   N <- 1200

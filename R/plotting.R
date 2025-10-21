@@ -111,10 +111,6 @@ power_curve_mean <- function(n_grid,
 #' @param theta0 Null value for the mean estimand.
 #' @param family GLM family passed to the DGP; defaults to `stats::gaussian()`
 #'   (with identity link) or `stats::binomial()` (logistic).
-#' @param superpop_n Size of the synthetic superpopulation used to estimate
-#'   variance components.
-#' @param p Number of covariates in the DGP.
-#' @param K Number of folds for cross-fitting.
 #' @param seed Random seed forwarded to `simulate_crossfit_data()`.
 #' @param R Number of Monte Carlo replicates passed to `simulate_power_ppi_mean()`.
 #'
@@ -126,97 +122,60 @@ power_curve_mean <- function(n_grid,
 #'   n_grid = seq(50, 200, by = 25),
 #'   N = 3000,
 #'   theta0 = 0,
-#'   family = stats::gaussian(),
-#'   superpop_n = 6000,
+#'   var_f = 0.45,
+#'   var_res = 0.80,
+#'   delta = 0.2,
 #'   R = 1000
 #' )
 #'
 #' @export
-power_curve_mean_dgp <- function(n_grid,
-                                 N,
-                                 theta0 = 0,
-                                 family = stats::gaussian(),
-                                 superpop_n = 5000,
-                                 p = 5,
-                                 K = 5,
-                                 seed = 1,
-                                 alpha = 0.05,
-                                 R = 2000) {
-  if (!inherits(family, "family")) {
-    stop("family must be a valid stats::family object.", call. = FALSE)
-  }
-  if (!is.numeric(theta0) || length(theta0) != 1L || !is.finite(theta0)) {
-    stop("theta0 must be a finite numeric scalar.", call. = FALSE)
-  }
-  if (!is.numeric(superpop_n) || length(superpop_n) != 1L || superpop_n <= 0) {
-    stop("superpop_n must be a positive integer.", call. = FALSE)
-  }
-  if (!is.numeric(p) || length(p) != 1L || p <= 0) {
-    stop("p must be a positive integer.", call. = FALSE)
-  }
-  if (!is.numeric(K) || length(K) != 1L || K <= 1) {
-    stop("K must be an integer greater than 1.", call. = FALSE)
-  }
-  if (!is.numeric(R) || length(R) != 1L || R <= 0) {
-    stop("R must be a positive numeric scalar.", call. = FALSE)
+power_curve_mean_dgp <- function(
+  n_grid = seq(50, 200, by = 25),
+  N,
+  theta0 = 0,
+  var_f = 0.45,
+  var_res = 0.80,
+  delta = 0.2,
+  family = stats::gaussian(),
+  R = 1000,
+  alpha = 0.05,
+  seed = 1
+) {
+  if (!is.numeric(n_grid) || length(n_grid) == 0L) {
+    stop("n_grid must be a numeric vector of sample sizes.", call. = FALSE)
   }
 
-  n_grid <- as.integer(sort(unique(n_grid)))
-  if (any(is.na(n_grid)) || any(n_grid <= 0)) {
-    stop("n_grid must contain positive integers only.", call. = FALSE)
-  }
+  results <- lapply(
+    n_grid,
+    function(n_i) {
+      moments_ppi <- list(
+        delta   = delta,
+        var_f   = var_f,
+        var_res = var_res
+      )
 
-  total_needed <- N + max(n_grid)
-  if (superpop_n < total_needed) {
-    superpop_n <- total_needed
-  }
+      res <- simulate_power_ppi_mean(
+        R       = R,
+        n       = n_i,
+        N       = N,
+        alpha   = alpha,
+        family  = family,
+        moments = moments_ppi,
+        theta0  = theta0,
+        seed    = seed + n_i
+      )
 
-  df <- simulate_crossfit_data(
-    n = as.integer(superpop_n),
-    p = as.integer(p),
-    family = family,
-    K = as.integer(K),
-    seed = seed
-  )
-
-  theta <- mean(df$y)
-  delta <- theta - theta0
-  var_f <- stats::var(df$fhat_cf)
-  var_res <- stats::var(df$y - df$fhat_cf)
-
-  seeds <- seed + seq_along(n_grid)
-  sims <- lapply(
-    seq_along(n_grid),
-    function(i) {
-      simulate_power_ppi_mean(
-        df = df,
-        N = N,
-        n = n_grid[i],
-        alpha = alpha,
-        R = as.integer(R),
-        theta0 = theta0,
-        seed = seeds[i]
+      data.frame(
+        n             = n_i,
+        analytical    = res$analytical_power,
+        empirical     = res$empirical_power,
+        abs_diff      = abs(res$empirical_power - res$analytical_power),
+        stringsAsFactors = FALSE
       )
     }
   )
 
-  power_empirical <- vapply(sims, function(x) x$empirical_power, numeric(1L))
-  power_exact <- vapply(sims, function(x) x$analytical_power, numeric(1L))
-
-  data.frame(
-    n = n_grid,
-    power_empirical = power_empirical,
-    power_exact = power_exact,
-    delta = rep(delta, length(n_grid)),
-    N = rep(N, length(n_grid)),
-    alpha = rep(alpha, length(n_grid)),
-    var_f = rep(var_f, length(n_grid)),
-    var_res = rep(var_res, length(n_grid)),
-    family = rep(family$family, length(n_grid)),
-    theta = rep(theta, length(n_grid)),
-    theta0 = rep(theta0, length(n_grid)),
-    row.names = NULL
-  )
+  do.call(rbind, results)
 }
 
 #' Convenience wrapper for Gaussian DGP power curves
@@ -227,9 +186,6 @@ power_curve_mean_dgp <- function(n_grid,
 power_curve_gaussian <- function(n_grid,
                                  N,
                                  theta0 = 0,
-                                 superpop_n = 5000,
-                                 p = 5,
-                                 K = 5,
                                  seed = 1,
                                  alpha = 0.05,
                                  R = 2000) {
@@ -238,9 +194,6 @@ power_curve_gaussian <- function(n_grid,
     N = N,
     theta0 = theta0,
     family = stats::gaussian(),
-    superpop_n = superpop_n,
-    p = p,
-    K = K,
     seed = seed,
     alpha = alpha,
     R = R
@@ -255,9 +208,6 @@ power_curve_gaussian <- function(n_grid,
 power_curve_binomial <- function(n_grid,
                                  N,
                                  theta0 = 0,
-                                 superpop_n = 5000,
-                                 p = 5,
-                                 K = 5,
                                  seed = 1,
                                  alpha = 0.05,
                                  R = 2000) {
@@ -266,9 +216,6 @@ power_curve_binomial <- function(n_grid,
     N = N,
     theta0 = theta0,
     family = stats::binomial(),
-    superpop_n = superpop_n,
-    p = p,
-    K = K,
     seed = seed,
     alpha = alpha,
     R = R
@@ -387,105 +334,89 @@ type1_error_curve_mean <- function(effect_grid,
 #' @param effect_grid Numeric vector of effect sizes \eqn{\theta - \theta_0} to
 #'   evaluate.
 #' @param n Labeled sample size used inside `simulate_power_ppi_mean()`.
+#' @param var_f Variance of \eqn{f(X)}.
+#' @param var_res Residual variance.
+#' @param theta True mean of \eqn{Y} under the alternative.
 #'
 #' @return Data frame with columns `effect_size`, `type1_empirical`,
 #'   `type1_exact`, `theta`, `theta0`, and additional metadata mirroring the
 #'   inputs.
 #'
 #' @examples
-#' type1_error_curve_mean_dgp(
-#'   effect_grid = seq(-0.4, 0.4, by = 0.05),
-#'   N = 4000,
-#'   n = 200,
-#'   family = stats::gaussian(),
-#'   R = 2000
+#' curve <- type1_error_curve_mean_dgp(
+#'   effect_grid = seq(-0.4, 0.4, by = 0.05),  # range of effect sizes to test
+#'   N           = 4000,                       # unlabeled sample size
+#'   n           = 200,                        # labeled sample size
+#'   var_f       = 0.45,                       # variance of f(X)
+#'   var_res     = 0.80,                       # variance of residuals
+#'   theta       = 0,                          # null mean (can be 0)
+#'   R           = 2000                        # number of Monte Carlo reps
 #' )
 #'
 #' @export
 type1_error_curve_mean_dgp <- function(effect_grid,
                                        N,
                                        n,
-                                       family = stats::gaussian(),
-                                       superpop_n = 5000,
-                                       p = 5,
-                                       K = 5,
-                                       seed = 1,
+                                       var_f,
+                                       var_res,
+                                       theta = 0,    # can just be 0, since only delta matters
                                        alpha = 0.05,
-                                       R = 2000) {
+                                       R = 2000,
+                                       seed = 1) {
   if (!is.numeric(effect_grid) || length(effect_grid) == 0L) {
     stop("effect_grid must be a numeric vector of effect sizes.", call. = FALSE)
   }
-  if (!inherits(family, "family")) {
-    stop("family must be a valid stats::family object.", call. = FALSE)
-  }
-  if (!is.numeric(N) || length(N) != 1L || N <= 0) {
-    stop("N must be a positive numeric scalar.", call. = FALSE)
-  }
-  if (!is.numeric(n) || length(n) != 1L || n <= 0) {
-    stop("n must be a positive numeric scalar.", call. = FALSE)
-  }
-  if (!is.numeric(superpop_n) || length(superpop_n) != 1L || superpop_n <= 0) {
-    stop("superpop_n must be a positive integer.", call. = FALSE)
-  }
-  if (!is.numeric(p) || length(p) != 1L || p <= 0) {
-    stop("p must be a positive integer.", call. = FALSE)
-  }
-  if (!is.numeric(K) || length(K) != 1L || K <= 1) {
-    stop("K must be an integer greater than 1.", call. = FALSE)
-  }
-  if (!is.numeric(alpha) || length(alpha) != 1L || alpha <= 0 || alpha >= 1) {
-    stop("alpha must lie in (0, 1).", call. = FALSE)
-  }
-  if (!is.numeric(R) || length(R) != 1L || R <= 0) {
-    stop("R must be a positive numeric scalar.", call. = FALSE)
+  if (missing(var_f) || missing(var_res)) {
+    stop("You must supply var_f and var_res when not using superpopulation.", call. = FALSE)
   }
 
   effect_grid <- sort(effect_grid)
-  df <- simulate_crossfit_data(
-    n = as.integer(superpop_n),
-    p = as.integer(p),
-    family = family,
-    K = as.integer(K),
-    seed = seed
-  )
-
-  theta <- mean(df$y)
   seeds <- seed + seq_along(effect_grid)
+
   sims <- lapply(
     seq_along(effect_grid),
     function(i) {
-      theta0_i <- theta - effect_grid[i]
+      delta_i   <- effect_grid[i]
+      theta0_i  <- theta - delta_i
+
+      moments_ppi <- list(
+        delta   = delta_i,
+        var_f   = var_f,
+        var_res = var_res
+      )
+
       simulate_power_ppi_mean(
-        df = df,
-        N = N,
-        n = n,
-        alpha = alpha,
-        R = as.integer(R),
-        theta0 = theta0_i,
-        seed = seeds[i]
+        R        = as.integer(R),
+        n        = n,
+        N        = N,
+        alpha    = alpha,
+        family   = stats::gaussian(),
+        moments  = moments_ppi,
+        theta0   = theta0_i,
+        seed     = seeds[i]
       )
     }
   )
 
-  type1_empirical <- vapply(sims, function(x) x$empirical_power, numeric(1L))
-  type1_exact <- vapply(sims, function(x) x$analytical_power, numeric(1L))
-  theta0_vals <- vapply(effect_grid, function(delta) theta - delta, numeric(1L))
-  var_f <- stats::var(df$fhat_cf)
-  var_res <- stats::var(df$y - df$fhat_cf)
+  # Extract empirical and analytical power
+  type1_empirical <- vapply(sims, function(x) x$empirical_power, numeric(1))
+  type1_exact     <- vapply(sims, function(x) x$analytical_power, numeric(1))
+  theta0_vals     <- theta - effect_grid
 
+  # Build output data frame
   data.frame(
-    effect_size = effect_grid,
+    effect_size     = effect_grid,
     type1_empirical = type1_empirical,
-    type1_exact = type1_exact,
-    theta = rep(theta, length(effect_grid)),
-    theta0 = theta0_vals,
-    N = rep(N, length(effect_grid)),
-    n = rep(as.integer(n), length(effect_grid)),
-    alpha = rep(alpha, length(effect_grid)),
-    var_f = rep(var_f, length(effect_grid)),
-    var_res = rep(var_res, length(effect_grid)),
-    family = rep(family$family, length(effect_grid)),
-    row.names = NULL
+    type1_exact     = type1_exact,
+    theta           = rep(theta, length(effect_grid)),
+    theta0          = theta0_vals,
+    N               = rep(N, length(effect_grid)),
+    n               = rep(n, length(effect_grid)),
+    alpha           = rep(alpha, length(effect_grid)),
+    var_f           = rep(var_f, length(effect_grid)),
+    var_res         = rep(var_res, length(effect_grid)),
+    family          = rep("gaussian", length(effect_grid)),
+    row.names       = NULL
   )
 }
 

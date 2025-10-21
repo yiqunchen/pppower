@@ -2,56 +2,50 @@
 % Please edit documentation in R/ppi_plus_ols_power.R
 \name{simulate_power_ppi_pp_ols}
 \alias{simulate_power_ppi_pp_ols}
-\title{Monte Carlo power for the PPI++ OLS estimator}
+\title{Monte Carlo power for the PPI++ OLS estimator (iid sample from the DGP)}
 \usage{
 simulate_power_ppi_pp_ols(
-  df,
-  formula,
-  N,
+  R,
   n,
-  c,
-  theta0,
-  y_col = "y",
-  f_col = "fhat_cf",
+  N,
+  contrast,
   alpha = 0.05,
-  R = 2000,
+  family = stats::gaussian(),
   lambda = NULL,
   lambda_type = c("plugin", "user"),
-  clip = TRUE,
+  moments = NULL,
   seed = 1
 )
 }
 \arguments{
-\item{df}{Data frame with columns \code{y} and \code{fhat_cf}.}
+\item{R}{Integer. Number of Monte Carlo replicates.}
 
-\item{formula}{RHS-only formula describing the regressors.}
+\item{n}{Labeled sample size per replicate.}
 
-\item{N}{Unlabeled sample size.}
+\item{N}{Unlabeled sample size per replicate.}
 
-\item{n}{Labeled sample size.}
+\item{contrast}{Numeric contrast vector (length must equal the number of regressors).}
 
-\item{c}{Contrast vector (length equals number of regressors).}
+\item{alpha}{Two-sided test level (default 0.05).}
 
-\item{theta0}{Null value for the contrast.}
+\item{family}{GLM family used for the predictive model (e.g. \code{stats::gaussian()} or \code{stats::binomial()}).}
 
-\item{y_col, f_col}{Column names for the outcome and predictions.}
+\item{lambda}{Optional user-specified blend weight (used when \code{lambda_type = "user"}).}
 
-\item{alpha}{Two-sided significance level.}
+\item{lambda_type}{\code{"plugin"} (default) recomputes the plug-in \eqn{\lambda^\star} each replicate;
+\code{"user"} fixes the supplied \code{lambda}.}
 
-\item{R}{Number of Monte Carlo replicates.}
+\item{moments}{Optional named list of population moments used to compute analytical power.
+Expected entries include at least \code{delta}, \code{H_L}, \code{H_U}, \code{Sigma_YY}, \code{Sigma_ff_l},
+\code{Sigma_ff_u}, \code{Sigma_Yf}, and optionally \code{lambda}.}
 
-\item{lambda}{Optional user weight (used when \code{lambda_type = "user"}).}
-
-\item{lambda_type}{\code{"plugin"} (default) recomputes \eqn{\lambda^\star} each draw,
-\code{"user"} uses the supplied \code{lambda}.}
-
-\item{clip}{If \code{TRUE}, clips lambda to \verb{[0,1]} inside the solver.}
-
-\item{seed}{RNG seed (or \code{NULL} to leave unchanged).}
+\item{seed}{RNG seed passed to the replicate generator (can be \code{NULL}).}
 }
 \value{
-List with empirical/analytical power, lambda summary, and per-draw details.
+A list containing \code{empirical_power}, optional \code{analytical_power}, the average
+plug-in \code{lambda}, and per-replicate details.
 }
 \description{
-Monte Carlo power for the PPI++ OLS estimator
+Draw fresh labeled/unlabeled samples and refit the predictive model in every replicate,
+optionally returning the closed-form power when population moments are supplied.
 }

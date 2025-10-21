@@ -32,7 +32,7 @@ power_ppi_mean(
 
 \item{metrics}{Optional list of predictive-performance summaries.}
 
-\item{metric_type}{Character string describing \code{metrics} (e.g. \code{"continuous"}, \code{"hard"}, \code{"prob"}, \code{"precision_recall"}).}
+\item{metric_type}{Character string describing \code{metrics} (e.g. \code{"continuous"}, \code{"prob"}, \code{"classification"}).}
 
 \item{m_labeled}{Labeled sample size associated with \code{metrics} (defaults to \code{n}).}
 

@@ -25,293 +25,17 @@ You can install the development version of `pppower` from
 devtools::install_github("yiqunchen/pppower")
 ```
 
-## Example
+## Vignettes
 
-This is a basic example which shows you how to solve a common problem:
+- **Prediction-Powered Power Planning**
 
-``` r
-library(pppower)
-## basic example code
-set.seed(1)
-```
-
-**Start with a cross-fitted superpopulation data**
+Open in R:
 
 ``` r
-# Linear signal with coefficients 0.3, 0.8, ... and heavier Gaussian noise (sd = 2)
-# Cross-fitted predictions (out-of-fold)
-df <- simulate_crossfit_data(
-  n = 3500, p = 5, family = gaussian(), #
-  K = 5, seed = 20251007
-)
-str(df)
-#> 'data.frame':    3500 obs. of  7 variables:
-#>  $ y      : num  -8.604 -0.121 2.387 1.222 1.246 ...
-#>  $ x1     : num  -0.597 -0.215 0.678 1.876 -0.864 ...
-#>  $ x2     : num  -0.156 0.543 -0.109 1.033 -1.44 ...
-#>  $ x3     : num  -0.3061 0.6888 -0.2761 -0.0526 -0.4471 ...
-#>  $ x4     : num  -1.192 -1.491 0.62 -0.268 0.453 ...
-#>  $ x5     : num  -1.508 1.196 0.64 0.307 0.343 ...
-#>  $ fhat_cf: num  -6.303 1.39 2.356 1.509 -0.385 ...
-#>  - attr(*, "family")= chr "gaussian"
-#>  - attr(*, "K")= num 5
+vignette("intro-ppi", package = "pppower")
 ```
 
-`simulate_crossfit_data()` builds a synthetic “superpopulation” with
-covariates, outcomes, and out-of-fold predictions (`fhat_cf`). These
-serve as inputs for both analytical formulas and Monte Carlo power
-simulations.
-
-**Mean-estimation toolkit**
-
-#### Analytical power and Monte Carlo calibration
-
-``` r
-theta_true <- mean(df$y)
-theta0     <- theta_true - 0.35
-delta      <- theta_true - theta0
-var_f      <- var(df$fhat_cf)
-var_res    <- var(df$y - df$fhat_cf)
-N          <- 3000
-n          <- 200
-alpha      <- 0.05
-sim        <- 20000
-
-power_ppi_mean(
-  delta = delta,
-  var_f = var_f,
-  var_res = var_res,
-  N = N,
-  n = n,
-  alpha = alpha
-)
-#> [1] 0.6169984
-
-simulate_power(
-  delta   = delta,
-  N       = N,
-  n       = n,
-  alpha   = alpha,
-  var_f   = var_f,
-  var_res = var_res,
-  R       = sim
-)
-#>     Exact_PP Empirical_PP 
-#>    0.6169984    0.6192500
-```
-
-- `power_ppi_mean()` returns the exact normal-theory power.
-- `simulate_power()` confirms the formula empirically for any variance
-  inputs.
-
-#### Monte Carlo with an explicit superpopulation
-
-``` r
-mc_pp <- pppower:::simulate_power_ppi_mean(
-  df      = df,
-  N       = N,
-  n       = n,
-  alpha   = alpha,
-  R       = sim,
-  theta0  = theta0,
-  seed    = 20251007
-)
-mc_pp$empirical_power
-#> [1] 0.63
-mc_pp$analytical_power
-#> [1] 0.6169984
-```
-
-#### Sample-size planning
-
-``` r
-n_mean <- n_required_PP(
-  delta   = delta,
-  N       = N,
-  alpha   = alpha,
-  power   = 0.8,
-  type    = "mean",
-  var_f   = var_f,
-  var_res = var_res
-)
-n_mean
-#> [1] 340
-```
-
-`n_required_PP()` now supports the PP mean, PP-OLS, and custom variance
-decompositions through the type switch (logistic regression in the
-future).
-
-**Linear Regression**
-
-``` r
-fit_ols <- ppi_ols_fit(
-  y      = "y",
-  f_col  = "fhat_cf",
-  formula = ~ x1 + x2 + x3 + x4 + x5,
-  data_l = df[1:n, ],
-  data_u = df[(n + 1):(n + N), ]
-)
-
-summary(fit_ols)
-#>               Estimate Std.Error          z     Pr...z..
-#> (Intercept) -0.0582027 0.1342167 -0.4336473 6.645446e-01
-#> x1           0.2154943 0.1492191  1.4441473 1.486975e-01
-#> x2           0.9815688 0.1251441  7.8435075 4.381330e-15
-#> x3           1.3205945 0.1195599 11.0454653 2.305700e-28
-#> x4           1.9493006 0.1307634 14.9070810 2.964310e-50
-#> x5           2.3846676 0.1275478 18.6962608 5.310028e-78
-
-pieces      <- fit_ols$pieces
-coef_names  <- colnames(pieces$V_u)       # matches V_u/V_l dimension
-c_vec       <- numeric(length(coef_names))
-names(c_vec) <- coef_names
-c_vec["x1"] <- 1
-
-delta_ols <- sum(c_vec * fit_ols$coef)
-```
-
-`ppi_ols_fit()` returns coefficient estimates, sandwich covariance, and
-the $V_u$, $V_l$ components required for power calculations.
-
-`ppi_ols_wald()` offers Wald tests for arbitrary contrasts.
-
-#### Analytical and Monte Carlo power
-
-``` r
-# superpopulation contrast for the given c
-X_full      <- model.matrix(~ x1 + x2 + x3 + x4 + x5, df)
-beta_true   <- pppower:::ols_fit(X_full, df$y)$coef
-contrast_true <- sum(c_vec * beta_true)
-
-# the effect size you want to study
-delta_target <- delta_ols         # if you want to stick with the sample estimate
-theta0       <- contrast_true - delta_target
-
-pppower:::power_ppi_ols(
-  delta = delta_target,
-  V_u   = pieces$V_u,
-  V_l   = pieces$V_l,
-  N     = pieces$N,
-  n     = pieces$n,
-  c     = c_vec,
-  alpha = alpha
-)
-#> [1] 0.3033231
-
-pppower:::simulate_power_ppi_ols(
-  df      = df,
-  formula = ~ x1 + x2 + x3 + x4 + x5,
-  N       = pieces$N,
-  n       = pieces$n,
-  c       = c_vec,
-  theta0  = theta0,
-  alpha   = alpha,
-  R       = sim,
-  seed    = 20251007
-)$empirical_power
-#> [1] 0.33565
-```
-
-#### Sample-size planning for PP-OLS
-
-``` r
-n_ols <- n_required_PP(
-  delta = delta_ols,
-  N     = pieces$N,
-  alpha = alpha,
-  power = 0.8,
-  type  = "ols",
-  V_u   = pieces$V_u,
-  V_l   = pieces$V_l,
-  c     = c_vec
-)
-n_ols
-#> [1] 753
-```
-
-#### Power Curves
-
-**Mean Estimation**
-
-``` r
-effect_grid <- seq(-0.4, 0.4, by = 0.05)
-curve_fixed <- type1_error_curve_mean(
-  effect_grid = effect_grid,
-  N = N,
-  n = n,
-  var_f = var_f,
-  var_res = var_res,
-  alpha = alpha,
-  R = sim,
-  seed = 20251007
-)
-
-plot_type1_error_curve(
-  curve_fixed,
-  main = "Power curve from variance inputs"
-)
-```
-
-<img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
-
-**Cross-fitted Data Generation Processes**
-
-``` r
-curve_dgp <- type1_error_curve_mean_dgp(
-  effect_grid = effect_grid,
-  N = N,
-  n = n,
-  family = stats::gaussian(),
-  superpop_n = 10000,
-  p = 5,
-  K = 5,
-  alpha = alpha,
-  R = sim,
-  seed = 20251007
-)
-
-plot_type1_error_curve(
-  curve_dgp,
-  main = "Power curve with cross-fitted DGP (Gaussian)"
-)
-```
-
-<img src="man/figures/README-dgp-power-curve-1.png" width="100%" />
-
-`plot_type1_error_curve()` is shared by both outputs and lets you
-overlay empirical/analytical curves and nominal reference lines.
-
-**Reference of key functions**
-
-- Simulation: `simulate_crossfit_data()`: synthetic GLM data with
-  cross-fitted predictions.
-
-`simulate_power()` / `simulate_power_ppi_mean()` /
-`simulate_power_ppi_ols()`: Monte Carlo power.
-
-- Analytical power: `power_ppi_mean()`: PP mean estimator.
-  `power_ppi_ols()`: Linear contrasts in PP-OLS.
-
-- Estimation & inference: `ppi_ols()` (*currently internal*),
-  `ppi_ols_fit()`, `ppi_ols_wald()` (*currently internal*).
-
-- Planning: `n_required_PP()`: unified sample-size solver (type =
-  “mean”, “ols”, or “custom”).
-
-- Plotting: `power_curve_mean()`, `power_curve_mean_dgp()`,
-  `power_curve_gaussian()`, `power_curve_binomial()`.
-  `type1_error_curve_mean()`, `type1_error_curve_mean_dgp()`,
-  `plot_type1_error_curve()`.
-
-Each example above is self-contained; adjust Monte Carlo replicates (R)
-upward for production studies.
-
-**Contributing** - Issues and pull requests are welcome. Please add
-tests under tests/testthat/ and run `devtools::test()` before submitting
-changes.
-
-    #> ─ Session info ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    #> ─ Session info ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     #>  setting  value
     #>  version  R version 4.3.1 Patched (2023-07-19 r84711)
     #>  os       Rocky Linux 9.4 (Blue Onyx)
@@ -321,13 +45,14 @@ changes.
     #>  collate  en_US.UTF-8
     #>  ctype    en_US.UTF-8
     #>  tz       US/Eastern
-    #>  date     2025-10-16
+    #>  date     2025-10-21
     #>  pandoc   3.1.3 @ /jhpce/shared/community/core/conda_R/4.3/bin/ (via rmarkdown)
     #>  quarto   NA
     #> 
-    #> ─ Packages ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    #> ─ Packages ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
     #>  ! package     * version    date (UTC) lib source
     #>    brio          1.1.3      2021-11-30 [2] CRAN (R 4.3.1)
+    #>    bslib         0.5.1      2023-08-11 [2] CRAN (R 4.3.1)
     #>    cachem        1.0.8      2023-05-01 [2] CRAN (R 4.3.1)
     #>    callr         3.7.3      2022-11-02 [2] CRAN (R 4.3.1)
     #>    cli           3.6.1      2023-03-23 [2] CRAN (R 4.3.1)
@@ -347,6 +72,8 @@ changes.
     #>    htmltools     0.5.6      2023-08-10 [2] CRAN (R 4.3.1)
     #>    htmlwidgets   1.6.2      2023-03-17 [2] CRAN (R 4.3.1)
     #>    httpuv        1.6.11     2023-05-11 [2] CRAN (R 4.3.1)
+    #>    jquerylib     0.1.4      2021-04-26 [2] CRAN (R 4.3.1)
+    #>    jsonlite      1.8.7      2023-06-29 [2] CRAN (R 4.3.1)
     #>    knitr         1.44       2023-09-11 [2] CRAN (R 4.3.1)
     #>    later         1.3.1      2023-05-02 [2] CRAN (R 4.3.1)
     #>    lifecycle     1.0.4      2023-11-07 [1] CRAN (R 4.3.1)
@@ -357,7 +84,6 @@ changes.
     #>    pillar        1.9.0      2023-03-22 [2] CRAN (R 4.3.1)
     #>    pkgbuild      1.4.8      2025-05-26 [1] CRAN (R 4.3.1)
     #>    pkgconfig     2.0.3      2019-09-22 [2] CRAN (R 4.3.1)
-    #>    pkgdown       2.0.7      2022-12-14 [2] CRAN (R 4.3.1)
     #>    pkgload       1.4.1      2025-09-23 [1] CRAN (R 4.3.1)
     #>  P pppower     * 0.0.0.9000 2025-10-08 [?] load_all()
     #>    prettyunits   1.1.1      2020-01-24 [2] CRAN (R 4.3.1)
@@ -375,6 +101,7 @@ changes.
     #>    roxygen2      7.2.3      2022-12-08 [2] CRAN (R 4.3.1)
     #>    rprojroot     2.1.1      2025-08-26 [1] CRAN (R 4.3.1)
     #>    rstudioapi    0.15.0     2023-07-07 [2] CRAN (R 4.3.1)
+    #>    sass          0.4.7      2023-07-15 [2] CRAN (R 4.3.1)
     #>    sessioninfo   1.2.3      2025-02-05 [1] CRAN (R 4.3.1)
     #>    shiny         1.7.5      2023-08-12 [2] CRAN (R 4.3.1)
     #>    stringi       1.7.12     2023-01-11 [2] CRAN (R 4.3.1)
@@ -400,4 +127,4 @@ changes.
     #>  * ── Packages attached to the search path.
     #>  P ── Loaded and on-disk path mismatch.
     #> 
-    #> ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    #> ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

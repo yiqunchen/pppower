@@ -8,13 +8,12 @@ type1_error_curve_mean_dgp(
   effect_grid,
   N,
   n,
-  family = stats::gaussian(),
-  superpop_n = 5000,
-  p = 5,
-  K = 5,
-  seed = 1,
+  var_f,
+  var_res,
+  theta = 0,
   alpha = 0.05,
-  R = 2000
+  R = 2000,
+  seed = 1
 )
 }
 \arguments{
@@ -25,21 +24,17 @@ evaluate.}
 
 \item{n}{Labeled sample size used inside \code{simulate_power_ppi_mean()}.}
 
-\item{family}{GLM family passed to the DGP; defaults to \code{stats::gaussian()}
-(with identity link) or \code{stats::binomial()} (logistic).}
+\item{var_f}{Variance of \eqn{f(X)}.}
 
-\item{superpop_n}{Size of the synthetic superpopulation used to estimate
-variance components.}
+\item{var_res}{Residual variance.}
 
-\item{p}{Number of covariates in the DGP.}
-
-\item{K}{Number of folds for cross-fitting.}
-
-\item{seed}{Random seed forwarded to \code{simulate_crossfit_data()}.}
+\item{theta}{True mean of \eqn{Y} under the alternative.}
 
 \item{alpha}{Two-sided significance level.}
 
 \item{R}{Number of Monte Carlo replicates passed to \code{simulate_power_ppi_mean()}.}
+
+\item{seed}{Random seed forwarded to \code{simulate_crossfit_data()}.}
 }
 \value{
 Data frame with columns \code{effect_size}, \code{type1_empirical},

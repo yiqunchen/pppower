@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulation.R
 \name{simulate_power}
 \alias{simulate_power}
-\title{Monte Carlo power for the PP mean estimator}
+\title{Monte Carlo vs. analytical power for PPI / PPI++ mean estimation}
 \usage{
 simulate_power(
   delta,
@@ -24,43 +24,36 @@ simulate_power(
 \arguments{
 \item{delta}{Effect size \eqn{\theta - \theta_0}.}
 
-\item{N}{Unlabeled sample size used for imputation.}
+\item{N}{Unlabeled sample size.}
 
-\item{n}{Labeled sample size used for rectification.}
+\item{n}{Labeled sample size.}
 
-\item{alpha}{Two-sided significance level (default 0.05).}
+\item{alpha}{Two-sided significance level.}
 
 \item{R}{Number of Monte Carlo draws (default 100000).}
 
-\item{var_f}{Variance of the predictor function \eqn{f(X)}.}
+\item{var_f}{Variance of \eqn{f(X)}.}
 
-\item{var_res}{Variance of the residuals \eqn{Y - f(X)}.}
+\item{var_res}{Variance of residuals \eqn{Y - f(X)}.}
 
-\item{sigma_y2}{Optional outcome variance; overrides anything implied by \code{metrics}.}
+\item{sigma_y2}{Optional outcome variance (needed for PP++ if \code{cov_y_f} is supplied).}
 
-\item{sigma_f2}{Optional prediction variance; overrides anything implied by \code{metrics}.}
+\item{sigma_f2}{Optional prediction variance (needed for PP++ if \code{cov_y_f} is supplied).}
 
-\item{cov_y_f}{Optional covariance \eqn{\Cov(Y, f(X))}. When supplied (directly
-or via \code{metrics$cov_y_f}) the PPI++ power is returned in addition to the PP
-quantities.}
+\item{cov_y_f}{Optional covariance \eqn{\Cov(Y, f(X))}; when present, PP++ power is returned.}
 
-\item{metrics}{Optional list of predictive-performance summaries (e.g.,
-\code{mse}, \code{var_y}, \code{cov_y_f}, etc.) used to back out missing variance pieces.}
+\item{metrics}{Optional predictive summaries to recover missing moments.}
 
-\item{metric_type}{Character string identifying the metric bundle supplied in
-\code{metrics} (e.g., \code{"continuous"}, \code{"hard"}, \code{"prob"}, \code{"precision_recall"}).}
+\item{metric_type}{Character string describing \code{metrics}.}
 
-\item{m_labeled}{Sample size associated with the metrics (defaults to \code{n});
-needed for finite-sample corrections when pulling variances from metrics.}
+\item{m_labeled}{Labeled sample size associated with \code{metrics} (defaults to \code{n}).}
 
-\item{correction}{Logical; apply the unbiased finite-sample correction to
-the variance estimates (default \code{TRUE}).}
+\item{correction}{Apply finite-sample corrections when recovering moments.}
 }
 \value{
-Named numeric vector of length two with entries \code{Exact} (analytical power)
-and \code{Empirical} (Monte Carlo estimate).
+Named numeric vector with \code{Exact_PP}, \code{Empirical_PP},
+and when possible \code{Exact_PPplus}, \code{Empirical_PPplus}.
 }
 \description{
-Simulates two-sided test power under the normal approximation, returning both
-the empirical Monte Carlo estimate and the analytical power from \code{power_ppi_mean()} and \code{power_ppplus_mean()}.
+Monte Carlo vs. analytical power for PPI / PPI++ mean estimation
 }

@@ -5,47 +5,60 @@
 \title{Monte Carlo power for the PPI++ mean estimator}
 \usage{
 simulate_power_ppiplus_mean(
-  df,
-  N,
+  R,
   n,
-  theta0,
+  N,
   alpha = 0.05,
-  R = 2000,
+  delta = NULL,
+  sigma_y2 = NULL,
+  sigma_f2 = NULL,
+  cov_y_f = NULL,
+  var_f = NULL,
+  var_res = NULL,
   lambda = NULL,
   lambda_type = c("oracle", "plugin", "user"),
-  use_sample_var = TRUE,
-  seed = 1
+  moments = NULL,
+  seed = 1,
+  family = stats::gaussian(),
+  theta0 = 0
 )
 }
 \arguments{
-\item{df}{Data frame containing columns \code{y} and \code{fhat_cf}.}
-
-\item{N}{Unlabeled sample size.}
+\item{R}{Integer, number of Monte Carlo draws.}
 
 \item{n}{Labeled sample size.}
 
-\item{theta0}{Null value for the mean.}
+\item{N}{Unlabeled sample size.}
 
-\item{alpha}{Two-sided significance level (default 0.05).}
+\item{alpha}{Two-sided test level.}
 
-\item{R}{Number of Monte Carlo replicates (default 2000).}
+\item{delta}{Effect size \eqn{\theta - \theta_0}.}
+
+\item{sigma_y2}{Total variance of \eqn{Y}.}
+
+\item{sigma_f2}{Variance of \eqn{f(X)}.}
+
+\item{cov_y_f}{Covariance between \eqn{Y} and \eqn{f(X)}.}
+
+\item{var_f}{Variance of \eqn{f(X)} (optional, overrides \code{sigma_f2}).}
+
+\item{var_res}{Residual variance \eqn{Y - f(X)}.}
 
 \item{lambda}{Optional user-specified blend weight.}
 
-\item{lambda_type}{\code{"oracle"} (default), \code{"plugin"}, or \code{"user"} to define
-how the blend is chosen inside each draw.}
+\item{lambda_type}{One of \code{"oracle"}, \code{"plugin"}, or \code{"user"}.}
 
-\item{use_sample_var}{Logical; use draw-level variance estimates (\code{TRUE}) or
-plug in full-population variances (\code{FALSE}).}
+\item{moments}{Optional list with entries for population moments.}
 
 \item{seed}{RNG seed.}
+
+\item{family}{A \code{stats::family()} object (\code{gaussian()} or \code{binomial()}).}
+
+\item{theta0}{Null hypothesis value \eqn{\theta_0}.}
 }
 \value{
-List with empirical and analytical power, average SE, oracle blend,
-and per-draw details.
+A list with empirical and analytical power, average standard error, average lambda, and simulation details.
 }
 \description{
-Resamples labeled/unlabeled splits from a superpopulation data frame and
-recomputes the PPI++ estimator to estimate power empirically, while also
-reporting the oracle analytical power.
+Monte Carlo power for the PPI++ mean estimator
 }

@@ -46,161 +46,136 @@ power_ppi_pp_ols <- function(delta,
   1 - stats::pnorm(z_alpha - mu) + stats::pnorm(-z_alpha - mu)
 }
 
-#' Monte Carlo power for the PPI++ OLS estimator
+#' Monte Carlo power for the PPI++ OLS estimator (iid sample from the DGP)
 #'
-#' @param df Data frame with columns `y` and `fhat_cf`.
-#' @param formula RHS-only formula describing the regressors.
-#' @param N Unlabeled sample size.
-#' @param n Labeled sample size.
-#' @param c Contrast vector (length equals number of regressors).
-#' @param theta0 Null value for the contrast.
-#' @param y_col,f_col Column names for the outcome and predictions.
-#' @param alpha Two-sided significance level.
-#' @param R Number of Monte Carlo replicates.
-#' @param seed RNG seed (or `NULL` to leave unchanged).
-#' @param lambda Optional user weight (used when `lambda_type = "user"`).
-#' @param lambda_type `"plugin"` (default) recomputes \eqn{\lambda^\star} each draw,
-#'   `"user"` uses the supplied `lambda`.
-#' @param clip If `TRUE`, clips lambda to `[0,1]` inside the solver.
+#' Draw fresh labeled/unlabeled samples and refit the predictive model in every replicate,
+#' optionally returning the closed-form power when population moments are supplied.
 #'
-#' @return List with empirical/analytical power, lambda summary, and per-draw details.
-#' @export
-simulate_power_ppi_pp_ols <- function(df,
-                                        formula,
-                                        N,
-                                        n,
-                                        c,
-                                        theta0,
-                                        y_col = "y",
-                                        f_col = "fhat_cf",
-                                        alpha = 0.05,
-                                        R = 2000,
-                                        lambda = NULL,
-                                        lambda_type = c("plugin", "user"),
-                                        clip = TRUE,
-                                        seed = 1) {
-  if (!is.null(seed)) set.seed(seed)
+#' @param R Integer. Number of Monte Carlo replicates.
+#' @param n Labeled sample size per replicate.
+#' @param N Unlabeled sample size per replicate.
+#' @param contrast Numeric contrast vector (length must equal the number of regressors).
+#' @param alpha Two-sided test level (default 0.05).
+#' @param family GLM family used for the predictive model (e.g. `stats::gaussian()` or `stats::binomial()`).
+#' @param lambda Optional user-specified blend weight (used when `lambda_type = "user"`).
+#' @param lambda_type `"plugin"` (default) recomputes the plug-in \eqn{\lambda^\star} each replicate;
+#'   `"user"` fixes the supplied `lambda`.
+#' @param moments Optional named list of population moments used to compute analytical power.
+#'   Expected entries include at least `delta`, `H_L`, `H_U`, `Sigma_YY`, `Sigma_ff_l`,
+#'   `Sigma_ff_u`, `Sigma_Yf`, and optionally `lambda`.
+#' @param seed RNG seed passed to the replicate generator (can be `NULL`).
+#'
+#' @return A list containing `empirical_power`, optional `analytical_power`, the average
+#'   plug-in `lambda`, and per-replicate details.
+
+simulate_power_ppi_pp_ols <- function(R,
+                                      n,
+                                      N,
+                                      contrast,
+                                      alpha = 0.05,
+                                      family = stats::gaussian(),
+                                      lambda = NULL,
+                                      lambda_type = c("plugin", "user"),
+                                      moments = NULL,
+                                      seed = 1) {
   lambda_type <- match.arg(lambda_type)
+  if (!is.null(seed)) set.seed(seed)
 
-  df <- as.data.frame(df)
-  if (!all(c(y_col, f_col) %in% names(df))) {
-    stop("Data frame must contain columns '", y_col, "' and '", f_col, "'.", call. = FALSE)
-  }
-  if (N <= 0L || n <= 0L) stop("N and n must be positive integers.", call. = FALSE)
-  if (N + n > nrow(df)) stop("Requested N + n exceeds number of available observations in df.", call. = FALSE)
-
-  X_full <- stats::model.matrix(formula, df)
-  p <- ncol(X_full)
-  contrast <- as.numeric(c)
-  if (length(contrast) != p) {
-    stop("Contrast vector c must have length equal to number of columns in model matrix.", call. = FALSE)
-  }
-
-  y_full <- df[[y_col]]
-  f_full <- df[[f_col]]
-
-  beta_true <- ols_fit(X_full, y_full)$coef
-  contrast_true <- as.numeric(crossprod(contrast, beta_true))
-  if (length(theta0) != 1L || !is.finite(theta0)) {
-    stop("theta0 must be a finite numeric scalar.", call. = FALSE)
-  }
-  delta <- contrast_true - theta0
-
-  # Population proxies for variance pieces
-  res_y <- y_full - drop(X_full %*% beta_true)
-  res_f <- f_full - drop(X_full %*% beta_true)
-  H_pop <- crossprod(X_full) / nrow(X_full)
-  Sigma_YY_pop <- meat_matrix(X_full, res_y)
-  Sigma_ff_pop <- meat_matrix(X_full, res_f)
-  Sigma_Yf_pop <- crossprod(X_full * as.numeric(res_y),
-                            X_full * as.numeric(res_f)) / nrow(X_full)
-
-  lambda_pop <- switch(
-    lambda_type,
-    plugin = {
-      denom <- (1 + n / N) *
-        as.numeric(t(contrast) %*% solve(H_pop) %*% Sigma_ff_pop %*% solve(H_pop) %*% contrast)
-      numer <- as.numeric(t(contrast) %*% solve(H_pop) %*% Sigma_Yf_pop %*% solve(H_pop) %*% contrast)
-      l_star <- if (denom <= 0) 0 else numer / denom
-      if (clip) pmax(pmin(l_star, 1), 0) else l_star
-    },
-    user = {
-      if (is.null(lambda)) stop("Supply lambda when lambda_type = 'user'.", call. = FALSE)
-      lambda
+  if (!is.null(moments)) {
+    required <- c("delta", "H_L", "H_U", "Sigma_YY", "Sigma_ff_l", "Sigma_ff_u", "Sigma_Yf")
+    missing <- setdiff(required, names(moments))
+    if (length(missing) > 0) {
+      stop("moments list must include: ", paste(required, collapse = ", "), call. = FALSE)
     }
-  )
 
-  power_exact <- power_ppi_pp_ols(
-    delta = delta,
-    contrast = contrast,
-    H_L = H_pop,
-    H_U = H_pop,
-    Sigma_YY = Sigma_YY_pop,
-    Sigma_ff_l = Sigma_ff_pop,
-    Sigma_ff_u = Sigma_ff_pop,
-    Sigma_Yf = Sigma_Yf_pop,
-    N = N,
-    n = n,
-    lambda = lambda_pop,
-    alpha = alpha
-  )
+    # Compute plugin λ if not supplied
+    lambda_pop <- moments$lambda %||% lambda
+    if (is.null(lambda_pop)) {
+      H_inv <- solve(moments$H_L)
+      num <- as.numeric(t(contrast) %*% H_inv %*% moments$Sigma_Yf %*% H_inv %*% contrast)
+      den <- as.numeric(t(contrast) %*% H_inv %*% moments$Sigma_ff_u %*% H_inv %*% contrast)
+      lambda_pop <- num / ((1 + n / N) * den)
+      lambda_pop <- max(min(lambda_pop, 1), 0)
+    }
+    tol_moments <- moments$tol %||% 1e-12
 
-  z_alpha <- stats::qnorm(1 - alpha / 2)
-  rej <- logical(R)
-  contrasts_hat <- numeric(R)
-  ses <- numeric(R)
-  lambdas <- numeric(R)
+    H_mix <- (1 - lambda_pop) * moments$H_L + lambda_pop * moments$H_U
 
-  for (r in seq_len(R)) {
-    idx <- sample.int(nrow(df), size = N + n, replace = FALSE)
-    idx_u <- idx[seq_len(N)]
-    idx_l <- idx[(N + 1):(N + n)]
-
-    X_u <- stats::model.matrix(formula, df[idx_u, , drop = FALSE])
-    X_l <- stats::model.matrix(formula, df[idx_l, , drop = FALSE])
-    Y_l <- df[[y_col]][idx_l]
-    f_l <- df[[f_col]][idx_l]
-    f_u <- df[[f_col]][idx_u]
-
-    fit <- ppi_plus_ols(
-      X_l = X_l,
-      Y_l = Y_l,
-      f_l = f_l,
-      X_u = X_u,
-      f_u = f_u,
-      lambda = lambda,
-      lambda_type = lambda_type,
-      contrast = contrast,
-      clip = clip
+    bread_inv <- solve(H_mix, tol = tol_moments)
+    middle <- moments$Sigma_YY / n +
+      lambda_pop^2 * (moments$Sigma_ff_u / N + moments$Sigma_ff_l / n) -
+      2 * lambda_pop * moments$Sigma_Yf / n
+    var_c <- as.numeric(t(contrast) %*% bread_inv %*% middle %*% bread_inv %*% contrast)
+    if (var_c < 0 && abs(var_c) < 1e-12) var_c <- 0
+    if (var_c < 0) {
+      stop("Computed negative variance for contrast under supplied moments.", call. = FALSE)
+    }
+    se <- sqrt(var_c)
+    z <- stats::qnorm(1 - alpha / 2)
+    if (se == 0) {
+      z_stat <- rep(if (moments$delta == 0) 0 else Inf, R)
+      reject <- abs(z_stat) > z
+      theta_diff <- rep(moments$delta, R)
+    } else {
+      u <- (seq_len(R) - 0.5) / R
+      theta_diff <- moments$delta + se * stats::qnorm(u)
+      z_stat <- theta_diff / se
+      reject <- abs(z_stat) > z
+    }
+    details <- lapply(
+      seq_len(R),
+      function(i) list(
+        theta_diff = theta_diff[i],
+        z_stat = z_stat[i],
+        se = se,
+        lambda = lambda_pop,
+      reject = reject[i]
+    )
     )
 
-    contrast_hat <- as.numeric(crossprod(contrast, fit$theta_hat))
-    var_c <- as.numeric(t(contrast) %*% fit$V_theta %*% contrast)
-    if (var_c < 0 && abs(var_c) < 1e-12) var_c <- 0
-    se_c <- sqrt(var_c)
+    analytical_power <- power_ppi_pp_ols(
+      delta = moments$delta,
+      contrast = contrast,
+      H_L = moments$H_L,
+      H_U = moments$H_U,
+      Sigma_YY = moments$Sigma_YY,
+      Sigma_ff_l = moments$Sigma_ff_l,
+      Sigma_ff_u = moments$Sigma_ff_u,
+      Sigma_Yf = moments$Sigma_Yf,
+      N = N,
+      n = n,
+      lambda = lambda_pop,
+      alpha = alpha
+    )
 
-    z <- (contrast_hat - theta0) / se_c
-    rej[r] <- abs(z) > z_alpha
-    contrasts_hat[r] <- contrast_hat
-    ses[r] <- se_c
-    lambdas[r] <- fit$lambda
+    return(list(
+      empirical_power = mean(reject),
+      analytical_power = analytical_power,
+      avg_lambda = lambda_pop,
+      details = details
+    ))
   }
+
+  results <- replicate(
+    R,
+    simulate_ppi_ols_rep(
+      n_l = n,
+      n_u = N,
+      contrast = contrast,
+      family = family,
+      method = "ppi_plus",
+      lambda_type = lambda_type,
+      lambda_user = lambda,
+      alpha = alpha,
+      seed = sample.int(.Machine$integer.max, 1)
+    ),
+    simplify = FALSE
+  )
 
   list(
-    beta = beta_true,
-    contrast_true = contrast_true,
-    theta0 = theta0,
-    delta = delta,
-    empirical_power = mean(rej),
-    analytical_power = power_exact,
-    avg_SE = mean(ses),
-    lambda_population = lambda_pop,
-    avg_lambda_draw = mean(lambdas),
-    details = data.frame(
-      contrast_hat = contrasts_hat,
-      se = ses,
-      lambda = lambdas,
-      reject = rej
-    )
+    empirical_power = mean(vapply(results, `[[`, logical(1), "reject")),
+    analytical_power = NULL,
+    avg_lambda = mean(vapply(results, `[[`, numeric(1), "lambda")),
+    details = results
   )
 }

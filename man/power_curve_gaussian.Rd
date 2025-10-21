@@ -4,17 +4,7 @@
 \alias{power_curve_gaussian}
 \title{Convenience wrapper for Gaussian DGP power curves}
 \usage{
-power_curve_gaussian(
-  n_grid,
-  N,
-  theta0 = 0,
-  superpop_n = 5000,
-  p = 5,
-  K = 5,
-  seed = 1,
-  alpha = 0.05,
-  R = 2000
-)
+power_curve_gaussian(n_grid, N, theta0 = 0, seed = 1, alpha = 0.05, R = 2000)
 }
 \arguments{
 \item{n_grid}{Integer vector of candidate labeled sample sizes.}
@@ -22,13 +12,6 @@ power_curve_gaussian(
 \item{N}{Unlabeled sample size.}
 
 \item{theta0}{Null value for the mean estimand.}
-
-\item{superpop_n}{Size of the synthetic superpopulation used to estimate
-variance components.}
-
-\item{p}{Number of covariates in the DGP.}
-
-\item{K}{Number of folds for cross-fitting.}
 
 \item{seed}{Random seed forwarded to \code{simulate_crossfit_data()}.}
 

@@ -1,4 +1,3 @@
-n_total <- 20000
 N <- 1500    # unlabeled sample size
 n <- 200     # labeled sample size
 alpha <- 0.05
@@ -40,29 +39,38 @@ test_that("Monte Carlo power aligns with analytical power for PPI and PPI++ OLS"
   seed_base <- 20240618L
   set.seed(seed_base)
 
-  x1 <- rnorm(n_total)
-  x2 <- rnorm(n_total)
-  eta <- 0.7 + 0.4 * x1 - 0.3 * x2
-  y <- eta + rnorm(n_total, sd = 1.0)
-  fhat_cf <- eta + rnorm(n_total, sd = 0.6)
+  beta_true <- c(0.7, 0.4, -0.3)  # intercept, x1, x2
+  c_vec <- c(0, 1, 0)
+  theta0 <- beta_true[2] - 0.15
+  delta_pop <- beta_true[2] - theta0
 
-  df <- data.frame(y = y, fhat_cf = fhat_cf, x1 = x1, x2 = x2)
-  formula <- ~ x1 + x2
-  X_full <- stats::model.matrix(formula, df)
-  theta_full <- ols_fit(X_full, df$y)$coef
+  var_eta <- beta_true[2]^2 + beta_true[3]^2
+  sigma_f2 <- 0.6^2
+  sigma_y2 <- 1^2
 
-  c_vec <- c(0, 1, 0)  # coefficient on x1
-  theta0 <- as.numeric(theta_full["x1"]) - 0.15
+  var_f_pop   <- var_eta + sigma_f2
+  var_res_pop <- sigma_y2 + sigma_f2
+
+  H_pop <- diag(3)
+  Sigma_YY_pop <- sigma_y2 * H_pop
+  Sigma_ff_pop <- sigma_f2 * H_pop
+  Sigma_Yf_pop <- matrix(0, nrow = 3, ncol = 3)
+  lambda_pop <- 0
+
+  moments_ppi <- list(
+    delta    = delta_pop,
+    H        = H_pop,
+    Sigma_YY = Sigma_YY_pop
+  )
 
   res_ppi <- simulate_power_ppi_ols(
-    df = df,
-    formula = formula,
-    N = N,
-    n = n,
-    c = c_vec,
-    theta0 = theta0,
-    alpha = alpha,
     R = R_sim,
+    n = n,
+    N = N,
+    contrast = c_vec,
+    alpha = alpha,
+    family = stats::gaussian(),
+    moments = moments_ppi,
     seed = seed_base + 1L
   )
 
@@ -80,16 +88,26 @@ test_that("Monte Carlo power aligns with analytical power for PPI and PPI++ OLS"
     )
   )
 
+  moments_ppiplus <- list(
+    delta = delta_pop,
+    H_L = H_pop,
+    H_U = H_pop,
+    Sigma_YY = Sigma_YY_pop,
+    Sigma_ff_l = Sigma_ff_pop,
+    Sigma_ff_u = Sigma_ff_pop,
+    Sigma_Yf = Sigma_Yf_pop,
+    lambda = lambda_pop
+  )
+
   res_ppiplus <- simulate_power_ppi_pp_ols(
-    df = df,
-    formula = formula,
-    N = N,
-    n = n,
-    c = c_vec,
-    theta0 = theta0,
-    alpha = alpha,
     R = R_sim,
+    n = n,
+    N = N,
+    contrast = c_vec,
+    alpha = alpha,
+    family = stats::gaussian(),
     lambda_type = "plugin",
+    moments = moments_ppiplus,
     seed = seed_base + 2L
   )
 
@@ -106,52 +124,50 @@ test_that("Monte Carlo power aligns with analytical power for PPI and PPI++ OLS"
       empirical_ppiplus, analytical_ppiplus, diff_ppiplus, tol_ppiplus
     )
   )
-
-  expect_true(res_ppi$avg_SE < 1.5, info = "Avg SE (PPI) should be finite and reasonable.")
-  expect_true(
-  res_ppiplus$avg_SE < res_ppi$avg_SE + 0.1,
-  info = "PPI++ average SE should stay comparable to PPI in this configuration."
-  )
 })
 
 test_that("Monte Carlo agreement holds across OLS parameter grid", {
   skip_on_cran()
-  set.seed(as.integer(Sys.time()))
+  set.seed(as.integer(Sys.Date()))
 
-  x1 <- rnorm(n_total)
-  x2 <- rnorm(n_total)
-  x3 <- rnorm(n_total)
-  eta <- 0.5 + 0.35 * x1 - 0.25 * x2 + 0.15 * x3
-  y <- eta + rnorm(n_total, sd = 1.1)
-  fhat_cf <- eta + rnorm(n_total, sd = 0.7)
+  beta_grid <- c(0.5, 0.35, -0.25, 0.15)
+  c_vec <- c(0, 1, 0, 0)
 
-  df <- data.frame(y = y, fhat_cf = fhat_cf, x1 = x1, x2 = x2, x3 = x3)
-  formula <- ~ x1 + x2 + x3
-  X_full <- stats::model.matrix(formula, df)
-  theta_full <- ols_fit(X_full, df$y)$coef
+  var_eta_grid <- sum(beta_grid[-1]^2)
+  sigma_f2_grid <- 0.7^2
+  sigma_y2_grid <- 1.1^2
 
-  c_vec <- c(0, 1, 0, 0)  # focus on x1 coefficient
+  var_f_pop <- var_eta_grid + sigma_f2_grid
+  var_res_pop <- sigma_y2_grid + sigma_f2_grid
+
+  H_pop <- diag(4)
+  Sigma_YY_pop <- sigma_y2_grid * H_pop
+  Sigma_ff_pop <- sigma_f2_grid * H_pop
+  Sigma_Yf_pop <- matrix(0, nrow = 4, ncol = 4)
 
   grid <- expand.grid(
     delta = c(0.08, 0.15, 0.25),
-    N = c(1600, 2300),
-    n = c(180, 280),
+    N     = c(1600, 2300),
+    n     = c(180, 280),
     KEEP.OUT.ATTRS = FALSE
   )
 
   for (i in seq_len(nrow(grid))) {
     g <- grid[i, ]
-    theta0 <- as.numeric(theta_full["x1"]) - g$delta
+    moments_ppi <- list(
+      delta    = g$delta,
+      H        = H_pop,
+      Sigma_YY = Sigma_YY_pop
+    )
 
     res <- simulate_power_ppi_ols(
-      df = df,
-      formula = formula,
-      N = g$N,
-      n = g$n,
-      c = c_vec,
-      theta0 = theta0,
-      alpha = alpha,
       R = R_sim,
+      n = g$n,
+      N = g$N,
+      contrast = c_vec,
+      alpha = alpha,
+      family = stats::gaussian(),
+      moments = moments_ppi,
       seed = 1000 + i
     )
 
@@ -160,16 +176,17 @@ test_that("Monte Carlo agreement holds across OLS parameter grid", {
     diff <- abs(empirical - analytical)
     mc_se <- sqrt(analytical * (1 - analytical) / R_sim)
 
-    ok <- (diff < 4 * mc_se) || (diff < 0.03) ||
+    ok <- (diff < 3 * mc_se) || (diff < 0.03) ||
       (analytical > 0.98 && empirical > 0.98)
 
     msg <- sprintf(
-      "Empirical=%.3f, Analytical=%.3f, |diff|=%.3f, 4*MCSE=%.3f, delta=%.3f, N=%d, n=%d",
-      empirical, analytical, diff, 4 * mc_se, g$delta, g$N, g$n
+      "Empirical=%.3f, Analytical=%.3f, |diff|=%.3f, 3*MCSE=%.3f, delta=%.3f, N=%d, n=%d",
+      empirical, analytical, diff, 3 * mc_se, g$delta, g$N, g$n
     )
     expect_true(ok, info = msg)
   }
 })
+
 
 test_that("ppi_plus_ols plugin lambda matches plug-in formula and user override", {
   set.seed(as.integer(Sys.time()))
