@@ -7,21 +7,26 @@
 power_curve_binomial(n_grid, N, theta0 = 0, seed = 1, alpha = 0.05, R = 2000)
 }
 \arguments{
-\item{n_grid}{Integer vector of candidate labeled sample sizes.}
+\item{n_grid}{Numeric vector of labeled sample sizes to evaluate.}
 
 \item{N}{Unlabeled sample size.}
 
-\item{theta0}{Null value for the mean estimand.}
+\item{theta0}{Null value for the mean estimand \eqn{\theta_0}.}
 
-\item{seed}{Random seed forwarded to \code{simulate_crossfit_data()}.}
+\item{seed}{RNG seed used inside the per-\code{n} simulations.}
 
-\item{alpha}{Two-sided significance level.}
+\item{alpha}{Two-sided test level (default 0.05).}
 
-\item{R}{Number of Monte Carlo replicates passed to \code{simulate_power_ppi_mean()}.}
+\item{R}{Number of Monte Carlo replicates for empirical power (default 1000).}
 }
 \value{
-Data frame with the columns produced by \code{power_curve_mean()} plus
-\code{family}, \code{theta}, and \code{theta0} for downstream plotting.
+A data frame with one row per \code{n} in \code{n_grid}, containing:
+\describe{
+\item{n}{Labeled sample size.}
+\item{analytical}{Analytical power from the normal theory formula.}
+\item{empirical}{Monte Carlo power (rejection rate).}
+\item{abs_diff}{Absolute difference |empirical − analytical|.}
+}
 }
 \description{
 Convenience wrapper for Binomial DGP power curves

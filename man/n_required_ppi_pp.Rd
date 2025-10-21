@@ -2,13 +2,14 @@
 % Please edit documentation in R/required_n_ppi.R
 \name{n_required_ppi_pp}
 \alias{n_required_ppi_pp}
-\title{Required labeled sample size for desired PPI++ power}
+\title{Required labeled sample size for PPI++ (mean or OLS)}
 \usage{
 n_required_ppi_pp(
   delta,
   N,
   alpha = 0.05,
   power = 0.8,
+  type = c("mean", "ols"),
   sigma_y2 = NULL,
   sigma_f2 = NULL,
   cov_y_f = NULL,
@@ -18,89 +19,99 @@ n_required_ppi_pp(
   metric_type = NULL,
   m_labeled = NULL,
   correction = TRUE,
+  c = NULL,
+  H_L = NULL,
+  H_U = NULL,
+  Sigma_YY = NULL,
+  Sigma_ff_l = NULL,
+  Sigma_ff_u = NULL,
+  Sigma_Yf = NULL,
   warn_smallN = TRUE,
   smallN_threshold = 500,
   mode = c("error", "cap")
 )
 }
 \arguments{
-\item{delta}{Effect size \eqn{\theta - \theta_0}; must be non-zero.}
+\item{delta}{Effect size. For mean estimation, \code{theta - theta0}; for OLS, \code{t(c) \%*\% beta - theta0}.}
 
 \item{N}{Unlabeled sample size.}
 
-\item{alpha}{Two-sided significance level.}
+\item{alpha}{Significance level.}
 
-\item{power}{Target power (\eqn{1-\beta}).}
+\item{power}{Desired power (e.g., 0.8 for 80\%).}
 
-\item{sigma_y2}{Optional outcome variance; overrides anything implied by \code{metrics}.}
+\item{type}{One of \code{"mean"} (default) or \code{"ols"}.}
 
-\item{sigma_f2}{Optional prediction variance; overrides anything implied by \code{metrics}.}
+\item{sigma_y2}{Variance of Y.}
 
-\item{cov_y_f}{Optional covariance \eqn{\Cov(Y, f(X))}. When supplied (directly
-or via \code{metrics$cov_y_f}) the PPI++ power is returned in addition to the PP
-quantities.}
+\item{sigma_f2}{Variance of predictions f(X).}
 
-\item{var_f}{Optional variance of \eqn{f(X)}.}
+\item{cov_y_f}{Covariance between Y and f(X).}
 
-\item{var_res}{Optional residual variance of residual \eqn{Y - f(X)}.}
+\item{var_f}{Variance of f(X); used interchangeably with \code{sigma_f2}.}
 
-\item{metrics}{Optional list of predictive metrics (passed to
-\code{resolve_ppi_pp_moments()}).}
+\item{var_res}{Residual variance of Y - f(X).}
 
-\item{metric_type}{Character string describing \code{metrics} (e.g. \code{"continuous"},
-\code{"hard"}, \code{"prob"}, \code{"precision_recall"}).}
+\item{metrics}{Optional list of predictive metrics (e.g., MSE, R2) from model validation.}
 
-\item{m_labeled}{Labeled sample size associated with the metrics; defaults to
-\code{metrics$m_obs} when present.}
+\item{metric_type}{Type of predictive metric: \code{"continuous"} or \code{"binary"}.}
 
-\item{correction}{Logical; apply finite-sample variance corrections when
-deriving moments from metrics (default \code{TRUE}).}
+\item{m_labeled}{Number of labeled samples used to estimate metrics.}
 
-\item{warn_smallN}{Logical; warn if \code{N < smallN_threshold}.}
+\item{correction}{Logical; apply small-sample correction if \code{TRUE}.}
 
-\item{smallN_threshold}{Threshold that triggers the small-\code{N} warning.}
+\item{c}{Contrast vector for OLS contrasts (\code{t(c) \%*\% beta}).}
 
-\item{mode}{\code{"error"} (default) throws when the target power cannot be met with
-\verb{n \\le N}; \code{"cap"} returns \code{n = N} with the achieved power attached as an attribute.}
+\item{H_L, H_U}{Per-observation Hessians for labeled and unlabeled data (used in sandwich variance for OLS).}
+
+\item{Sigma_YY}{Covariance of X(Y - X'beta*).}
+
+\item{Sigma_ff_l, Sigma_ff_u}{Covariances of X(f(X) - X'beta*) for labeled/unlabeled data.}
+
+\item{Sigma_Yf}{Cross-covariance between labeled and predicted score vectors.}
+
+\item{warn_smallN}{Warn if unlabeled N is small enough that finite-sample effects dominate.}
+
+\item{smallN_threshold}{Threshold for triggering small-N warning (default = 500).}
+
+\item{mode}{Behavior if required n_star exceeds N.
+Either \code{"error"} (default) to throw an error, or \code{"cap"} to cap n_star = N and return achieved power.}
 }
 \value{
-Integer labeled sample size; if \code{mode = "cap"} and the cap is hit, the
-returned value carries an \code{"achieved_power"} attribute.
+Integer labeled sample size (\code{n_star}).
 }
 \description{
-Finds the minimum labeled sample size \eqn{n} that achieves a target two-sided
-power for the PP++ mean estimator when the oracle blend \eqn{\lambda^\star} is
-used. You can supply raw moments (\code{sigma_y2}, \code{sigma_f2}, \code{cov_y_f}) or reuse
-the metrics interface to infer them.
+Computes the minimum labeled sample size (\code{n_star}) required to achieve a desired
+statistical power under the Prediction-Powered Plus (PPI++) framework.
+Supports both mean estimation and linear regression (PPI++–OLS).
 }
 \examples{
-# PP++ mean estimator using direct moment inputs
+# PPI++ mean estimator using direct moments
 n_required_ppi_pp(
-  delta = 0.2,
-  N = 4000,
-  alpha = 0.05,
-  power = 0.8,
-  sigma_y2 = 1.0,
-  sigma_f2 = 0.4,
-  cov_y_f = 0.18,
-  var_f = 0.4,
-  var_res = 0.6
+  delta = 0.2, N = 4000, alpha = 0.05, power = 0.8,
+  sigma_y2 = 1.0, sigma_f2 = 0.4, cov_y_f = 0.18,
+  var_f = 0.4, var_res = 0.6
 )
 
-# Same calculation, recovering moments from predictive metrics
-metrics_pp <- list(
-  type = "continuous",
-  mse = 0.6,
-  var_y = 1.0,
-  cov_y_f = 0.18,
-  m_obs = 300
-)
+# Using predictive metrics
+metrics_pp <- list(type = "continuous", mse = 0.6, var_y = 1.0, cov_y_f = 0.18, m_obs = 300)
 n_required_ppi_pp(
-  delta = 0.2,
-  N = 4000,
-  alpha = 0.05,
-  power = 0.8,
-  metrics = metrics_pp,
-  metric_type = "continuous"
+  delta = 0.2, N = 4000, alpha = 0.05, power = 0.8,
+  metrics = metrics_pp, metric_type = "continuous"
 )
+
+# OLS example
+c_vec <- c(0, 1, 0)
+H_pop <- diag(3)
+Sigma_YY_pop <- diag(3)
+Sigma_ff_pop <- 0.5 * diag(3)
+Sigma_Yf_pop <- 0.3 * diag(3)
+n_required_ppi_pp(
+  delta = 0.15, N = 2000, alpha = 0.05, power = 0.8,
+  type = "ols",
+  c = c_vec, H_L = H_pop, H_U = H_pop,
+  Sigma_YY = Sigma_YY_pop, Sigma_ff_l = Sigma_ff_pop,
+  Sigma_ff_u = Sigma_ff_pop, Sigma_Yf = Sigma_Yf_pop
+)
+
 }

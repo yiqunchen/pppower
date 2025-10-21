@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotting.R
 \name{power_curve_mean_dgp}
 \alias{power_curve_mean_dgp}
-\title{Power curve using Gaussian/Binomial DGPs}
+\title{Power curve for PPI mean with supplied population moments}
 \usage{
 power_curve_mean_dgp(
   n_grid = seq(50, 200, by = 25),
@@ -18,35 +18,47 @@ power_curve_mean_dgp(
 )
 }
 \arguments{
-\item{n_grid}{Integer vector of candidate labeled sample sizes.}
+\item{n_grid}{Numeric vector of labeled sample sizes to evaluate.}
 
 \item{N}{Unlabeled sample size.}
 
-\item{theta0}{Null value for the mean estimand.}
+\item{theta0}{Null value for the mean estimand \eqn{\theta_0}.}
 
-\item{var_f}{Variance of \eqn{f(X)}.}
+\item{var_f}{Population variance of predictions \eqn{Var(f(X))}.}
 
-\item{var_res}{Variance of residuals \eqn{Y - f(X)}.}
+\item{var_res}{Population residual variance \eqn{Var(Y - f(X))}.}
 
 \item{delta}{Effect size \eqn{\theta - \theta_0}.}
 
-\item{family}{GLM family passed to the DGP; defaults to \code{stats::gaussian()}
-(with identity link) or \code{stats::binomial()} (logistic).}
+\item{family}{GLM family (default \code{stats::gaussian()}). Included for API
+consistency; the analytical calculation depends only on \code{var_f}, \code{var_res},
+\code{N}, \code{n}, and \code{delta}.}
 
-\item{R}{Number of Monte Carlo replicates passed to \code{simulate_power_ppi_mean()}.}
+\item{R}{Number of Monte Carlo replicates for empirical power (default 1000).}
 
-\item{alpha}{Two-sided significance level.}
+\item{alpha}{Two-sided test level (default 0.05).}
 
-\item{seed}{Random seed forwarded to \code{simulate_crossfit_data()}.}
+\item{seed}{RNG seed used inside the per-\code{n} simulations.}
 }
 \value{
-Data frame with the columns produced by \code{power_curve_mean()} plus
-\code{family}, \code{theta}, and \code{theta0} for downstream plotting.
+A data frame with one row per \code{n} in \code{n_grid}, containing:
+\describe{
+\item{n}{Labeled sample size.}
+\item{analytical}{Analytical power from the normal theory formula.}
+\item{empirical}{Monte Carlo power (rejection rate).}
+\item{abs_diff}{Absolute difference |empirical − analytical|.}
+}
 }
 \description{
-Generates a synthetic superpopulation via \code{simulate_crossfit_data()} and
-computes Monte Carlo power curves for the PP mean estimator over a grid of
-labeled sample sizes using \code{simulate_power_ppi_mean()}.
+Computes \strong{analytical} and \strong{Monte Carlo} power for the prediction-powered
+mean estimator across a grid of labeled sample sizes \code{n_grid}, given
+population moments and an effect size. This function does \strong{not} simulate a
+superpopulation; instead, you provide the required moments:
+\eqn{\sigma_f^2 = Var(f(X))}, \eqn{\sigma_{\mathrm{res}}^2 = Var(Y - f(X))},
+and the effect size \eqn{\delta = \theta - \theta_0}. For each \code{n} in
+\code{n_grid}, analytical power is computed from the normal theory formula using
+\eqn{\sqrt{\sigma_f^2/N + \sigma_{\mathrm{res}}^2/n}}, and empirical power is
+estimated via Monte Carlo using \code{simulate_power_ppi_mean()}.
 }
 \examples{
 power_curve_mean_dgp(
@@ -58,5 +70,4 @@ power_curve_mean_dgp(
   delta = 0.2,
   R = 1000
 )
-
 }

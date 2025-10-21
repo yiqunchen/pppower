@@ -100,22 +100,39 @@ power_curve_mean <- function(n_grid,
   )
 }
 
-#' Power curve using Gaussian/Binomial DGPs
+#' Power curve for PPI mean with supplied population moments
 #'
 #' @description
-#' Generates a synthetic superpopulation via `simulate_crossfit_data()` and
-#' computes Monte Carlo power curves for the PP mean estimator over a grid of
-#' labeled sample sizes using `simulate_power_ppi_mean()`.
+#' Computes **analytical** and **Monte Carlo** power for the prediction-powered
+#' mean estimator across a grid of labeled sample sizes `n_grid`, given
+#' population moments and an effect size. This function does **not** simulate a
+#' superpopulation; instead, you provide the required moments:
+#' \eqn{\sigma_f^2 = Var(f(X))}, \eqn{\sigma_{\mathrm{res}}^2 = Var(Y - f(X))},
+#' and the effect size \eqn{\delta = \theta - \theta_0}. For each `n` in
+#' `n_grid`, analytical power is computed from the normal theory formula using
+#' \eqn{\sqrt{\sigma_f^2/N + \sigma_{\mathrm{res}}^2/n}}, and empirical power is
+#' estimated via Monte Carlo using `simulate_power_ppi_mean()`.
 #'
-#' @inheritParams power_curve_mean
-#' @param theta0 Null value for the mean estimand.
-#' @param family GLM family passed to the DGP; defaults to `stats::gaussian()`
-#'   (with identity link) or `stats::binomial()` (logistic).
-#' @param seed Random seed forwarded to `simulate_crossfit_data()`.
-#' @param R Number of Monte Carlo replicates passed to `simulate_power_ppi_mean()`.
+#' @param n_grid Numeric vector of labeled sample sizes to evaluate.
+#' @param N Unlabeled sample size.
+#' @param theta0 Null value for the mean estimand \eqn{\theta_0}.
+#' @param var_f Population variance of predictions \eqn{Var(f(X))}.
+#' @param var_res Population residual variance \eqn{Var(Y - f(X))}.
+#' @param delta Effect size \eqn{\theta - \theta_0}.
+#' @param family GLM family (default `stats::gaussian()`). Included for API
+#'   consistency; the analytical calculation depends only on `var_f`, `var_res`,
+#'   `N`, `n`, and `delta`.
+#' @param R Number of Monte Carlo replicates for empirical power (default 1000).
+#' @param alpha Two-sided test level (default 0.05).
+#' @param seed RNG seed used inside the per-`n` simulations.
 #'
-#' @return Data frame with the columns produced by `power_curve_mean()` plus
-#'   `family`, `theta`, and `theta0` for downstream plotting.
+#' @return A data frame with one row per `n` in `n_grid`, containing:
+#'   \describe{
+#'     \item{n}{Labeled sample size.}
+#'     \item{analytical}{Analytical power from the normal theory formula.}
+#'     \item{empirical}{Monte Carlo power (rejection rate).}
+#'     \item{abs_diff}{Absolute difference |empirical − analytical|.}
+#'   }
 #'
 #' @examples
 #' power_curve_mean_dgp(
@@ -127,7 +144,6 @@ power_curve_mean <- function(n_grid,
 #'   delta = 0.2,
 #'   R = 1000
 #' )
-#'
 #' @export
 power_curve_mean_dgp <- function(
   n_grid = seq(50, 200, by = 25),
@@ -323,34 +339,55 @@ type1_error_curve_mean <- function(effect_grid,
   )
 }
 
-#' Type I error curve using Gaussian/Binomial DGPs
+#' Type I error and power curve for the PPI mean estimator
 #'
 #' @description
-#' Simulates superpopulation data via `simulate_crossfit_data()` and evaluates
-#' empirical and analytical Type I error across an effect-size grid by repeatedly
-#' calling `simulate_power_ppi_mean()`.
+#' Computes empirical and analytical Type I error (or power) across a grid of
+#' effect sizes for the prediction-powered mean estimator, **without simulating
+#' a superpopulation**. Instead of generating data, you supply the key population
+#' quantities directly:
+#' \eqn{\sigma_f^2 = Var(f(X))} and \eqn{\sigma_{\mathrm{res}}^2 = Var(Y - f(X))}.
+#' Analytical power is computed from the normal theory formula
+#' \eqn{\sqrt{\sigma_f^2/N + \sigma_{\mathrm{res}}^2/n}}, while empirical power is
+#' estimated via repeated Monte Carlo simulations using
+#' [`simulate_power_ppi_mean()`].
 #'
-#' @inheritParams power_curve_mean_dgp
-#' @param effect_grid Numeric vector of effect sizes \eqn{\theta - \theta_0} to
-#'   evaluate.
-#' @param n Labeled sample size used inside `simulate_power_ppi_mean()`.
-#' @param var_f Variance of \eqn{f(X)}.
-#' @param var_res Residual variance.
-#' @param theta True mean of \eqn{Y} under the alternative.
+#' @param effect_grid Numeric vector of effect sizes \eqn{\delta = \theta - \theta_0}
+#'   over which to evaluate Type I error / power.
+#' @param N Unlabeled sample size.
+#' @param n Labeled sample size.
+#' @param var_f Variance of predictions \eqn{Var(f(X))}.
+#' @param var_res Residual variance \eqn{Var(Y - f(X))}.
+#' @param theta True mean of \eqn{Y} under the alternative. Defaults to 0.
+#'   Only affects \eqn{\theta_0 = \theta - \delta}; it does not change power.
+#' @param alpha Two-sided significance level (default 0.05).
+#' @param R Number of Monte Carlo replicates (default 2000).
+#' @param seed RNG seed for reproducibility (default 1).
 #'
-#' @return Data frame with columns `effect_size`, `type1_empirical`,
-#'   `type1_exact`, `theta`, `theta0`, and additional metadata mirroring the
-#'   inputs.
+#' @return A data frame with one row per value in `effect_grid`, containing:
+#' \describe{
+#'   \item{effect_size}{The effect size \eqn{\delta}.}
+#'   \item{type1_empirical}{Empirical power (or Type I error when \eqn{\delta = 0}).}
+#'   \item{type1_exact}{Analytical power from the normal theory formula.}
+#'   \item{theta}{True mean of \eqn{Y}.}
+#'   \item{theta0}{Null value \eqn{\theta_0}.}
+#'   \item{N}{Unlabeled sample size.}
+#'   \item{n}{Labeled sample size.}
+#'   \item{alpha}{Significance level.}
+#'   \item{var_f}{Prediction variance.}
+#'   \item{var_res}{Residual variance.}
+#'   \item{family}{Distribution family used (`"gaussian"`).}
+#' }
 #'
 #' @examples
-#' curve <- type1_error_curve_mean_dgp(
-#'   effect_grid = seq(-0.4, 0.4, by = 0.05),  # range of effect sizes to test
-#'   N           = 4000,                       # unlabeled sample size
-#'   n           = 200,                        # labeled sample size
-#'   var_f       = 0.45,                       # variance of f(X)
-#'   var_res     = 0.80,                       # variance of residuals
-#'   theta       = 0,                          # null mean (can be 0)
-#'   R           = 2000                        # number of Monte Carlo reps
+#' type1_error_curve_mean_dgp(
+#'   effect_grid = seq(-0.4, 0.4, by = 0.05),
+#'   N           = 4000,
+#'   n           = 200,
+#'   var_f       = 0.45,
+#'   var_res     = 0.80,
+#'   theta       = 0,
+#'   R           = 2000
 #' )
 #'
 #' @export

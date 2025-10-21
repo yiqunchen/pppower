@@ -35,7 +35,6 @@ test_that("power_ppi_ols approaches one for large effects", {
 })
 
 test_that("Monte Carlo power aligns with analytical power for PPI and PPI++ OLS", {
-  skip_on_cran()
   seed_base <- 20240618L
   set.seed(seed_base)
 
@@ -127,7 +126,6 @@ test_that("Monte Carlo power aligns with analytical power for PPI and PPI++ OLS"
 })
 
 test_that("Monte Carlo agreement holds across OLS parameter grid", {
-  skip_on_cran()
   set.seed(as.integer(Sys.Date()))
 
   beta_grid <- c(0.5, 0.35, -0.25, 0.15)
@@ -154,11 +152,21 @@ test_that("Monte Carlo agreement holds across OLS parameter grid", {
 
   for (i in seq_len(nrow(grid))) {
     g <- grid[i, ]
-    moments_ppi <- list(
-      delta    = g$delta,
-      H        = H_pop,
-      Sigma_YY = Sigma_YY_pop
-    )
+  moments_ppi <- list(
+    delta    = g$delta,
+    H        = H_pop,
+    Sigma_YY = Sigma_YY_pop
+  )
+
+  moments_ppiplus <- list(
+    delta = g$delta,
+    H_L = H_pop,
+    H_U = H_pop,
+    Sigma_YY = Sigma_YY_pop,
+    Sigma_ff_l = Sigma_ff_pop,
+    Sigma_ff_u = Sigma_ff_pop,
+    Sigma_Yf = Sigma_Yf_pop
+  )
 
     res <- simulate_power_ppi_ols(
       R = R_sim,
@@ -184,6 +192,135 @@ test_that("Monte Carlo agreement holds across OLS parameter grid", {
       empirical, analytical, diff, 3 * mc_se, g$delta, g$N, g$n
     )
     expect_true(ok, info = msg)
+
+    res_ppiplus <- simulate_power_ppi_pp_ols(
+      R = R_sim,
+      n = g$n,
+      N = g$N,
+      contrast = c_vec,
+      alpha = alpha,
+      family = stats::gaussian(),
+      lambda_type = "plugin",
+      moments = moments_ppiplus,
+      seed = 2000 + i
+    )
+
+    empirical_ppiplus <- res_ppiplus$empirical_power
+    analytical_ppiplus <- res_ppiplus$analytical_power
+    diff_ppiplus <- abs(empirical_ppiplus - analytical_ppiplus)
+    mc_se_ppiplus <- sqrt(analytical_ppiplus * (1 - analytical_ppiplus) / R_sim)
+
+    ok_ppiplus <- (diff_ppiplus < 3 * mc_se_ppiplus) || (diff_ppiplus < 0.03) ||
+      (analytical_ppiplus > 0.98 && empirical_ppiplus > 0.98)
+
+    msg_ppiplus <- sprintf(
+      "PPI++ OLS: Empirical=%.3f, Analytical=%.3f, |diff|=%.3f, 3*MCSE=%.3f, delta=%.3f, N=%d, n=%d",
+      empirical_ppiplus, analytical_ppiplus, diff_ppiplus, 3 * mc_se_ppiplus, g$delta, g$N, g$n
+    )
+    expect_true(ok_ppiplus, info = msg_ppiplus)
+  }
+})
+
+test_that("Monte Carlo agreement holds across OLS parameter grid (Binomial)", {
+  set.seed(as.integer(Sys.Date()))
+
+  beta_grid <- c(-0.2, 0.8, -0.4, 0.2)    # logistic coefficients
+  c_vec <- c(0, 1, 0, 0)
+
+  # Pick a representative mean probability (e.g., marginal mean)
+  p_mean <- 0.6
+  var_y_pop <- p_mean * (1 - p_mean)       # Bernoulli variance
+
+  # Prediction variance (variance of f(X) = P(Y=1 | X))
+  sigma_f2_grid <- 0.20
+  var_f_pop <- sigma_f2_grid
+
+  # Residual variance for Bernoulli: Var(Y - f(X)) = p(1-p) - Var(f(X))
+  var_res_pop <- var_y_pop - var_f_pop
+
+  # Fisher information matrix for logistic regression ~ expected Hessian
+  p <- length(beta_grid)
+  H_pop <- var_y_pop * diag(p)           # approx. E[ X'WX ]
+  Sigma_YY_pop  <- var_y_pop * diag(p)
+  Sigma_ff_pop  <- sigma_f2_grid * diag(p)
+  Sigma_Yf_pop  <- sigma_f2_grid * diag(p) # assume unbiased predictor
+
+  grid <- expand.grid(
+    delta = c(0.08, 0.15, 0.25),
+    N     = c(1600, 2300),
+    n     = c(180, 280),
+    KEEP.OUT.ATTRS = FALSE
+  )
+
+  for (i in seq_len(nrow(grid))) {
+    g <- grid[i, ]
+
+    moments_ppi <- list(
+      delta    = g$delta,
+      H        = H_pop,
+      Sigma_YY = Sigma_YY_pop
+    )
+
+    moments_ppiplus <- list(
+      delta       = g$delta,
+      H_L         = H_pop,
+      H_U         = H_pop,
+      Sigma_YY    = Sigma_YY_pop,
+      Sigma_ff_l  = Sigma_ff_pop,
+      Sigma_ff_u  = Sigma_ff_pop,
+      Sigma_Yf    = Sigma_Yf_pop
+    )
+
+    res <- simulate_power_ppi_ols(
+      R = R_sim,
+      n = g$n,
+      N = g$N,
+      contrast = c_vec,
+      alpha = alpha,
+      family = stats::binomial(),
+      moments = moments_ppi,
+      seed = 1000 + i
+    )
+
+    empirical <- res$empirical_power
+    analytical <- res$analytical_power
+    diff <- abs(empirical - analytical)
+    mc_se <- sqrt(analytical * (1 - analytical) / R_sim)
+
+    ok <- (diff < 3 * mc_se) || (diff < 0.03) ||
+      (analytical > 0.98 && empirical > 0.98)
+
+    msg <- sprintf(
+      "Binomial PPI OLS: Empirical=%.3f, Analytical=%.3f, |diff|=%.3f, 3*MCSE=%.3f, delta=%.3f, N=%d, n=%d",
+      empirical, analytical, diff, 3 * mc_se, g$delta, g$N, g$n
+    )
+    expect_true(ok, info = msg)
+
+    res_ppiplus <- simulate_power_ppi_pp_ols(
+      R = R_sim,
+      n = g$n,
+      N = g$N,
+      contrast = c_vec,
+      alpha = alpha,
+      family = stats::binomial(),
+      lambda_type = "plugin",
+      moments = moments_ppiplus,
+      seed = 2000 + i
+    )
+
+    empirical_ppiplus <- res_ppiplus$empirical_power
+    analytical_ppiplus <- res_ppiplus$analytical_power
+    diff_ppiplus <- abs(empirical_ppiplus - analytical_ppiplus)
+    mc_se_ppiplus <- sqrt(analytical_ppiplus * (1 - analytical_ppiplus) / R_sim)
+
+    ok_ppiplus <- (diff_ppiplus < 3 * mc_se_ppiplus) || (diff_ppiplus < 0.03) ||
+      (analytical_ppiplus > 0.98 && empirical_ppiplus > 0.98)
+
+    msg_ppiplus <- sprintf(
+      "Binomial PPI++ OLS: Empirical=%.3f, Analytical=%.3f, |diff|=%.3f, 3*MCSE=%.3f, delta=%.3f, N=%d, n=%d",
+      empirical_ppiplus, analytical_ppiplus, diff_ppiplus, 3 * mc_se_ppiplus, g$delta, g$N, g$n
+    )
+    expect_true(ok_ppiplus, info = msg_ppiplus)
   }
 })
 

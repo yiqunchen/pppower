@@ -72,7 +72,7 @@ simulate_power_ppi_mean <- function(R,
                                     theta0 = 0) {
   if (!is.null(seed)) set.seed(seed)
 
-  # ---- Resolve population moments ----
+  # Resolve population moments
   if (!is.null(moments)) {
     delta   <- moments$delta   %||% delta
     var_f   <- moments$var_f   %||% var_f

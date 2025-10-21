@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotting.R
 \name{type1_error_curve_mean_dgp}
 \alias{type1_error_curve_mean_dgp}
-\title{Type I error curve using Gaussian/Binomial DGPs}
+\title{Type I error and power curve for the PPI mean estimator}
 \usage{
 type1_error_curve_mean_dgp(
   effect_grid,
@@ -17,44 +17,62 @@ type1_error_curve_mean_dgp(
 )
 }
 \arguments{
-\item{effect_grid}{Numeric vector of effect sizes \eqn{\theta - \theta_0} to
-evaluate.}
+\item{effect_grid}{Numeric vector of effect sizes \eqn{\delta = \theta - \theta_0}
+over which to evaluate Type I error / power.}
 
 \item{N}{Unlabeled sample size.}
 
-\item{n}{Labeled sample size used inside \code{simulate_power_ppi_mean()}.}
+\item{n}{Labeled sample size.}
 
-\item{var_f}{Variance of \eqn{f(X)}.}
+\item{var_f}{Variance of predictions \eqn{Var(f(X))}.}
 
-\item{var_res}{Residual variance.}
+\item{var_res}{Residual variance \eqn{Var(Y - f(X))}.}
 
-\item{theta}{True mean of \eqn{Y} under the alternative.}
+\item{theta}{True mean of \eqn{Y} under the alternative. Defaults to 0.
+Only affects \eqn{\theta_0 = \theta - \delta}; it does not change power.}
 
-\item{alpha}{Two-sided significance level.}
+\item{alpha}{Two-sided significance level (default 0.05).}
 
-\item{R}{Number of Monte Carlo replicates passed to \code{simulate_power_ppi_mean()}.}
+\item{R}{Number of Monte Carlo replicates (default 2000).}
 
-\item{seed}{Random seed forwarded to \code{simulate_crossfit_data()}.}
+\item{seed}{RNG seed for reproducibility (default 1).}
 }
 \value{
-Data frame with columns \code{effect_size}, \code{type1_empirical},
-\code{type1_exact}, \code{theta}, \code{theta0}, and additional metadata mirroring the
-inputs.
+A data frame with one row per value in \code{effect_grid}, containing:
+\describe{
+\item{effect_size}{The effect size \eqn{\delta}.}
+\item{type1_empirical}{Empirical power (or Type I error when \eqn{\delta = 0}).}
+\item{type1_exact}{Analytical power from the normal theory formula.}
+\item{theta}{True mean of \eqn{Y}.}
+\item{theta0}{Null value \eqn{\theta_0}.}
+\item{N}{Unlabeled sample size.}
+\item{n}{Labeled sample size.}
+\item{alpha}{Significance level.}
+\item{var_f}{Prediction variance.}
+\item{var_res}{Residual variance.}
+\item{family}{Distribution family used (\code{"gaussian"}).}
+}
 }
 \description{
-Simulates superpopulation data via \code{simulate_crossfit_data()} and evaluates
-empirical and analytical Type I error across an effect-size grid by repeatedly
-calling \code{simulate_power_ppi_mean()}.
+Computes empirical and analytical Type I error (or power) across a grid of
+effect sizes for the prediction-powered mean estimator, \strong{without simulating
+a superpopulation}. Instead of generating data, you supply the key population
+quantities directly:
+\eqn{\sigma_f^2 = Var(f(X))} and \eqn{\sigma_{\mathrm{res}}^2 = Var(Y - f(X))}.
+Analytical power is computed from the normal theory formula
+\eqn{\sqrt{\sigma_f^2/N + \sigma_{\mathrm{res}}^2/n}}, while empirical power is
+estimated via repeated Monte Carlo simulations using
+\code{\link[=simulate_power_ppi_mean]{simulate_power_ppi_mean()}}.
 }
 \examples{
-curve <- type1_error_curve_mean_dgp(
-  effect_grid = seq(-0.4, 0.4, by = 0.05),  # range of effect sizes to test
-  N           = 4000,                       # unlabeled sample size
-  n           = 200,                        # labeled sample size
-  var_f       = 0.45,                       # variance of f(X)
-  var_res     = 0.80,                       # variance of residuals
-  theta       = 0,                          # null mean (can be 0)
-  R           = 2000                        # number of Monte Carlo reps
+type1_error_curve_mean_dgp(
+  effect_grid = seq(-0.4, 0.4, by = 0.05),
+  N           = 4000,
+  n           = 200,
+  var_f       = 0.45,
+  var_res     = 0.80,
+  theta       = 0,
+  R           = 2000
 )
 
 }
