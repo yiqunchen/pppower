@@ -47,12 +47,14 @@ empirical and analytical Type I error across an effect-size grid by repeatedly
 calling \code{simulate_power_ppi_mean()}.
 }
 \examples{
-type1_error_curve_mean_dgp(
-  effect_grid = seq(-0.4, 0.4, by = 0.05),
-  N = 4000,
-  n = 200,
-  family = stats::gaussian(),
-  R = 2000
+curve <- type1_error_curve_mean_dgp(
+  effect_grid = seq(-0.4, 0.4, by = 0.05),  # range of effect sizes to test
+  N           = 4000,                       # unlabeled sample size
+  n           = 200,                        # labeled sample size
+  var_f       = 0.45,                       # variance of f(X)
+  var_res     = 0.80,                       # variance of residuals
+  theta       = 0,                          # null mean (can be 0)
+  R           = 2000                        # number of Monte Carlo reps
 )
 
 }
