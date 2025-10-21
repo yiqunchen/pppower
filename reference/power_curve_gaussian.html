@@ -62,7 +62,7 @@
 
 
 <dl><dt id="arg-n-grid">n_grid<a class="anchor" aria-label="anchor" href="#arg-n-grid"></a></dt>
-<dd><p>Integer vector of candidate labeled sample sizes.</p></dd>
+<dd><p>Numeric vector of labeled sample sizes to evaluate.</p></dd>
 
 
 <dt id="arg-n">N<a class="anchor" aria-label="anchor" href="#arg-n"></a></dt>
@@ -70,26 +70,37 @@
 
 
 <dt id="arg-theta-">theta0<a class="anchor" aria-label="anchor" href="#arg-theta-"></a></dt>
-<dd><p>Null value for the mean estimand.</p></dd>
+<dd><p>Null value for the mean estimand \(\theta_0\).</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Random seed forwarded to <code><a href="simulate_crossfit_data.html">simulate_crossfit_data()</a></code>.</p></dd>
+<dd><p>RNG seed used inside the per-<code>n</code> simulations.</p></dd>
 
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
-<dd><p>Two-sided significance level.</p></dd>
+<dd><p>Two-sided test level (default 0.05).</p></dd>
 
 
 <dt id="arg-r">R<a class="anchor" aria-label="anchor" href="#arg-r"></a></dt>
-<dd><p>Number of Monte Carlo replicates passed to <code><a href="simulate_power_ppi_mean.html">simulate_power_ppi_mean()</a></code>.</p></dd>
+<dd><p>Number of Monte Carlo replicates for empirical power (default 1000).</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Data frame with the columns produced by <code><a href="power_curve_mean.html">power_curve_mean()</a></code> plus
-<code>family</code>, <code>theta</code>, and <code>theta0</code> for downstream plotting.</p>
-    </div>
+    <p>A data frame with one row per <code>n</code> in <code>n_grid</code>, containing:</p><dl><dt>n</dt>
+<dd><p>Labeled sample size.</p></dd>
+
+<dt>analytical</dt>
+<dd><p>Analytical power from the normal theory formula.</p></dd>
+
+<dt>empirical</dt>
+<dd><p>Monte Carlo power (rejection rate).</p></dd>
+
+<dt>abs_diff</dt>
+<dd><p>Absolute difference |empirical − analytical|.</p></dd>
+
+
+</dl></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
