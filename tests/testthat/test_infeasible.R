@@ -1,5 +1,4 @@
-test_that("n_required_PP correctly detects infeasible configurations", {
-
+test_that("n_required_pp correctly detects infeasible configurations", {
   # Case where unlabeled term dominates: var_f / N >= delta^2 / c0^2, also for small N
   delta  <- 0.1
   var_f  <- 2.0
@@ -9,7 +8,7 @@ test_that("n_required_PP correctly detects infeasible configurations", {
   power <- 0.8
 
   expect_error(
-    n_required_PP(
+    n_required_pp(
       delta = delta,
       N = N,
       alpha = alpha,
@@ -23,7 +22,7 @@ test_that("n_required_PP correctly detects infeasible configurations", {
 
   delta2 <- 0.5
   expect_warning(
-    n_required_PP(
+    n_required_pp(
       delta = delta2,
       N = N,
       alpha = alpha,
@@ -43,7 +42,7 @@ test_that("n_required_PP correctly detects infeasible configurations", {
   N <- 1000
 
   expect_no_error(
-    n_required_PP(
+    n_required_pp(
       delta = delta,
       N = N,
       alpha = alpha,
@@ -56,7 +55,7 @@ test_that("n_required_PP correctly detects infeasible configurations", {
 
   N_big <- 1e6
   expect_no_error(
-    n_required_PP(
+    n_required_pp(
       delta = delta,
       N = N_big,
       alpha = alpha,
@@ -69,7 +68,7 @@ test_that("n_required_PP correctly detects infeasible configurations", {
 })
 
 
-test_that("n_required_PP returns expected sample size for the mean estimator", {
+test_that("n_required_pp returns expected sample size for the mean estimator", {
   delta <- 0.2
   N <- 1000
   alpha <- 0.05
@@ -81,7 +80,7 @@ test_that("n_required_PP returns expected sample size for the mean estimator", {
   denom <- (delta^2 / c0^2) - (var_f / N)
   expected_n <- as.integer(ceiling(var_res / denom))
 
-  result <- n_required_PP(
+  result <- n_required_pp(
     delta = delta,
     N = N,
     alpha = alpha,
@@ -95,7 +94,7 @@ test_that("n_required_PP returns expected sample size for the mean estimator", {
   expect_identical(result, expected_n)
 })
 
-test_that("n_required_PP matches analytical solution for PP-OLS contrasts", {
+test_that("n_required_pp matches analytical solution for PP-OLS contrasts", {
   delta <- 0.15
   N <- 4000
   alpha <- 0.05
@@ -110,7 +109,7 @@ test_that("n_required_PP matches analytical solution for PP-OLS contrasts", {
   denom <- (delta^2 / c0^2) - (var_u / N)
   expected_n <- as.integer(ceiling(var_l / denom))
 
-  result <- n_required_PP(
+  result <- n_required_pp(
     delta = delta,
     N = N,
     alpha = alpha,
@@ -125,7 +124,7 @@ test_that("n_required_PP matches analytical solution for PP-OLS contrasts", {
   expect_identical(result, expected_n)
 })
 
-test_that("n_required_PP caps infeasible requests and records achieved power", {
+test_that("n_required_pp caps infeasible requests and records achieved power", {
   delta <- 0.05
   N <- 120
   alpha <- 0.05
@@ -134,7 +133,7 @@ test_that("n_required_PP caps infeasible requests and records achieved power", {
   var_labeled <- 2
 
   expect_warning(
-    capped <- n_required_PP(
+    capped <- n_required_pp(
       delta = delta,
       N = N,
       alpha = alpha,
@@ -155,9 +154,9 @@ test_that("n_required_PP caps infeasible requests and records achieved power", {
   expect_gt(achieved, 0)
 })
 
-test_that("n_required_PP validates required inputs by type", {
+test_that("n_required_pp validates required inputs by type", {
   expect_error(
-    n_required_PP(
+    n_required_pp(
       delta = 0.2,
       N = 600,
       type = "mean",
@@ -167,7 +166,7 @@ test_that("n_required_PP validates required inputs by type", {
   )
 
   expect_error(
-    n_required_PP(
+    n_required_pp(
       delta = 0.2,
       N = 600,
       type = "mean",
@@ -178,7 +177,7 @@ test_that("n_required_PP validates required inputs by type", {
   )
 
   expect_error(
-    n_required_PP(
+    n_required_pp(
       delta = 0.2,
       N = 600,
       type = "mean",
@@ -189,7 +188,7 @@ test_that("n_required_PP validates required inputs by type", {
   )
 
   expect_error(
-    n_required_PP(
+    n_required_pp(
       delta = 0.2,
       N = 600,
       type = "ols",
@@ -203,7 +202,7 @@ test_that("n_required_PP validates required inputs by type", {
   V_l <- diag(c(0.5, 0.7))
 
   expect_error(
-    n_required_PP(
+    n_required_pp(
       delta = 0.2,
       N = 600,
       type = "ols",
@@ -215,7 +214,7 @@ test_that("n_required_PP validates required inputs by type", {
   )
 
   expect_error(
-    n_required_PP(
+    n_required_pp(
       delta = 0.2,
       N = 600,
       type = "custom",
@@ -226,7 +225,7 @@ test_that("n_required_PP validates required inputs by type", {
   )
 
   expect_error(
-    n_required_PP(
+    n_required_pp(
       delta = 0.2,
       N = 600,
       type = "custom",
@@ -234,5 +233,233 @@ test_that("n_required_PP validates required inputs by type", {
       var_labeled = 0
     ),
     regexp = "var_labeled must be positive"
+  )
+})
+
+test_that("n_required_ppi_pp matches the PPI++ quadratic solution", {
+  delta <- 0.25
+  N <- 3000
+  alpha <- 0.05
+  power <- 0.8
+  sigma_y2 <- 1.1
+  sigma_f2 <- 0.4
+  cov_y_f  <- 0.2
+  var_f <- sigma_f2
+  var_res <- sigma_y2 - sigma_f2
+
+  z_alpha <- stats::qnorm(1 - alpha / 2)
+  z_beta  <- stats::qnorm(power)
+  S2 <- (delta / (z_alpha + z_beta))^2
+  discrim <- (sigma_y2 - S2 * N)^2 +
+    4 * S2 * N * (sigma_y2 - (cov_y_f^2 / sigma_f2))
+  expected_n <- ceiling((sigma_y2 - S2 * N + sqrt(discrim)) / (2 * S2))
+
+  result <- n_required_ppi_pp(
+    delta = delta,
+    N = N,
+    alpha = alpha,
+    power = power,
+    sigma_y2 = sigma_y2,
+    sigma_f2 = sigma_f2,
+    cov_y_f = cov_y_f,
+    var_f = var_f,
+    var_res = var_res,
+    warn_smallN = FALSE
+  )
+
+  expect_identical(result, as.integer(expected_n))
+})
+
+test_that("n_required_ppi_pp works with metrics input", {
+  delta <- 0.18
+  N <- 2500
+  alpha <- 0.05
+  power <- 0.85
+  sigma_y2 <- 0.9
+  sigma_f2 <- 0.35
+  cov_y_f  <- 0.12
+  var_res  <- sigma_y2 - sigma_f2
+
+  metrics <- list(
+    type = "continuous",
+    mse = var_res,
+    var_y = sigma_y2,
+    cov_y_f = cov_y_f,
+    m_obs = 200
+  )
+
+  direct <- n_required_ppi_pp(
+    delta = delta,
+    N = N,
+    alpha = alpha,
+    power = power,
+    sigma_y2 = sigma_y2,
+    sigma_f2 = sigma_f2,
+    cov_y_f = cov_y_f,
+    var_f = sigma_f2,
+    var_res = var_res,
+    warn_smallN = FALSE
+  )
+
+  via_metrics <- n_required_ppi_pp(
+    delta = delta,
+    N = N,
+    alpha = alpha,
+    power = power,
+    metrics = metrics,
+    metric_type = "continuous",
+    warn_smallN = FALSE
+  )
+
+  expect_identical(via_metrics, direct)
+})
+
+test_that("n_required_ppi_pp works with binary metrics input", {
+  delta <- 0.22
+  N <- 1800
+  alpha <- 0.05
+  power <- 0.9
+  tp <- 96
+  fp <- 24
+  fn <- 30
+  tn <- 90
+  m_obs <- tp + fp + fn + tn
+  p_y <- (tp + fn) / m_obs
+  p_hat <- (tp + fp) / m_obs
+  accuracy <- (tp + tn) / m_obs
+  adj <- m_obs / (m_obs - 1)
+  bias <- p_y - p_hat
+  var_res <- adj * ((1 - accuracy) - bias^2)
+  var_f <- adj * p_hat * (1 - p_hat)
+  sigma_y2 <- p_y * (1 - p_y)
+  sigma_f2 <- var_f
+  tp_rate <- tp / m_obs
+  cov_y_f <- tp_rate - p_y * p_hat
+
+  direct <- n_required_ppi_pp(
+    delta = delta,
+    N = N,
+    alpha = alpha,
+    power = power,
+    sigma_y2 = sigma_y2,
+    sigma_f2 = sigma_f2,
+    cov_y_f = cov_y_f,
+    var_f = var_f,
+    var_res = var_res,
+    warn_smallN = FALSE
+  )
+
+  metrics_conf <- list(
+    type = "classification",
+    tp = tp,
+    fp = fp,
+    fn = fn,
+    tn = tn,
+    p_y = p_y,
+    var_y = sigma_y2,
+    m_obs = m_obs
+  )
+
+  via_metrics_conf <- n_required_ppi_pp(
+    delta = delta,
+    N = N,
+    alpha = alpha,
+    power = power,
+    metrics = metrics_conf,
+    metric_type = "classification",
+    warn_smallN = FALSE
+  )
+
+  expect_identical(via_metrics_conf, direct)
+
+  precision <- tp / (tp + fp)
+  recall <- tp / (tp + fn)
+
+  metrics_pr <- list(
+    type = "classification",
+    precision = precision,
+    recall = recall,
+    p_y = p_y,
+    var_y = sigma_y2,
+    m_obs = m_obs
+  )
+
+  via_metrics_pr <- n_required_ppi_pp(
+    delta = delta,
+    N = N,
+    alpha = alpha,
+    power = power,
+    metrics = metrics_pr,
+    metric_type = "classification",
+    warn_smallN = FALSE
+  )
+
+  expect_identical(via_metrics_pr, direct)
+})
+
+test_that("n_required_ppi_pp caps infeasible requests and records achieved power", {
+  delta <- 0.03
+  N <- 150
+  alpha <- 0.05
+  power <- 0.9
+  sigma_y2 <- 1.0
+  sigma_f2 <- 0.25
+  cov_y_f  <- 0.05
+  var_f <- sigma_f2
+  var_res <- sigma_y2 - sigma_f2
+
+  expect_warning(
+    capped <- n_required_ppi_pp(
+      delta = delta,
+      N = N,
+      alpha = alpha,
+      power = power,
+      sigma_y2 = sigma_y2,
+      sigma_f2 = sigma_f2,
+      cov_y_f = cov_y_f,
+      var_f = var_f,
+      var_res = var_res,
+      mode = "cap",
+      warn_smallN = FALSE
+    ),
+    regexp = "Capping to n = N"
+  )
+
+  expect_identical(as.integer(capped), as.integer(N))
+  achieved <- attr(capped, "achieved_power")
+  expect_true(is.numeric(achieved) && length(achieved) == 1L)
+  expect_lt(achieved, power)
+  expect_gt(achieved, 0)
+})
+
+test_that("n_required_ppi_pp validates required moments", {
+  expect_error(
+    n_required_ppi_pp(
+      delta = 0.2,
+      N = 500,
+      alpha = 0.05,
+      power = 0.8,
+      sigma_y2 = 1.0,
+      sigma_f2 = 0,
+      cov_y_f = 0.1,
+      var_f = 0,
+      var_res = 1.0
+    ),
+    regexp = "sigma_f2 must be positive"
+  )
+
+  expect_error(
+    n_required_ppi_pp(
+      delta = 0.2,
+      N = 500,
+      alpha = 0.05,
+      power = 0.8,
+      sigma_y2 = 1.0,
+      sigma_f2 = 0.3,
+      cov_y_f = 5,
+      var_f = 0.3,
+      var_res = 0.7
+    ),
+    regexp = "Infeasible"
   )
 })

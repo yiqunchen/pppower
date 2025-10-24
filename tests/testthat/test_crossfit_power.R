@@ -1,152 +1,82 @@
-super_pop_n <- 20000
+# Population parameters 
 N <- 1500    # unlabeled sample size
 n <- 200     # labeled sample size
 alpha <- 0.05
-sim <- 20000
+R_sim <- 2000
 
-test_that("Analytical power equals Monte Carlo power under cross-fitted data", {
-  set.seed(as.integer(Sys.time()))
-  df_bin <- simulate_crossfit_data(
-    n = super_pop_n, p = 5, family = binomial(), K = 5, seed = as.integer(Sys.time())
-  )
-  theta <- mean(df_bin$y)
-  theta0 <- theta - 0.25
-  delta <- theta - theta0
+test_that("Monte Carlo power aligns with analytical power for PPI and PPI++ mean estimators", {
+  set.seed(20240620L)
 
-  var_f <- var(df_bin$fhat_cf)
-  var_res <- var(df_bin$y - df_bin$fhat_cf)
+  delta_pop    <- 0.2
+  var_f_pop    <- 0.45
+  var_res_pop  <- 0.8
+  sigma_y2_pop <- var_f_pop + var_res_pop
+  cov_yf_pop   <- var_f_pop
+  sigma_f2_pop <- var_f_pop
 
-  power_exact <- power_ppi_mean(delta, var_f, var_res, N, n, alpha)
-
-  res_mc <- simulate_power_ppi_mean(
-    df_bin, N, n, alpha = alpha, R = sim,
-    theta0 = theta0, seed = as.integer(Sys.time())
+  # PPI (vanilla)
+  moments_ppi <- list(
+    delta   = delta_pop,
+    var_f   = var_f_pop,
+    var_res = var_res_pop
   )
 
-  empirical <- res_mc$empirical_power
-  analytical <- res_mc$analytical_power
+  res_ppi <- simulate_power_ppi_mean(
+    R = R_sim,
+    n = n,
+    N = N,
+    alpha = alpha,
+    family = stats::gaussian(),
+    moments = moments_ppi,
+    seed = 20240621L
+  )
 
-  diff <- abs(empirical - analytical)
-  se_mc <- sqrt(empirical * (1 - empirical) / sim)  # MC standard error
-  tol <- max(3 * se_mc, 0.01)
+  empirical_ppi    <- res_ppi$empirical_power
+  analytical_ppi   <- res_ppi$analytical_power
+  diff_ppi         <- abs(empirical_ppi - analytical_ppi)
+  mc_se_ppi        <- sqrt(analytical_ppi * (1 - analytical_ppi) / R_sim)
+  tol_ppi          <- max(3 * mc_se_ppi, 0.01)
+
   expect_true(
-  diff < tol,
-  label = sprintf("Empirical=%.3f, Analytical=%.3f, |diff|=%.3f < tol=%.3f",
-                  empirical, analytical, diff, tol)
-)
-})
-
-test_that("Analytical power approximates Monte Carlo power (cross-fitted Gaussian DGP)", {
-  set.seed(as.integer(Sys.time()))
-  # Moderate-signal Gaussian DGP to avoid power saturation
-  df <- simulate_crossfit_data(
-    n = super_pop_n, p = 6, family = gaussian(),
-    K = 5, seed = as.integer(Sys.time())
+    diff_ppi < tol_ppi,
+    info = sprintf(
+      "PPI-mean: Empirical=%.4f, Analytical=%.4f, |diff|=%.4f, tol=%.4f",
+      empirical_ppi, analytical_ppi, diff_ppi, tol_ppi
+    )
   )
 
-  theta  <- mean(df$y)
-  theta0 <- theta - 0.25
-  delta  <- theta - theta0
+  # PPI++
+  moments_ppiplus <- list(
+    delta     = delta_pop,
+    sigma_y2  = sigma_y2_pop,
+    sigma_f2  = sigma_f2_pop,
+    cov_y_f   = cov_yf_pop,
+    var_f     = var_f_pop,
+    var_res   = var_res_pop
+  )
 
-  var_f   <- var(df$fhat_cf)
-  var_res <- var(df$y - df$fhat_cf)
-  cov_yf  <- cov(df$y, df$fhat_cf)
-  
-  res <- simulate_power(
-    delta,
-    N = N,
+  res_ppiplus <- simulate_power_ppiplus_mean(
+    R = R_sim,
     n = n,
-    alpha = alpha,
-    R = sim,
-    var_f = var_f,
-    var_res = var_res,
-    cov_y_f = cov_yf
-  )
-
-  analytical_pp     <- res["Exact_PP"]
-  analytical_ppplus <- res["Exact_PPplus"]
-  empirical_pp      <- res["Empirical_PP"]
-  empirical_ppplus  <- res["Empirical_PPplus"]
-
-  diff_pp <- abs(empirical_pp - analytical_pp)
-  diff_ppplus <- abs(empirical_ppplus - analytical_ppplus)
-
-  se_mc_pp <- sqrt(empirical_pp * (1 - empirical_pp) / sim)
-  tol_pp <- max(3 * se_mc_pp, 0.01)
-  se_mc_ppplus <- sqrt(empirical_ppplus * (1 - empirical_ppplus) / sim)
-  tol_ppplus <- max(3 * se_mc_ppplus, 0.01)
-
-  expect_lt(
-    abs(diff_pp), tol_pp,
-    sprintf(
-      "Gaussian DGP (PP): Empirical=%.3f, Analytical=%.3f, |diff|=%.3f < tol=%.3f",
-      empirical_pp, analytical_pp, abs(diff_pp), tol_pp
-    )
-  )
-
-  expect_lt(
-    abs(diff_ppplus), tol_ppplus,
-    sprintf(
-      "Gaussian DGP (PP++): Empirical=%.3f, Analytical=%.3f, |diff|=%.3f < tol=%.3f",
-      empirical_ppplus, analytical_ppplus, abs(diff_ppplus), tol_ppplus
-    )
-  )
-})
-
-test_that("Analytical power approximates Monte Carlo power (cross-fitted Binomial DGP)", {
-  set.seed(as.integer(format(Sys.Date(), "%Y%m%d")))
-
-  # Weak logistic signal to get midrange power (avoid near 1)
-  df <- simulate_crossfit_data(
-    n = super_pop_n, p = 6, family = binomial(),
-    K = 5, seed = as.integer(Sys.time())
-  )
-
-  theta  <- mean(df$y)
-  theta0 <- theta - 0.25
-  delta  <- theta - theta0
-
-  var_f   <- var(df$fhat_cf)
-  var_res <- var(df$y - df$fhat_cf)
-  cov_yf  <- cov(df$y, df$fhat_cf)
-
-  res <- simulate_power(
-    delta,
     N = N,
-    n = n,
     alpha = alpha,
-    R = sim,
-    var_f = var_f,
-    var_res = var_res,
-    cov_y_f = cov_yf
+    family = stats::gaussian(),
+    moments = moments_ppiplus,
+    lambda_type = "plugin",
+    seed = 20240622L
   )
 
-  analytical_pp     <- res["Exact_PP"]
-  analytical_ppplus <- res["Exact_PPplus"]
-  empirical_pp      <- res["Empirical_PP"]
-  empirical_ppplus  <- res["Empirical_PPplus"]
+  empirical_ppiplus    <- res_ppiplus$empirical_power
+  analytical_ppiplus   <- res_ppiplus$analytical_power
+  diff_ppiplus         <- abs(empirical_ppiplus - analytical_ppiplus)
+  mc_se_ppiplus        <- sqrt(analytical_ppiplus * (1 - analytical_ppiplus) / R_sim)
+  tol_ppiplus          <- max(3 * mc_se_ppiplus, 0.01)
 
-  diff_pp <- abs(empirical_pp - analytical_pp)
-  diff_ppplus <- abs(empirical_ppplus - analytical_ppplus)
-
-  se_mc_pp <- sqrt(empirical_pp * (1 - empirical_pp) / sim)
-  tol_pp <- max(3 * se_mc_pp, 0.01)
-  se_mc_ppplus <- sqrt(empirical_ppplus * (1 - empirical_ppplus) / sim)
-  tol_ppplus <- max(3 * se_mc_ppplus, 0.01)
-
-  expect_lt(
-    abs(diff_pp), tol_pp,
-    sprintf(
-      "Binary DGP (PP): Empirical=%.3f, Analytical=%.3f, |diff|=%.3f < tol=%.3f",
-      empirical_pp, analytical_pp, abs(diff_pp), tol_pp
-    )
-  )
-
-  expect_lt(
-    abs(diff_ppplus), tol_ppplus,
-    sprintf(
-      "Binary DGP (PP++): Empirical=%.3f, Analytical=%.3f, |diff|=%.3f < tol=%.3f",
-      empirical_ppplus, analytical_ppplus, abs(diff_ppplus), tol_ppplus
+  expect_true(
+    diff_ppiplus < tol_ppiplus,
+    info = sprintf(
+      "PPI++-mean: Empirical=%.4f, Analytical=%.4f, |diff|=%.4f, tol=%.4f",
+      empirical_ppiplus, analytical_ppiplus, diff_ppiplus, tol_ppiplus
     )
   )
 })

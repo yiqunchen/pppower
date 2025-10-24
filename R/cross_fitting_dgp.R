@@ -1,4 +1,4 @@
-crossfit_glm <- function(X, y, K = 5, family = stats::binomial(), seed = 1) {
+crossfit_glm <- function(X, y, K = 2, family = stats::binomial(), seed = 1) {
   n <- nrow(X)
   folds <- kfold_split(n, K, seed)
   fhat <- numeric(n)
@@ -16,7 +16,6 @@ crossfit_glm <- function(X, y, K = 5, family = stats::binomial(), seed = 1) {
     fit <- stats::glm(y ~ .,
                       data   = df_tr,
                       family = family)
-    fit <- stats::glm(y ~ ., data = df_tr, family = family)
     pred <- stats::predict(fit, newdata = df_te, type = "response")
 
     # clamp only for binomial (probabilities); not for gaussian
@@ -28,4 +27,3 @@ crossfit_glm <- function(X, y, K = 5, family = stats::binomial(), seed = 1) {
 
   fhat
 }
-

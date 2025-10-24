@@ -4,32 +4,46 @@
 \alias{power_ppi_mean}
 \title{Power for prediction-powered mean estimator}
 \usage{
-power_ppi_mean(delta, var_f, var_res, N, n, alpha = 0.05)
+power_ppi_mean(
+  delta,
+  N,
+  n,
+  alpha = 0.05,
+  var_f = NULL,
+  var_res = NULL,
+  metrics = NULL,
+  metric_type = NULL,
+  m_labeled = n,
+  correction = TRUE
+)
 }
 \arguments{
 \item{delta}{Effect size \eqn{\theta - \theta_0}.}
-
-\item{var_f}{Variance of \eqn{f(X)}.}
-
-\item{var_res}{Variance of residuals \eqn{Y - f(X)}.}
 
 \item{N}{Unlabeled sample size.}
 
 \item{n}{Labeled sample size.}
 
 \item{alpha}{Two-sided significance level.}
+
+\item{var_f}{Optional variance of \eqn{f(X)}.}
+
+\item{var_res}{Optional residual variance of residual \eqn{Y - f(X)}.}
+
+\item{metrics}{Optional list of predictive-performance summaries.}
+
+\item{metric_type}{Character string describing \code{metrics} (e.g. \code{"continuous"}, \code{"prob"}, \code{"classification"}).}
+
+\item{m_labeled}{Labeled sample size associated with \code{metrics} (defaults to \code{n}).}
+
+\item{correction}{Logical; apply finite-sample variance corrections when
+recovering moments from metrics.}
 }
 \value{
 Numeric scalar power in [0, 1].
 }
 \description{
-Computes two-sided test power for the PP mean estimator under
-normal approximation.
-}
-\details{
-Standard error is \eqn{\sqrt{\mathrm{Var}(f)/N + \mathrm{Var}(Y-f)/n}}.
-}
-\examples{
-power_ppi_mean(delta = 0.2, var_f = 0.4, var_res = 1.0, N = 1000, n = 200)
-
+Computes two-sided test power for the PP mean estimator under a normal
+approximation. Variance components can be supplied directly or recovered from
+predictive metrics via \code{resolve_ppi_variances()}.
 }

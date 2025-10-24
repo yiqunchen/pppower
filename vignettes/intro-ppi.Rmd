@@ -25,55 +25,56 @@ knitr::opts_chunk$set(
 * **Prediction-powered mean estimator** - the target parameter is the population mean \(\theta = \mathbb{E}[Y]\) corrected via predictions \(f(X)\).
 * **Prediction-powered linear regression (PPI-OLS)** - the estimand is a linear contrast \(c^\top \beta\) from a PPI-adjusted OLS estimator.
 
-Both workflows rely on a synthetic “superpopulation” that mimics the joint distribution of \((X, Y)\) and their cross-fitted predictions. The helper `simulate_crossfit_data()` generates such a data set.
-
-```{r setup}
-library(pppower)
-set.seed(123)
-
-df <- pppower:::simulate_crossfit_data(
-  n = 4000,
-  p = 5,
-  family = gaussian(),
-  K = 5
-)
-str(df)
-```
-
 ---
 
 ## 1. Prediction-Powered Mean Estimation
 
 ### Notation
 
-We test \(H_0: \theta = \theta_0\) versus a two-sided alternative, with:
+Notation
 
-- \(\delta = \theta - \theta_0\) - effect size of interest.
-- \(N\) - unlabeled sample size used to evaluate predictions \(f(X)\).
-- \(n\) - labeled sample size used to correct prediction error.
-- \(\sigma_f^2 = \mathrm{Var}(f(X))\) and \(\sigma_{\text{res}}^2 = \mathrm{Var}(Y - f(X))\).
+We test the null hypothesis H_0: \theta = \theta_0
+versus a two-sided alternative, where:
+-	\delta = \theta - \theta_0: effect size of interest
+-	N: unlabeled sample size (used to estimate \mathbb{E}[f(X)])
+-	n: labeled sample size (used to correct prediction error)
+-	\sigma_f^2 = \mathrm{Var}(f(X)): variance of the model prediction
+-	\sigma_{\text{res}}^2 = \mathrm{Var}(Y - f(X)): residual variance after prediction
 
-These can be estimated from the superpopulation.
+These quantities are typically estimated from prior data, pilot studies, or external models — but for planning and power analysis, we can specify them directly.
+
 
 ```{r mean-inputs}
-theta_true <- mean(df$y)
-theta0 <- theta_true - 0.45
-delta <- theta_true - theta0
-var_f <- var(df$fhat_cf)
-var_res <- var(df$y - df$fhat_cf)
-N <- 2000
-n <- 200
-alpha <- 0.05
+library(pppower)
 
-sim <- 2000
+# Study design parameters
+N     <- 2000     # unlabeled sample size
+n     <- 200      # labeled sample size
+alpha <- 0.05     # two-sided significance level
+sim   <- 2000     # Monte Carlo replicates
+
+# Population-level quantities (from prior knowledge, pilot data, or assumptions)
+theta0   <- 0.0   # null value of the mean
+delta    <- 0.15  # effect size (true mean - theta0)
+var_f    <- 0.45  # variance of f(X)
+var_res  <- 0.80  # residual variance
 ```
 
 ### Analytical power
 
+With these inputs, we can calculate the analytical power of the PPI mean estimator using the closed-form normal approximation:
+
 `power_ppi_mean()` implements the normal-theory power formula, using the standard error \(\sqrt{\sigma_f^2 / N + \sigma_{\text{res}}^2 / n}\).
 
 ```{r mean-analytic}
-power_ppi_mean(delta, var_f, var_res, N, n, alpha)
+power_ppi_mean(
+  delta = delta,
+  var_f = var_f,
+  var_res = var_res,
+  N = N,
+  n = n,
+  alpha = alpha
+)
 ```
 
 ### Monte Carlo calibration (parametric)
@@ -97,25 +98,255 @@ simulate_power(
 `pppower:::simulate_power_ppi_mean()` repeatedly resamples labeled/unlabeled splits from the synthetic population, recomputing the PPI estimator each time.
 
 ```{r mean-pp}
+moments_ppi <- list(
+  delta   = delta,
+  var_f   = var_f,
+  var_res = var_res
+)
+
+# Run the full Monte Carlo simulation and compare with analytical power
 mc_pp <- pppower:::simulate_power_ppi_mean(
-  df = df,
-  N = N,
-  n = n,
-  alpha = alpha,
   R = sim,
+  n = n,
+  N = N,
+  alpha = alpha,
+  family = gaussian(),
+  moments = moments_ppi,
   theta0 = theta0,
   seed = 2024
 )
+
+# Results: empirical rejection rate (Monte Carlo) vs. analytical formula
 mc_pp$empirical_power
 mc_pp$analytical_power
 ```
 
+### PPI++ Mean Estimation
+
+```{r ppiplusplus, eval = FALSE, include = FALSE}
+moments_ppiplus <- list(
+  delta     = 0.15,
+  sigma_y2  = 1.10,     # total variance of Y
+  sigma_f2  = 0.45,     # variance of f(X)
+  cov_y_f   = 0.45,     # Cov(Y, f(X)), equals var_f if unbiased
+  var_f     = 0.45,
+  var_res   = 0.65      # residual variance
+)
+
+# Analytical power based on population moments and optimal lambda
+analytical_ppiplus <- power_ppi_pp_mean(
+  delta      = moments_ppiplus$delta,
+  N          = N,
+  n          = n,
+  sigma_y2   = moments_ppiplus$sigma_y2,
+  sigma_f2   = moments_ppiplus$sigma_f2,
+  cov_y_f    = moments_ppiplus$cov_y_f,
+  var_f      = moments_ppiplus$var_f,
+  var_res    = moments_ppiplus$var_res,
+  alpha      = alpha
+)
+analytical_ppiplus
+
+# Monte Carlo calibration (repeated simulation from the population)
+set.seed(20240623L)
+ppplusplus_mc <- pppower:::simulate_power_ppiplus_mean(
+  R          = 2000,
+  n          = n,
+  N          = N,
+  alpha      = alpha,
+  family     = gaussian(),
+  moments    = moments_ppiplus,
+  lambda_type = "plugin",
+  seed       = 20240623L
+)
+
+# Compare analytical and empirical power
+ppplusplus_mc$analytical_power
+ppplusplus_mc$empirical_power
+
+# Inspect lambda used and average across simulations
+ppplusplus_mc$avg_lambda
+```
+
+
+### PPI/PPI++ OLS
+
+```{r PPI OLS}
+c_list <- list(
+  c1 = c(1, 0, 0),        # intercept
+  c2 = c(0, 1, 0),        # slope on x1
+  c3 = c(0, 0, 1),        # slope on x2
+  c4 = c(0, 1, -1),       # difference x1 - x2
+  c5 = c(0, 0.5, 0.5)     # average (x1 + x2)/2
+)
+
+beta_true <- c(0.7, 0.4, -0.3)
+p <- length(beta_true)
+
+# Choose a null for each contrast
+theta0_map <- c(
+  c1 = 0.0,
+  c2 = 0.25,
+  c3 = 0.0,
+  c4 = 0.0,
+  c5 = 0.0
+)
+
+# Variance components and matrices
+sigma_y2_pop <- 1.0
+sigma_f2_pop <- 0.45
+
+H_pop         <- diag(p)
+Sigma_YY_pop  <- sigma_y2_pop * H_pop
+Sigma_ff_pop  <- sigma_f2_pop * H_pop
+Sigma_Yf_pop  <- matrix(0, nrow = p, ncol = p)
+
+set.seed(20240625L)
+
+run_one_contrast <- function(name, c_vec, theta0) {
+  delta_c <- as.numeric(c(c_vec %*% beta_true) - theta0)
+
+  moments_ols <- list(
+    delta    = delta_c,
+    H        = H_pop,
+    Sigma_YY = Sigma_YY_pop,
+    Sigma_ff = Sigma_ff_pop,
+    Sigma_Yf = Sigma_Yf_pop
+  )
+
+  res <- pppower:::simulate_power_ppi_ols(
+    R        = sim,
+    n        = n,
+    N        = N,
+    contrast = c_vec,
+    alpha    = alpha,
+    family   = gaussian(),
+    moments  = moments_ols,
+    seed     = sample.int(.Machine$integer.max, 1)
+  )
+
+  mc_se <- sqrt(res$analytical_power * (1 - res$analytical_power) / sim)
+  tol   <- max(3 * mc_se, 0.01)
+  diff  <- abs(res$empirical_power - res$analytical_power)
+
+  data.frame(
+    contrast   = name,
+    theta0     = theta0,
+    delta      = delta_c,
+    analytical = res$analytical_power,
+    empirical  = res$empirical_power,
+    abs_diff   = diff,
+    tol        = tol,
+    pass       = diff < tol,
+    stringsAsFactors = FALSE
+  )
+}
+
+res_list <- mapply(
+  run_one_contrast,
+  name  = names(c_list),
+  c_vec = c_list,
+  theta0 = theta0_map[names(c_list)],
+  SIMPLIFY = FALSE
+)
+
+ols_multi <- do.call(rbind, res_list)
+ols_multi
+```
+
+```{r PPI++ OLS}
+c_list <- list(
+  c1 = c(1, 0, 0),        
+  c2 = c(0, 1, 0),        
+  c3 = c(0, 0, 1),        
+  c4 = c(0, 1, -1),       
+  c5 = c(0, 0.5, 0.5)     
+)
+
+beta_true <- c(0.7, 0.4, -0.3)
+p <- length(beta_true)
+
+theta0_map <- c(
+  c1 = 0.0,
+  c2 = 0.25,
+  c3 = 0.0,
+  c4 = 0.0,
+  c5 = 0.0
+)
+
+sigma_y2_pop <- 1.0
+sigma_f2_pop <- 0.45
+
+H_pop         <- diag(p)
+Sigma_YY_pop  <- sigma_y2_pop * H_pop
+Sigma_ff_L_pop <- sigma_f2_pop * H_pop
+Sigma_ff_U_pop <- sigma_f2_pop * H_pop
+Sigma_Yf_pop  <- sigma_f2_pop * H_pop
+
+set.seed(20240626L)
+
+run_one_contrast_ppiplus <- function(name, c_vec, theta0) {
+  delta_c <- as.numeric(c(c_vec %*% beta_true) - theta0)
+
+  moments_ppiplus <- list(
+    delta      = delta_c,
+    H_L        = H_pop,
+    H_U        = H_pop,
+    Sigma_YY   = Sigma_YY_pop,
+    Sigma_ff_l = Sigma_ff_L_pop,
+    Sigma_ff_u = Sigma_ff_U_pop,
+    Sigma_Yf   = Sigma_Yf_pop
+  )
+
+  res <- pppower:::simulate_power_ppi_pp_ols(
+    R        = sim,
+    n        = n,
+    N        = N,
+    contrast = c_vec,
+    alpha    = alpha,
+    family   = gaussian(),
+    lambda_type = "plugin",
+    moments  = moments_ppiplus,
+    seed     = sample.int(.Machine$integer.max, 1)
+  )
+
+  mc_se <- sqrt(res$analytical_power * (1 - res$analytical_power) / sim)
+  tol   <- max(3 * mc_se, 0.01)
+  diff  <- abs(res$empirical_power - res$analytical_power)
+
+  data.frame(
+    contrast   = name,
+    theta0     = theta0,
+    delta      = delta_c,
+    analytical = res$analytical_power,
+    empirical  = res$empirical_power,
+    abs_diff   = diff,
+    tol        = tol,
+    pass       = diff < tol,
+    avg_lambda = res$avg_lambda,
+    stringsAsFactors = FALSE
+  )
+}
+
+res_list_ppiplus <- mapply(
+  run_one_contrast_ppiplus,
+  name  = names(c_list),
+  c_vec = c_list,
+  theta0 = theta0_map[names(c_list)],
+  SIMPLIFY = FALSE
+)
+
+ols_ppiplus_multi <- do.call(rbind, res_list_ppiplus)
+ols_ppiplus_multi
+
+```
+
 ### Sample-size planning
 
-`n_required_PP()` solves for the labeled sample size that meets a power target.
+`n_required_pp()` solves for the labeled sample size that meets a power target.
 
 ```{r mean-n}
-n_required_PP(
+n_required_pp(
   delta = delta,
   N = N,
   alpha = alpha,
@@ -160,25 +391,22 @@ legend("bottomright", legend = c("Empirical", "Analytical"),
 
 To study Type I error and power as a function of \(\delta\), use `type1_error_curve_mean()` or, for a fully simulated DGP, `type1_error_curve_mean_dgp()`:
 
-```{r mean-type1}
-effect_grid <- seq(-0.3, 0.3, by = 0.05)
-curve_dgp <- pppower:::type1_error_curve_mean_dgp(
-  effect_grid = effect_grid,
+```{r mean-type1, eval = TRUE}
+curve_parametric <- type1_error_curve_mean_dgp(
+  effect_grid = seq(-0.5, 0.5, by = 0.05),
   N = N,
   n = n,
-  family = gaussian(),
-  superpop_n = 20000,
-  p = 5,
-  K = 5,
-  alpha = alpha,
-  R = sim
+  var_f = var_f,
+  var_res = var_res,
+  theta = 1.0,
+  alpha = 0.05,
+  R = 2000,
+  seed = 20240627L
 )
 
-curve_dgp
-
 pppower:::plot_type1_error_curve(
-  curve_dgp,
-  main = "Type I error / power (DGP)"
+  curve_parametric,
+  main = "Type I Error / Power Curve (Parametric, No Superpopulation)"
 )
 ```
 
@@ -193,102 +421,123 @@ Let \(\beta\) be the PPI-adjusted coefficient vector and \(c\) the contrast of i
 - Estimand: \(c^\top \beta\).
 - Variance: \(c^\top (V_u / N + V_l / n) c\), where `V_u`/`V_l` are per-observation sandwich covariances for the unlabeled (imputation) and labeled (rectifier) regressions.
 
-### Fit the model
+### OLS set up
+
+```{r ols-setup}
+# Study design
+N     <- 2000      # unlabeled sample size
+n     <- 200       # labeled sample size
+alpha <- 0.05
+sim   <- 2000
+
+# True coefficient vector (assumed or estimated from prior data)
+beta_true <- c(0.7, 0.4, -0.3, 0.2)
+
+# Contrast vector for hypothesis test
+c_vec <- c(0, 1, 0, 0)      # test second coefficient
+
+# Effect size (difference from null)
+theta0  <- 0.25
+delta   <- as.numeric(t(c_vec) %*% beta_true - theta0)
+
+# Variance components (assumed known from pilot data or prior studies)
+sigma_y2 <- 1.0       # total variance of Y
+sigma_f2 <- 0.45      # variance explained by predictor model
+
+# Per-observation covariance matrices
+p <- length(beta_true)
+H_pop         <- diag(p)                       # design matrix Hessian
+Sigma_YY_pop  <- sigma_y2 * H_pop              # Var(Y)
+Sigma_ff_pop  <- sigma_f2 * H_pop              # Var(f(X))
+Sigma_Yf_pop  <- sigma_f2 * H_pop              # Cov(Y, f(X))
+```
+
+### Analytical Power
+
+We can compute the analytical power for the PPI-OLS estimator using these components:
 
 ```{r ols-fit}
-fit_ols <- ppi_ols_fit(
-  y = "y",
-  f_col = "fhat_cf",
-  formula = ~ x1 + x2 + x3 + x4 + x5,
-  data_l = df[1:n, ],
-  data_u = df[(n + 1):(n + N), ]
-)
-
-summary(fit_ols)
-pieces <- fit_ols$pieces
-```
-
-`summary()` reports coefficient, standard error, and z-statistic. The `pieces` list exposes `V_u`, `V_l`, `n`, and `N` for power formulas.
-
-### Construct a contrast
-
-Suppose we focus on `x1`:
-
-```{r ols-contrast}
-coef_names <- colnames(pieces$V_u)
-c_vec <- numeric(length(coef_names))
-names(c_vec) <- coef_names
-c_vec["x1"] <- 1
-
-delta_ols <- sum(c_vec * fit_ols$coef)
-delta_ols
-```
-
-`ppi_ols_wald()` provides the Wald test summary:
-
-```{r ols-wald}
-wald_x1 <- pppower:::ppi_ols_wald(fit_ols, A = matrix(c_vec, nrow = 1))
-wald_x1
-```
-
-### Analytical power
-
-```{r ols-analytic}
 power_ppi_ols(
-  delta = delta_ols,
-  V_u = pieces$V_u,
-  V_l = pieces$V_l,
-  N = pieces$N,
-  n = pieces$n,
-  c = c_vec,
+  delta = delta,
+  V_u   = Sigma_ff_pop,
+  V_l   = Sigma_YY_pop,
+  N     = N,
+  n     = n,
+  c     = c_vec,
   alpha = alpha
 )
 ```
 
+
 ### Monte Carlo calibration
 
-`simulate_power_ppi_ols()` resamples from the superpopulation and recomputes the PPI-OLS estimator. Align the null value so the effect size matches the analytic call.
+Suppose we focus on `x1`:
 
 ```{r ols-mc}
-theta0 <- sum(c_vec * fit_ols$coef) - delta_ols
+moments_ols <- list(
+  delta    = delta,
+  H        = H_pop,
+  Sigma_YY = Sigma_YY_pop
+)
 
-pppower:::simulate_power_ppi_ols(
-  df = df,
-  formula = ~ x1 + x2 + x3 + x4 + x5,
-  N = pieces$N,
-  n = pieces$n,
-  c = c_vec,
-  theta0 = theta0,
-  alpha = alpha,
-  R = sim,
-  seed = 4321
-)$analytical_power
+ols_mc <- pppower:::simulate_power_ppi_ols(
+  R        = sim,
+  n        = n,
+  N        = N,
+  contrast = c_vec,
+  alpha    = alpha,
+  family   = gaussian(),
+  moments  = moments_ols,
+  seed     = 20240625L
+)
 
-pppower:::simulate_power_ppi_ols(
-  df = df,
-  formula = ~ x1 + x2 + x3 + x4 + x5,
-  N = pieces$N,
-  n = pieces$n,
-  c = c_vec,
-  theta0 = theta0,
-  alpha = alpha,
-  R = sim,
-  seed = 4321
-)$empirical_power
+ols_mc$analytical_power
+ols_mc$empirical_power
+abs(ols_mc$empirical_power - ols_mc$analytical_power)
 ```
 
 ### Sample-size solver
 
 ```{r ols-n}
-n_required_PP(
-  delta = delta_ols,
-  N = pieces$N,
+
+target <- 0.90
+
+n_required_pp(
+  delta = delta,
+  N = N,
   alpha = alpha,
-  power = 0.80,
+  power = target,
   type = "ols",
-  V_u = pieces$V_u,
-  V_l = pieces$V_l,
+  V_u = Sigma_ff_pop,
+  V_l = Sigma_YY_pop,
   c = c_vec
+)
+
+n_required_ppi_pp(
+  delta      = delta,
+  N          = N,
+  alpha      = alpha,
+  power      = target,
+  type       = "ols",
+  c          = c_vec,
+  H_L        = H_pop,
+  H_U        = H_pop,
+  Sigma_YY   = Sigma_YY_pop,
+  Sigma_ff_l = Sigma_ff_pop,
+  Sigma_ff_u = Sigma_ff_pop,
+  Sigma_Yf   = matrix(0, nrow = nrow(Sigma_YY_pop), ncol = ncol(Sigma_ff_pop))
+)
+
+n_star <- pppower:::n_required_ppi_pp_ols_closed(
+  delta     = delta,
+  N         = N,
+  alpha     = 0.05,
+  power     = target,
+  c         = c_vec,
+  H         = H_pop,
+  Sigma_YY  = Sigma_YY_pop,
+  Sigma_ff  = Sigma_ff_pop,  # single Σ_ff, same as in variance formula
+  Sigma_Yf  = Sigma_Yf_pop
 )
 ```
 
@@ -300,10 +549,10 @@ n_required_PP(
 |-----------------------------------------------|-----------------------------------------------------------------------|
 | Generate cross-fitted superpopulation         | `simulate_crossfit_data()`                                           |
 | Mean estimator power & calibration            | `power_ppi_mean()`, `simulate_power()`, `pppower:::simulate_power_ppi_mean()` |
-| Mean estimator sample size                    | `n_required_PP(type = "mean", ...)`                                   |
+| Mean estimator sample size                    | `n_required_pp(type = "mean", ...)`                                   |
 | Mean estimator curves                         | `power_curve_mean()`, `type1_error_curve_mean[_dgp]()`, `plot_type1_error_curve()` |
 | Fit prediction-powered OLS                    | `ppi_ols_fit()`, `summary()`                                          |
 | OLS contrasts and power                       | `pppower:::ppi_ols_wald()`, `power_ppi_ols()`, `pppower:::simulate_power_ppi_ols()`       |
-| OLS sample size                               | `n_required_PP(type = "ols", ...)`                                    |
+| OLS sample size                               | `n_required_pp(type = "ols", ...)`                                    |
 
 Together these tools help you explore prediction quality, diagnose finite-sample effects, and plan labeled sample sizes for both mean and regression targets.
