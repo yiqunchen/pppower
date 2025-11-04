@@ -403,6 +403,7 @@ n_required_ppi_pp <- function(delta,
     target <- (delta / c0)^2
     objective <- function(n) coef_var(n) - target
 
+    # Root finding of the objective function
     root <- tryCatch(stats::uniroot(objective, c(2, 1e6))$root,
                  error = function(e) NA_real_)
     if (is.na(root))
@@ -450,6 +451,7 @@ n_required_ppi_pp <- function(delta,
   n_capped
 }
 
+# A closed-form formula by inverting the equation (22) from the write up
 n_required_ppi_pp_ols_closed <- function(
   delta, N, alpha = 0.05, power = 0.90,
   c, H, Sigma_YY, Sigma_ff, Sigma_Yf

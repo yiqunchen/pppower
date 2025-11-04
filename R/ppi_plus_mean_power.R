@@ -24,6 +24,8 @@ ppi_pp_variance <- function(n,
   max(term_res + term_pred + term_cross, 0)
 }
 
+# Takes in type of metric and statistics of the metrics, then output variances and covariances 
+# for downstream functions.
 resolve_ppi_pp_moments <- function(sigma_y2 = NULL,
                                    sigma_f2 = NULL,
                                    cov_y_f = NULL,

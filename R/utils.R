@@ -61,6 +61,7 @@ derive_vars_continuous <- function(mse,
   list(var_f = var_f, var_res = var_res, var_y = var_y)
 }
 
+## Brier change to Y and Y_hat
 derive_vars_binary <- function(metric_type = c("classification", "prob"),
                                stats,
                                m_obs,
