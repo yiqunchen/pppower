@@ -1,0 +1,10 @@
+^weekly_meeting$
+^README\.Rmd$
+^\.github$
+^\.vscode$
+^_pkgdown\.yml$
+^docs$
+^LICENSE\.md$
+^Rplots\.pdf$
+^doc$
+^Meta$
