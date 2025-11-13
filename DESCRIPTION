@@ -2,22 +2,32 @@ Package: pppower
 Title: pppower: Convenient Prediction-Powered Inference Power Calculations
 Version: 0.0.0.9000
 Authors@R: c(
-    person("Moran", "Guo", , email = "mguo31@jh.edu", role = "aut"),
-    person("Yiqun", "Chen", , email = "yiqun.t.chen@gmail.com", role = "cre")
+    person("Moran", "Guo", , email = "mguo31@jh.edu", role = c("aut")),
+    person("Yiqun", "Chen", , email = "yiqun.t.chen@gmail.com", role = c("aut", "cre"))
     )
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
+Config/testthat/edition: 3
+Imports:
+    stats,
+    tibble,
+    dplyr,
+    ranger,
+    randomForest,
+    rlang
 Suggests:
+    furrr,
+    purrr,
+    tidyr,
+    utils,
+    future,
+    ggplot2,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
-Config/testthat/edition: 3
-Imports:
-    rlang,
-    stats
 URL: https://yiqunchen.github.io/pppower
 Config/Needs/website: rmarkdown
 VignetteBuilder: knitr

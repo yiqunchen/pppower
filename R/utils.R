@@ -1,3 +1,6 @@
+#' @importFrom stats lm sd pnorm cor
+NULL
+
 `%||%` <- function(x, y) {
   if (!is.null(x)) x else y
 }
@@ -246,4 +249,135 @@ resolve_ppi_variances <- function(var_f = NULL,
   }
 
   list(var_f = vars$var_f, var_res = vars$var_res)
+}
+
+#' Generate One Labeled + Unlabeled Sample
+#'
+#' @keywords internal
+#' 
+#' @param n_labeled Number of labeled samples
+#' @param n_unlabeled Number of unlabeled samples
+#' @param X_sampler_L Function sampling labeled covariates
+#' @param X_sampler_U Function sampling unlabeled covariates (defaults to X_sampler_L)
+#' @param f_generator Function generating f(X)
+#' @param eps_sampler Error sampler, default N(0,1)
+#' @param delta Mean shift applied to f
+#'
+#' @return A list with labeled and unlabeled data and true mean.
+#'
+#' @importFrom stats rnorm
+simulate_one_draw <- function(n_labeled, 
+                              n_unlabeled,
+                              X_sampler_L, 
+                              X_sampler_U = NULL,
+                              f_generator,
+                              eps_sampler = function(n) rnorm(n, 0, 1),
+                              delta = 0) {
+  if (is.null(X_sampler_U)) X_sampler_U <- X_sampler_L
+ 
+  X_L <- X_sampler_L(n_labeled)
+  X_U <- X_sampler_U(n_unlabeled)
+
+  f_L_base <- f_generator(X_L)
+  f_U_base <- f_generator(X_U)
+
+  # mean shift by delta
+  f_L <- f_L_base + delta
+  f_U <- f_U_base + delta
+
+  y_L <- f_L + eps_sampler(n_labeled)
+
+  list(
+    labeled   = list(X = X_L, y = y_L, f = f_L),
+    unlabeled = list(X = X_U, f = f_U),
+    theta_true = mean(f_L),   # population mean of Y is ~ mean(f) here
+    delta = delta
+  )
+}
+
+#' Internal helper for model prediction
+#'
+#' @keywords internal
+#'
+#' @param fit Fitted model object
+#' @param newdata New data frame to predict on
+#'
+#' @return Numeric vector of predictions.
+#'
+#' @importFrom stats predict
+.predict_any <- function(fit, newdata) {
+  if (inherits(fit, "ranger")) {
+    predict(fit, data = newdata)$predictions
+  } else {
+    stats::predict(fit, newdata = newdata)
+  }
+}
+
+#' Fit predictive model and return predictions
+#'
+#' @description
+#' Internal unified interface for GLMs and random forests.
+#'
+#' @keywords internal
+#'
+#' @param model_type Type of model ("glm_correct", "glm_mis", "glm_wrong", "rf")
+#' @param X_L Labeled covariates
+#' @param y_L Labeled outcomes
+#' @param X_U Unlabeled covariates
+#' @param mtry RF mtry value
+#' @param rf_engine Random forest engine ("ranger" or "randomForest")
+#' @param rf_trees Number of trees
+#' @param rf_min_node_size Minimum node size for ranger
+#' @param rf_num_threads Threads (ranger)
+#' @param rf_seed Random seed
+#'
+#' @return List containing model fit object and predictions on X_U.
+#'
+#' @importFrom stats glm predict
+#' @importFrom ranger ranger
+#' @importFrom randomForest randomForest
+fit_predict_model <- function(model_type, X_L, y_L, X_U,
+                              mtry = NULL,
+                              rf_engine = c("ranger", "randomForest"),
+                              rf_trees = 200,
+                              rf_min_node_size = 5,
+                              rf_num_threads = NULL,
+                              rf_seed = NULL) {
+  model_type <- match.arg(model_type, c("glm_correct", "glm_mis", "glm_wrong", "rf"))
+  rf_engine  <- match.arg(rf_engine, c("ranger", "randomForest"))
+  dat_L <- data.frame(y = y_L, X_L)
+
+  if (model_type == "glm_correct") {
+    fit <- stats::glm(y ~ x1 + I(x1 * x2) + I(x2^3), data = dat_L)
+    fhat_U <- stats::predict(fit, newdata = X_U)
+
+  } else if (model_type == "glm_mis") {
+    fit <- stats::glm(y ~ x1 + x2, data = dat_L)
+    fhat_U <- stats::predict(fit, newdata = X_U)
+
+  } else if (model_type == "glm_wrong") {
+    fit <- stats::glm(y ~ I(x1 * x2), data = dat_L)
+    fhat_U <- stats::predict(fit, newdata = X_U)
+
+  } else if (model_type == "rf") {
+    mtry_eff  <- if (is.null(mtry)) floor(sqrt(ncol(X_L))) else mtry
+    use_rgr   <- (rf_engine == "ranger") && requireNamespace("ranger", quietly = TRUE)
+    if (use_rgr) {
+      fit <- ranger::ranger(
+        y ~ ., data = dat_L,
+        num.trees     = rf_trees,
+        mtry          = mtry_eff,
+        min.node.size = rf_min_node_size,
+        importance    = "none",
+        seed          = rf_seed,
+        num.threads   = rf_num_threads
+      )
+      fhat_U <- predict(fit, data = X_U)$predictions
+    } else {
+      fit <- randomForest::randomForest(y ~ ., data = dat_L, ntree = rf_trees, mtry = mtry_eff)
+      fhat_U <- stats::predict(fit, newdata = X_U)
+    }
+  }
+
+  list(fit = fit, fhat_U = as.numeric(fhat_U))
 }
