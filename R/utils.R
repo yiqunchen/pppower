@@ -345,23 +345,29 @@ fit_predict_model <- function(model_type, X_L, y_L, X_U,
                               rf_seed = NULL) {
   model_type <- match.arg(model_type, c("glm_correct", "glm_mis", "glm_wrong", "rf"))
   rf_engine  <- match.arg(rf_engine, c("ranger", "randomForest"))
+
+  ## ensure names for formula use
+  if (is.matrix(X_L)) colnames(X_L) <- paste0("x", seq_len(ncol(X_L)))
+  if (is.matrix(X_U)) colnames(X_U) <- paste0("x", seq_len(ncol(X_U)))
+
   dat_L <- data.frame(y = y_L, X_L)
 
   if (model_type == "glm_correct") {
     fit <- stats::glm(y ~ x1 + I(x1 * x2) + I(x2^3), data = dat_L)
-    fhat_U <- stats::predict(fit, newdata = X_U)
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
 
   } else if (model_type == "glm_mis") {
     fit <- stats::glm(y ~ x1 + x2, data = dat_L)
-    fhat_U <- stats::predict(fit, newdata = X_U)
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
 
   } else if (model_type == "glm_wrong") {
     fit <- stats::glm(y ~ I(x1 * x2), data = dat_L)
-    fhat_U <- stats::predict(fit, newdata = X_U)
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
 
   } else if (model_type == "rf") {
     mtry_eff  <- if (is.null(mtry)) floor(sqrt(ncol(X_L))) else mtry
     use_rgr   <- (rf_engine == "ranger") && requireNamespace("ranger", quietly = TRUE)
+
     if (use_rgr) {
       fit <- ranger::ranger(
         y ~ ., data = dat_L,
@@ -372,10 +378,11 @@ fit_predict_model <- function(model_type, X_L, y_L, X_U,
         seed          = rf_seed,
         num.threads   = rf_num_threads
       )
-      fhat_U <- predict(fit, data = X_U)$predictions
+      fhat_U <- predict(fit, data = as.data.frame(X_U))$predictions
+
     } else {
       fit <- randomForest::randomForest(y ~ ., data = dat_L, ntree = rf_trees, mtry = mtry_eff)
-      fhat_U <- stats::predict(fit, newdata = X_U)
+      fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
     }
   }
 

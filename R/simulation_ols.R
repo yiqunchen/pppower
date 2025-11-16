@@ -65,9 +65,18 @@ ppi_ols_rep_one <- function(
   lambda_mode <- match.arg(lambda_mode)
   if (!is.null(seed)) set.seed(seed)
 
-  ## Generate Data
+  a <- as.numeric(a)
+
+  # Generate Data
   X_L <- X_sampler_L(n)
   X_U <- X_sampler_L(N)
+
+  # Coerce to numeric matrices
+  X_L <- as.matrix(X_L)
+  X_U <- as.matrix(X_U)
+  storage.mode(X_L) <- "double"
+  storage.mode(X_U) <- "double"
+
   p <- ncol(X_L)
   stopifnot(length(a) == p)
 
@@ -86,6 +95,8 @@ ppi_ols_rep_one <- function(
     fhat_L <- numeric(n)
     fhat_U_fold1 <- numeric(N); fhat_U_fold2 <- numeric(N)
 
+    fhat_U_folds <- vector("list", 2)
+
     for (fold in 1:2) {
       tr <- which(fold_id != fold)
       te <- which(fold_id == fold)
@@ -97,10 +108,11 @@ ppi_ols_rep_one <- function(
       )
 
       fhat_L[te] <- as.numeric(.predict_any(m$fit, X_L[te, , drop=FALSE]))
-      assign(paste0("fhat_U_fold", fold), m$fhat_U)
+      fhat_U_folds[[fold]] <- m$fhat_U
     }
 
-    fhat_U <- (fhat_U_fold1 + fhat_U_fold2)/2
+    # average U predictions
+    fhat_U <- (fhat_U_folds[[1]] + fhat_U_folds[[2]]) / 2
 
   } else {
     ## Non-cross-fit model (PPI or PPI++)
@@ -185,8 +197,6 @@ ppi_ols_rep_one <- function(
       stop("Oracle lambda not implemented internally.")
     }
   }
-
-
 
   # PPI uses only H_U and (G_U + correction)
   if (ppi_type == "PPI") {

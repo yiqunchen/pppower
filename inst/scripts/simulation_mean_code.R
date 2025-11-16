@@ -1,3 +1,11 @@
+library(furrr)
+library(purrr)
+library(tidyr)
+library(utils)
+library(future)
+library(dplyr)
+library(ggplot2)
+library(pppower)
 
 # True parameter
 X_sampler_L <- function(n) data.frame(x1 = rnorm(n), x2 = rnorm(n))
