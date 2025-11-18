@@ -307,9 +307,9 @@ simulate_one_draw <- function(n_labeled,
 #' @importFrom stats predict
 .predict_any <- function(fit, newdata) {
   if (inherits(fit, "ranger")) {
-    predict(fit, data = newdata)$predictions
+    predict(fit, data = as.data.frame(newdata))$predictions
   } else {
-    stats::predict(fit, newdata = newdata)
+    stats::predict(fit, newdata = as.data.frame(newdata))
   }
 }
 
@@ -387,4 +387,79 @@ fit_predict_model <- function(model_type, X_L, y_L, X_U,
   }
 
   list(fit = fit, fhat_U = as.numeric(fhat_U))
+}
+
+
+fit_predict_model_ols <- function(model_type, X_L, y_L, X_U,
+                              mtry = NULL,
+                              rf_engine = c("ranger", "randomForest"),
+                              rf_trees = 200,
+                              rf_min_node_size = 5,
+                              rf_num_threads = NULL,
+                              rf_seed = NULL) {
+  
+  model_type <- match.arg(model_type, c("glm_correct", "glm_mis", "glm_wrong", "rf"))
+  rf_engine  <- match.arg(rf_engine, c("ranger", "randomForest"))
+  
+  ## Ensure column names for formula models
+  if (is.matrix(X_L)) colnames(X_L) <- paste0("x", seq_len(ncol(X_L)))
+  if (is.matrix(X_U)) colnames(X_U) <- paste0("x", seq_len(ncol(X_U)))
+  
+  dat_L <- data.frame(y = y_L, X_L)
+  
+  ## --- GLM MODELS ---
+  if (model_type == "glm_correct") {
+    
+    ## Correct: true regression is y = β0 + β1 x1 + β2 x2
+    fit <- stats::glm(y ~ x1 + x2, data = dat_L)
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
+    
+  } else if (model_type == "glm_mis") {
+    
+    ## Misspecified: omit x2
+    fit <- stats::glm(y ~ x1, data = dat_L)
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
+    
+  } else if (model_type == "glm_wrong") {
+    
+    ## Wrong with interaction terms
+    fit <- stats::glm(
+    y ~ I(x1 * x2),
+    data = dat_L
+    )
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
+    
+  ## RANDOM FOREST 
+  } else if (model_type == "rf") {
+    
+    mtry_eff <- if (is.null(mtry)) floor(sqrt(ncol(X_L))) else mtry
+    use_rgr  <- (rf_engine == "ranger") && requireNamespace("ranger", quietly = TRUE)
+    
+    if (use_rgr) {
+      fit <- ranger::ranger(
+        y ~ ., 
+        data = dat_L,
+        num.trees     = rf_trees,
+        mtry          = mtry_eff,
+        min.node.size = rf_min_node_size,
+        importance    = "none",
+        seed          = rf_seed,
+        num.threads   = rf_num_threads
+      )
+      fhat_U <- predict(fit, data = as.data.frame(X_U))$predictions
+      
+    } else {
+      fit <- randomForest::randomForest(
+        y ~ ., data = dat_L,
+        ntree = rf_trees,
+        mtry  = mtry_eff
+      )
+      fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
+    }
+  }
+  
+  list(
+    fit    = fit,
+    fhat_U = as.numeric(fhat_U)
+  )
 }

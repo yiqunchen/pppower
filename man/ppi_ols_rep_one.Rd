@@ -14,6 +14,7 @@ ppi_ols_rep_one(
   a,
   delta = 0,
   ppi_type = c("PPI", "PPI++"),
+  theta0 = 0,
   lambda_mode = c("plugin", "oracle"),
   lambda_external = FALSE,
   n_external = ceiling(n/2),
@@ -41,6 +42,8 @@ ppi_ols_rep_one(
 \item{delta}{Effect size injected via \eqn{f(X) + \delta (X^\top a)}.}
 
 \item{ppi_type}{Either "PPI" (\\eqn{\\lambda=1}) or "PPI++".}
+
+\item{theta0}{True theta.}
 
 \item{lambda_mode}{For PPI++: "plugin" (estimate \\eqn{\\lambda})
 or "oracle" (not implemented internally).}

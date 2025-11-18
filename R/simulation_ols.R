@@ -19,6 +19,7 @@
 #'   "glm_wrong", "rf").
 #' @param a Contrast vector of length \eqn{p}.
 #' @param delta Effect size injected via \eqn{f(X) + \delta (X^\top a)}.
+#' @param theta0 True theta.
 #' @param ppi_type Either "PPI" (\\eqn{\\lambda=1}) or "PPI++".
 #' @param lambda_mode For PPI++: "plugin" (estimate \\eqn{\\lambda})
 #'   or "oracle" (not implemented internally).
@@ -52,6 +53,7 @@ ppi_ols_rep_one <- function(
   a,
   delta = 0,
   ppi_type = c("PPI", "PPI++"),
+  theta0 = 0,
   lambda_mode = c("plugin", "oracle"),
   lambda_external = FALSE,
   n_external = ceiling(n/2),
@@ -67,21 +69,19 @@ ppi_ols_rep_one <- function(
 
   a <- as.numeric(a)
 
-  # Generate Data
-  X_L <- X_sampler_L(n)
-  X_U <- X_sampler_L(N)
+  X_L_df <- X_sampler_L(n)  # data.frame with x1, x2
+  X_U_df <- X_sampler_L(N)
 
-  # Coerce to numeric matrices
-  X_L <- as.matrix(X_L)
-  X_U <- as.matrix(X_U)
-  storage.mode(X_L) <- "double"
-  storage.mode(X_U) <- "double"
+  X_L <- as.matrix(as.data.frame(X_L_df))
+  X_U <- as.matrix(as.data.frame(X_U_df))
+  mode(X_L) <- "numeric"
+  mode(X_U) <- "numeric"
 
   p <- ncol(X_L)
   stopifnot(length(a) == p)
 
-  f_L_true <- f_generator(X_L)
-  f_U_true <- f_generator(X_U)
+  f_L_true <- f_generator(X_L_df)
+  f_U_true <- f_generator(X_U_df)
 
   # inject contrast-aligned signal shift
   f_L <- f_L_true + delta * as.numeric(X_L %*% a)
@@ -101,7 +101,7 @@ ppi_ols_rep_one <- function(
       tr <- which(fold_id != fold)
       te <- which(fold_id == fold)
 
-      m <- fit_predict_model(
+      m <- fit_predict_model_ols(
         model_type,
         X_L[tr, , drop=FALSE], y_L[tr],
         X_U
@@ -116,7 +116,7 @@ ppi_ols_rep_one <- function(
 
   } else {
     ## Non-cross-fit model (PPI or PPI++)
-    m <- fit_predict_model(model_type, X_L, y_L, X_U)
+    m <- fit_predict_model_ols(model_type, X_L, y_L, X_U)
     fhat_L <- as.numeric(.predict_any(m$fit, X_L))
     fhat_U <- m$fhat_U
   }
@@ -146,11 +146,14 @@ ppi_ols_rep_one <- function(
         eps_sampler = eps_sampler,
         delta = delta
       )
-      X_ext <- sim_ext$labeled$X
+      X_ext_df <- sim_ext$labeled$X
       y_ext <- sim_ext$labeled$y
 
+      X_ext <- as.matrix(as.data.frame(X_ext_df))
+      mode(X_ext) <- "numeric"
+
       ## Predict f on external data using model trained on main X_L,y_L
-      m_ext <- fit_predict_model(model_type, X_L, y_L, X_ext)
+      m_ext <- fit_predict_model_ols(model_type, X_L_df, y_L, X_ext_df)
       fhat_ext <- m_ext$fhat_U
 
       ## External score covariances
@@ -234,7 +237,7 @@ ppi_ols_rep_one <- function(
   Vhat <- t(a) %*% Hinv %*% Mid %*% Hinv %*% a
   se_hat <- sqrt(as.numeric(Vhat))
 
-  z_stat <- theta_hat / se_hat
+  z_stat <- (theta_hat - theta0) / se_hat
   z_alpha <- qnorm(1 - alpha/2)
   reject <- abs(z_stat) > z_alpha
 
@@ -278,6 +281,7 @@ ppi_ols_rep_one <- function(
 #' @param model_type Predictive model class for \eqn{\hat f}.
 #' @param a Contrast vector of length \eqn{p}.
 #' @param delta Effect size.
+#' @param theta0 True theta.
 #' @param ppi_type `"PPI"` or `"PPI++"`.
 #' @param lambda_mode `"plugin"` or `"oracle"`.
 #' @param lambda_external Whether to estimate lambda from an external labeled dataset.
@@ -285,6 +289,7 @@ ppi_ols_rep_one <- function(
 #' @param PPIpp_crossfit Whether to use cross-fitting in PPI++.
 #' @param alpha Wald test significance level.
 #' @param seed Optional seed.
+#' @param keep_reps Binary, whether or not output intermediate statistics. Default FALSE.
 #'
 #' @return A list with:
 #'   \item{empirical_power}{Empirical rejection rate over R reps.}
@@ -309,33 +314,38 @@ ppi_ols_empirical_power <- function(
   model_type,
   a,
   delta,
+  theta0,
   ppi_type = c("PPI", "PPI++"),
   lambda_mode = c("plugin", "oracle"),
   lambda_external = FALSE,
   n_external = ceiling(n/2),
   PPIpp_crossfit = TRUE,
   alpha = 0.05,
-  seed = 1
+  seed = 1,
+  keep_reps = FALSE
 ) {
 
-  ppi_type   <- match.arg(ppi_type)
+  ppi_type    <- match.arg(ppi_type)
   lambda_mode <- match.arg(lambda_mode)
   set.seed(seed)
+  a <- as.numeric(a)
 
-  reps <- replicate(R,
+  reps <- replicate(
+    R,
     ppi_ols_rep_one(
       n = n, N = N,
       X_sampler_L = X_sampler_L,
       f_generator = f_generator,
-      model_type = model_type,
-      a = a,
-      delta = delta,
-      ppi_type = ppi_type,
-      lambda_mode = lambda_mode,
+      model_type   = model_type,
+      a            = a,
+      delta        = delta,
+      theta0       = theta0,
+      ppi_type     = ppi_type,
+      lambda_mode  = lambda_mode,
       lambda_external = lambda_external,
-      n_external = n_external,
+      n_external   = n_external,
       PPIpp_crossfit = PPIpp_crossfit,
-      alpha = alpha
+      alpha        = alpha
     ),
     simplify = FALSE
   )
@@ -348,72 +358,99 @@ ppi_ols_empirical_power <- function(
   empirical_power <- mean(reject_vec)
   mc_se_power     <- sqrt(empirical_power * (1 - empirical_power) / R)
 
-  ## Compute A, B, C sample analogues
-  A_vals <- vapply(reps, function(x) {
-    # use the H_p = (1-lambda)H_L + lambda H_U for each replicate
-    H_p <- (1 - x$lambda_hat) * x$H_L + x$lambda_hat * x$H_U
-    Hinv_a <- solve(H_p, a)
+  A_vals <- numeric(R)
+  B_vals <- numeric(R)
+  C_vals <- numeric(R)
 
-    drop(t(Hinv_a) %*% x$Sigma_YY_hat %*% Hinv_a)
-  }, numeric(1))
+  se_theory_vec   <- numeric(R)
+  power_theory_vec <- numeric(R)
 
-  B_vals <- vapply(reps, function(x) {
-    H_p <- (1 - x$lambda_hat) * x$H_L + x$lambda_hat * x$H_U
-    Hinv_a <- solve(H_p, a)
+  z_alpha <- qnorm(1 - alpha/2)
 
-    drop(t(Hinv_a) %*% x$Sigma_ff_hat %*% Hinv_a)
-  }, numeric(1))
+  theta_shift <- delta * sum(a * a) # analytic shift for linear contrast: theta* - theta0
 
-  C_vals <- vapply(reps, function(x) {
-    H_p <- (1 - x$lambda_hat) * x$H_L + x$lambda_hat * x$H_U
-    Hinv_a <- solve(H_p, a)
+  for (r in seq_len(R)) {
+    x  <- reps[[r]]
 
-    drop(t(Hinv_a) %*% x$Sigma_Yf_hat %*% Hinv_a)
-  }, numeric(1))
+    lambda_r <- x$lambda_hat
+    H_L_r    <- x$H_L
+    H_U_r    <- x$H_U
+    SYY_r    <- x$Sigma_YY_hat
+    Sff_r    <- x$Sigma_ff_hat
+    SYf_r    <- x$Sigma_Yf_hat
 
+    ## H_p for this replicate
+    if (ppi_type == "PPI") {
+      H_p_r <- H_U_r
+    } else {
+      H_p_r <- (1 - lambda_r) * H_L_r + lambda_r * H_U_r
+    }
+    Hinv_r <- solve(H_p_r)
+
+    ## Sandwich components
+    A_r <- as.numeric(t(a) %*% Hinv_r %*% SYY_r %*% Hinv_r %*% a)
+    B_r <- as.numeric(t(a) %*% Hinv_r %*% Sff_r %*% Hinv_r %*% a)
+    C_r <- as.numeric(t(a) %*% Hinv_r %*% SYf_r %*% Hinv_r %*% a)
+
+    A_vals[r] <- A_r
+    B_vals[r] <- B_r
+    C_vals[r] <- C_r
+
+    ## Variance for replicate r
+    V_r <- A_r / n +
+      lambda_r^2 * (B_r / N + B_r / n) -
+      2 * lambda_r * C_r / n
+
+    se_theory_r <- sqrt(V_r)
+    se_theory_vec[r] <- se_theory_r
+
+    ## Noncentral Z mean
+    mu_r <- theta_shift / se_theory_r
+
+    ## Theoretical power for replicate r
+    p_r <- pnorm(-z_alpha + mu_r) + (1 - pnorm(z_alpha + mu_r))
+    power_theory_vec[r] <- p_r
+  }
+
+  ## Averages across R
   A_hat <- mean(A_vals)
   B_hat <- mean(B_vals)
   C_hat <- mean(C_vals)
 
-  ## Theoretical lambda (oracle) based on averaged B,C 
-  r <- n / N
-  lambda_star_hat <- if (ppi_type == "PPI") 1 else C_hat / ((1+r) * B_hat)
-  lambda_star_hat <- max(0, min(1, lambda_star_hat))
+  se_theory         <- mean(se_theory_vec)
+  theoretical_power <- mean(power_theory_vec)
 
-  ## Closed-form variance
-  se_theory <- sqrt(
-    A_hat / n +
-      lambda_star_hat^2 * (B_hat / N + B_hat / n) -
-      2 * lambda_star_hat * C_hat / n
-  )
-
-  ## Wald power 
-  z_alpha <- qnorm(1 - alpha/2)
-  th_power <- 1 - pnorm(z_alpha - delta / se_theory) +
-              pnorm(-z_alpha - delta / se_theory)
-
+  ## lambda summary
   lambda_avg <- mean(lambda_vec)
   lambda_sd  <- sd(lambda_vec)
 
+  ## Oracle lambda based on sample-averaged B,C
+  r_ratio <- n / N
+  lambda_star_hat <-
+    if (ppi_type == "PPI") 1 else C_hat / ((1 + r_ratio) * B_hat)
+  lambda_star_hat <- max(0, min(1, lambda_star_hat))
+
+  ## Condition number
   H_condition_num <- mean(vapply(
     reps,
     function(x) {
-      Hp <- (1 - x$lambda_hat) * x$H_L + x$lambda_hat * x$H_U
+      if (ppi_type == "PPI") {
+        Hp <- x$H_U
+      } else {
+        Hp <- (1 - x$lambda_hat) * x$H_L + x$lambda_hat * x$H_U
+      }
       kappa(Hp)
     },
     numeric(1)
   ))
 
-  design_label <- ppi_type
-
-  ## Tidy table
-
+  ## Covariance summary table 
   cov_var_table <- tibble::tibble(
     model_type       = model_type,
     ppi_type         = ppi_type,
     lambda_mode      = lambda_mode,
     lambda_external  = lambda_external,
-    design           = design_label,
+    design           = ppi_type,
     n                = n,
     N                = N,
     A_hat            = A_hat,
@@ -424,24 +461,24 @@ ppi_ols_empirical_power <- function(
     lambda_star_hat  = lambda_star_hat,
     H_condition_num  = H_condition_num,
     se_theory        = se_theory,
-    power_theory     = th_power
+    power_theory     = theoretical_power
   )
 
-
-  ## Return
-  list(
+  out <- list(
     empirical_power  = empirical_power,
+    theoretical_power = theoretical_power,
     mc_se            = mc_se_power,
     avg_theta_hat    = mean(theta_vec),
     avg_se_hat       = mean(se_vec),
     avg_lambda_hat   = lambda_avg,
-    A_hat = A_hat,
-    B_hat = B_hat,
-    C_hat = C_hat,
     lambda_star_hat = lambda_star_hat,
-    se_theory = se_theory,
-    theoretical_power = th_power,
-    cov_var_table = cov_var_table,
-    reps = reps
+    se_theory         = se_theory,
+    cov_var_table = cov_var_table
   )
+
+  if (keep_reps) {
+    out$reps <- reps
+  }
+  
+  out
 }

@@ -1,21 +1,33 @@
 library(tidyverse)
 library(furrr)
 library(dplyr)
+library(future)
 
+devtools::load_all()
 
 # Data-generating process
+
+compute_theta0 <- function(a, X_sampler_L, f_generator, n_ref = 5e5) {
+  Xref <- X_sampler_L(n_ref)
+  Xref_m <- as.matrix(Xref)
+  yref <- f_generator(Xref_m)
+
+  H <- crossprod(Xref_m) / n_ref
+  G <- crossprod(Xref_m, yref) / n_ref
+  beta_star <- solve(H, G)
+
+  as.numeric(sum(a * beta_star))
+}
+
 
 X_sampler_L <- function(n) data.frame(
   x1 = rnorm(n),
   x2 = rnorm(n)
 )
 
-# Nonlinear truth for OLS tests
 f_true <- function(X) {
   X <- as.data.frame(X)
-  x1 <- X[["x1"]]
-  x2 <- X[["x2"]]
-  x1 + x1 * x2 + x2^3
+  with(X, 1 + 2 * x1 + 3.5 * x2)
 }
 
 contrasts_list <- list(
@@ -26,6 +38,10 @@ contrasts_list <- list(
 
 contrast_names <- names(contrasts_list)
 
+theta0_list <- lapply(contrasts_list, compute_theta0,
+                      X_sampler_L = X_sampler_L,
+                      f_generator = f_true)
+names(theta0_list) <- names(contrasts_list)
 # Simulation grid
 
 n_grid <- c(50, 100, 150, 200, 300)
@@ -33,9 +49,9 @@ N <- 2000
 R <- 500
 
 deltas <- seq(0, 0.6, by = 0.05)
-n_external <- c(50, 100, 200, 300, 500, 1000)
+#n_external <- c(50, 100, 200, 300, 500, 1000)
 
-models <- c("glm_correct", "glm_mis", "glm_wrong", "rf")
+models <- c("glm_correct", "glm_mis", "glm_wrong")
 ppi_types <- c("PPI", "PPI++")
 
 grid <- expand.grid(
@@ -45,11 +61,16 @@ grid <- expand.grid(
   ppi_type = ppi_types,
   n = n_grid,
   lambda_mode = "plugin",
-  lambda_external = TRUE,
+  lambda_external = FALSE,
   stringsAsFactors = FALSE
-)
+) %>%
+  mutate(
+    contrast    = as.character(contrast),
+    model_type  = as.character(model_type),
+    ppi_type    = as.character(ppi_type)
+  )
 
-plan(multisession, workers = 16, scheduling = TRUE)
+plan(multicore, workers = 8)
 
 power_grid <- grid %>%
   mutate(
@@ -57,23 +78,23 @@ power_grid <- grid %>%
       list(contrast, model_type, delta, ppi_type, n, lambda_mode, lambda_external),
       ~ ppi_ols_empirical_power(
           R = R,
-          n = ..5,                       # labeled
-          N = N,                         # unlabeled
+          n = ..5,
+          N = N,
           X_sampler_L = X_sampler_L,
           f_generator = f_true,
           model_type = ..2,
-          a = contrasts_list[[..1]],
+          a = contrasts_list[[ as.character(..1) ]],
           delta = ..3,
+          theta0 = theta0_list[[ as.character(..1) ]],
           ppi_type = ..4,
           lambda_mode = ..6,
           lambda_external = ..7,
-          n_external = ceiling(..5/2),   # consistent default
+          n_external = ceiling(..5/2),
           PPIpp_crossfit = TRUE,
           alpha = 0.05,
-          seed = 42,
-          scheduling = Inf
+          seed = 42
       ),
-      .options = furrr_options(seed = TRUE),
+      .options = furrr_options(seed = TRUE, packages = "pppower"),
       .progress = TRUE
     )
   )
@@ -82,14 +103,17 @@ power_df <- power_grid %>%
   tidyr::unnest_wider(result) %>%
   select(
     contrast, model_type, ppi_type, n, delta,
-    empirical_power, mc_se, avg_SE, lambda_external, avg_lambda_hat
+    empirical_power, mc_se,
+    avg_se_hat,          # ← OLS version SE
+    se_theory,           # ← analytic SE
+    theoretical_power,   # ← analytic power
+    lambda_external, avg_lambda_hat
   ) %>%
   mutate(
     ppi_type = factor(ppi_type, levels = c("PPI", "PPI++")),
     n = factor(n, levels = sort(unique(n))),
     model_type = factor(model_type, levels = models)
   )
-
 
 lambda_summary <- power_df %>%
   group_by(contrast, model_type, ppi_type, n, lambda_external) %>%
@@ -99,28 +123,150 @@ lambda_summary <- power_df %>%
     .groups = "drop"
   )
 
-
 plot_df <- power_df %>%
   filter(ppi_type %in% c("PPI", "PPI++"))
 
-for (ct in contrast_names) {
-  dfc <- plot_df %>% filter(contrast == ct)
 
+plot_contrast_power <- function(ct, plot_df, models) {
+  
+  # Filter for selected contrast
+  dfc <- plot_df %>%
+    filter(contrast == ct) %>%
+    mutate(
+      ppi_type = factor(ppi_type, levels = c("PPI", "PPI++")),
+      model_type = factor(model_type, levels = models),
+      n = factor(n, levels = sort(unique(n)))
+    )
+  
+  # Compute PPI++ - PPI differences 
+  dfc_diff <- dfc %>%
+    select(delta, model_type, n, ppi_type, empirical_power) %>%
+    tidyr::pivot_wider(
+      names_from = ppi_type,
+      values_from = empirical_power
+    ) %>%
+    mutate(power_diff = `PPI++` - PPI)
+  
+  dfc_long <- bind_rows(
+    dfc %>% mutate(panel = ppi_type),
+    dfc_diff %>% mutate(ppi_type = NA, empirical_power = NA, panel = "Difference")
+  )
+  
+  dfc_long$panel <- factor(
+    dfc_long$panel,
+    levels = c("PPI", "PPI++", "Difference")
+  )
+  
+  # Row-specific y-limit enforcement (via geom_blank) 
+  dfc_long <- dfc_long %>%
+    mutate(
+      yplot = case_when(
+        panel == "Difference" ~ power_diff,
+        TRUE ~ empirical_power
+      ),
+      ymin_fake = case_when(
+        panel == "Difference" ~ -0.5,
+        TRUE ~ 0
+      ),
+      ymax_fake = case_when(
+        panel == "Difference" ~ 0.5,
+        TRUE ~ 1
+      )
+    )
+  
   p <- ggplot(
-    dfc,
-    aes(x = delta, y = empirical_power,
-        color = model_type, group = model_type)
+    dfc_long,
+    aes(
+      x = delta,
+      y = yplot,
+      color = model_type,
+      group = model_type
+    )
   ) +
+    geom_blank(aes(y = ymin_fake)) +
+    geom_blank(aes(y = ymax_fake)) +
     geom_line(linewidth = 1.1) +
     geom_point(size = 1.8) +
-    facet_grid(ppi_type ~ n, scales = "free_y") +
+    facet_grid(panel ~ n, scales = "free_y") +
     labs(
-      title = paste("OLS Contrast Power Curve — contrast:", ct),
+      title = paste0("OLS Linear Contrast Power Curve — Contrast ", ct),
+      subtitle = "Rows: PPI, PPI++, and (PPI++ - PPI)",
       x = expression(Delta),
-      y = "Empirical Power"
+      y = "Empirical Power / Difference",
+      color = "Model"
     ) +
-    theme_bw(13)
-
-  print(p)
-
+    theme_bw(base_size = 13) +
+    theme(
+      panel.grid.minor = element_blank(),
+      strip.text = element_text(face = "bold"),
+      legend.position = "bottom"
+    )
+  
+  return(p)
 }
+
+plot_contrast_power("c1", plot_df, models)
+plot_contrast_power("c2", plot_df, models)
+plot_contrast_power("c3", plot_df, models)
+
+
+power_compare <- power_grid %>%
+  tidyr::unnest_wider(result) %>%
+  select(
+    contrast, model_type, ppi_type, n, delta,
+    empirical_power, theoretical_power, mc_se,
+    avg_se_hat, se_theory,
+    lambda_external, avg_lambda_hat
+  ) %>%
+  mutate(
+    ppi_type = factor(ppi_type, levels = c("PPI", "PPI++")),
+    n        = factor(n, levels = sort(unique(n))),
+    model_type = factor(model_type, levels = models)
+  )
+
+# Empirical vs Theoretical Power Scatterplot 
+
+emp_theoretical_power <- ggplot(
+  power_compare,
+  aes(
+    x = theoretical_power,
+    y = empirical_power,
+    color = model_type
+  )
+) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "black") +
+  geom_point(size = 2, alpha = 0.6) +
+  facet_grid(ppi_type ~ n + contrast, scales = "free") +
+  labs(
+    title = "Empirical vs. Analytical Power (OLS Contrast Tests)",
+    subtitle = "Rows: Estimator (PPI vs PPI++), Columns: labeled sample size n",
+    x = "Theoretical Power",
+    y = "Empirical Power",
+    color = "Model",
+    caption = "Closed-form OLS variance; λ from plugin/external as specified."
+  ) +
+  theme_bw(base_size = 12) +
+  theme(
+    panel.grid.minor = element_blank(),
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom",
+    plot.caption = element_text(hjust = 0.5, face = "italic", size = 10)
+  )
+
+print(emp_theoretical_power)
+
+p_error <- scatter_power %>%
+  mutate(err = empirical_power - theoretical_power) %>%
+  ggplot(aes(x = delta, y = err, color = ppi_type)) +
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_line() +
+  facet_grid(model_type ~ n) +
+  labs(
+    title = "Power Approximation Error",
+    subtitle = "Empirical - Theoretical",
+    x = expression(Delta),
+    y = "Error"
+  ) +
+  theme_bw(13)
+
+print(p_error)

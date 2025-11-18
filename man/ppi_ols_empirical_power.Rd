@@ -13,13 +13,15 @@ ppi_ols_empirical_power(
   model_type,
   a,
   delta,
+  theta0,
   ppi_type = c("PPI", "PPI++"),
   lambda_mode = c("plugin", "oracle"),
   lambda_external = FALSE,
   n_external = ceiling(n/2),
   PPIpp_crossfit = TRUE,
   alpha = 0.05,
-  seed = 1
+  seed = 1,
+  keep_reps = FALSE
 )
 }
 \arguments{
@@ -39,6 +41,8 @@ ppi_ols_empirical_power(
 
 \item{delta}{Effect size.}
 
+\item{theta0}{True theta.}
+
 \item{ppi_type}{\code{"PPI"} or \code{"PPI++"}.}
 
 \item{lambda_mode}{\code{"plugin"} or \code{"oracle"}.}
@@ -52,6 +56,8 @@ ppi_ols_empirical_power(
 \item{alpha}{Wald test significance level.}
 
 \item{seed}{Optional seed.}
+
+\item{keep_reps}{Binary, whether or not output intermediate statistics. Default FALSE.}
 }
 \value{
 A list with:
