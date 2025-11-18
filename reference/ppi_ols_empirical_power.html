@@ -84,13 +84,15 @@ calls <code><a href="ppi_ols_rep_one.html">ppi_ols_rep_one()</a></code> and aggr
 <span>  <span class="va">model_type</span>,</span>
 <span>  <span class="va">a</span>,</span>
 <span>  <span class="va">delta</span>,</span>
+<span>  <span class="va">theta0</span>,</span>
 <span>  ppi_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PPI"</span>, <span class="st">"PPI++"</span><span class="op">)</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"plugin"</span>, <span class="st">"oracle"</span><span class="op">)</span>,</span>
 <span>  lambda_external <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  n_external <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="va">n</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span>,</span>
 <span>  PPIpp_crossfit <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">1</span></span>
+<span>  seed <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  keep_reps <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -130,6 +132,10 @@ calls <code><a href="ppi_ols_rep_one.html">ppi_ols_rep_one()</a></code> and aggr
 <dd><p>Effect size.</p></dd>
 
 
+<dt id="arg-theta-">theta0<a class="anchor" aria-label="anchor" href="#arg-theta-"></a></dt>
+<dd><p>True theta.</p></dd>
+
+
 <dt id="arg-ppi-type">ppi_type<a class="anchor" aria-label="anchor" href="#arg-ppi-type"></a></dt>
 <dd><p><code>"PPI"</code> or <code>"PPI++"</code>.</p></dd>
 
@@ -156,6 +162,10 @@ calls <code><a href="ppi_ols_rep_one.html">ppi_ols_rep_one()</a></code> and aggr
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Optional seed.</p></dd>
+
+
+<dt id="arg-keep-reps">keep_reps<a class="anchor" aria-label="anchor" href="#arg-keep-reps"></a></dt>
+<dd><p>Binary, whether or not output intermediate statistics. Default FALSE.</p></dd>
 
 </dl></div>
     <div id="value">
