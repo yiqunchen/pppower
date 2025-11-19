@@ -43,7 +43,7 @@ ppi_ols_rep_one(
 
 \item{ppi_type}{Either "PPI" (\\eqn{\\lambda=1}) or "PPI++".}
 
-\item{theta0}{True theta.}
+\item{theta0}{Null value of the contrast \eqn{\theta=a^\top\beta^\star}.}
 
 \item{lambda_mode}{For PPI++: "plugin" (estimate \\eqn{\\lambda})
 or "oracle" (not implemented internally).}

@@ -19,7 +19,7 @@
 #'   "glm_wrong", "rf").
 #' @param a Contrast vector of length \eqn{p}.
 #' @param delta Effect size injected via \eqn{f(X) + \delta (X^\top a)}.
-#' @param theta0 True theta.
+#' @param theta0 Null value of the contrast \eqn{\theta=a^\top\beta^\star}.
 #' @param ppi_type Either "PPI" (\\eqn{\\lambda=1}) or "PPI++".
 #' @param lambda_mode For PPI++: "plugin" (estimate \\eqn{\\lambda})
 #'   or "oracle" (not implemented internally).
@@ -139,15 +139,17 @@ ppi_ols_rep_one <- function(
     if (lambda_external) {
 
       ## External labeled sample
-      sim_ext <- simulate_one_draw(
-        n_labeled = n_external, n_unlabeled = 0,
+      sim_ext <- simulate_one_draw_contrast(
+        n_labeled = n_external,
         X_sampler_L = X_sampler_L,
         f_generator = f_generator,
         eps_sampler = eps_sampler,
+        a = a,
         delta = delta
       )
-      X_ext_df <- sim_ext$labeled$X
-      y_ext <- sim_ext$labeled$y
+      
+      X_ext_df <- sim_ext$X
+      y_ext    <- sim_ext$y
 
       X_ext <- as.matrix(as.data.frame(X_ext_df))
       mode(X_ext) <- "numeric"
@@ -289,7 +291,7 @@ ppi_ols_rep_one <- function(
 #' @param PPIpp_crossfit Whether to use cross-fitting in PPI++.
 #' @param alpha Wald test significance level.
 #' @param seed Optional seed.
-#' @param keep_reps Binary, whether or not output intermediate statistics. Default FALSE.
+#' @param keep_reps Logical; whether or not output intermediate statistics. Default FALSE.
 #'
 #' @return A list with:
 #'   \item{empirical_power}{Empirical rejection rate over R reps.}
@@ -302,7 +304,7 @@ ppi_ols_rep_one <- function(
 #'   \item{se_theory}{Closed-form SE.}
 #'   \item{theoretical_power}{Closed-form Wald power.}
 #'   \item{cov_var_table}{Tidy diagnostic table.}
-#'   \item{reps}{Raw replicate outputs.}
+#'   \item{reps}{(Optional) Raw replicate-level results, if \code{keep_reps = TRUE}.}
 #'
 #' @export
 #' 
@@ -330,6 +332,7 @@ ppi_ols_empirical_power <- function(
   set.seed(seed)
   a <- as.numeric(a)
 
+  ## Run R Monte Carlo replicates
   reps <- replicate(
     R,
     ppi_ols_rep_one(
@@ -350,6 +353,7 @@ ppi_ols_empirical_power <- function(
     simplify = FALSE
   )
 
+  ## Extract replicate-level results
   reject_vec <- vapply(reps, `[[`, logical(1), "reject")
   theta_vec  <- vapply(reps, `[[`, numeric(1), "theta_hat")
   se_vec     <- vapply(reps, `[[`, numeric(1), "se_hat")
@@ -367,7 +371,8 @@ ppi_ols_empirical_power <- function(
 
   z_alpha <- qnorm(1 - alpha/2)
 
-  theta_shift <- delta * sum(a * a) # analytic shift for linear contrast: theta* - theta0
+  ## analytic contrast shift:  θ* - θ0 = δ‖a‖²
+  theta_shift <- delta * sum(a * a)
 
   for (r in seq_len(R)) {
     x  <- reps[[r]]

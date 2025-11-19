@@ -313,10 +313,14 @@ simulate_one_draw <- function(n_labeled,
   }
 }
 
-#' Fit predictive model and return predictions
+#' Fit predictive model and return predictions for Mean Estimation for PPI / PPI++ 
 #'
 #' @description
-#' Internal unified interface for GLMs and random forests.
+#' Internal unified interface for fitting predictive models used in the
+#' PPI and PPI++ estimators.  
+#' Supports correctly specified, misspecified, and incorrectly specified
+#' linear models, as well as random forests.  
+#' Returns fitted model object and predictions on the unlabeled covariates.
 #'
 #' @keywords internal
 #'
@@ -389,7 +393,33 @@ fit_predict_model <- function(model_type, X_L, y_L, X_U,
   list(fit = fit, fhat_U = as.numeric(fhat_U))
 }
 
-
+#' Fit Predictive Model for OLS PPI / PPI++ (Internal Helper)
+#'
+#' @description
+#' Internal unified interface for fitting predictive models used in the
+#' OLS-based PPI and PPI++ estimators.  
+#' Supports correctly specified, misspecified, and incorrectly specified
+#' linear models, as well as random forests.  
+#' Returns fitted model object and predictions on the unlabeled covariates.
+#'
+#' @keywords internal
+#'
+#' @param model_type Type of model ("glm_correct", "glm_mis", "glm_wrong", "rf")
+#' @param X_L Labeled covariates
+#' @param y_L Labeled outcomes
+#' @param X_U Unlabeled covariates
+#' @param mtry RF mtry value
+#' @param rf_engine Random forest engine ("ranger" or "randomForest")
+#' @param rf_trees Number of trees
+#' @param rf_min_node_size Minimum node size for ranger
+#' @param rf_num_threads Threads (ranger)
+#' @param rf_seed Random seed
+#'
+#' @return List containing model fit object and predictions on X_U.
+#'
+#' @importFrom stats glm predict
+#' @importFrom ranger ranger
+#' @importFrom randomForest randomForest
 fit_predict_model_ols <- function(model_type, X_L, y_L, X_U,
                               mtry = NULL,
                               rf_engine = c("ranger", "randomForest"),
@@ -411,22 +441,22 @@ fit_predict_model_ols <- function(model_type, X_L, y_L, X_U,
   if (model_type == "glm_correct") {
     
     ## Correct: true regression is y = β0 + β1 x1 + β2 x2
-    fit <- stats::glm(y ~ x1 + x2, data = dat_L)
+    #fit <- stats::glm(y ~ x1 + x2, data = dat_L)
+    fit <- stats::glm(y ~ x1 + x2 + x3, data = dat_L)
     fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
     
   } else if (model_type == "glm_mis") {
     
     ## Misspecified: omit x2
-    fit <- stats::glm(y ~ x1, data = dat_L)
+    #fit <- stats::glm(y ~ x1, data = dat_L)
+    fit <- stats::glm(y ~ x1 + x2, data = dat_L)
     fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
     
   } else if (model_type == "glm_wrong") {
     
     ## Wrong with interaction terms
-    fit <- stats::glm(
-    y ~ I(x1 * x2),
-    data = dat_L
-    )
+    #fit <- stats::glm(y ~ I(x1 * x2), data = dat_L)
+    fit <- stats::glm(y ~ x1, data = dat_L)
     fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
     
   ## RANDOM FOREST 
@@ -462,4 +492,169 @@ fit_predict_model_ols <- function(model_type, X_L, y_L, X_U,
     fit    = fit,
     fhat_U = as.numeric(fhat_U)
   )
+}
+
+#' Fit Predictive Model for GLM PPI / PPI++ (Internal Helper)
+#' @description
+#' Internal unified interface for GLMs and random forests used in the
+#' PPI / PPI++ GLM simulation framework.  
+#' This function fits a predictive model on labeled data \code{(X_L, y_L)}
+#' and returns fitted objects and predictions on both labeled and
+#' unlabeled covariates.
+#' 
+#' @keywords internal
+#'
+#' @param model_type Type of model ("glm_correct", "glm_mis", "glm_wrong", "rf")
+#' @param X_L Labeled covariates
+#' @param y_L Labeled outcomes
+#' @param X_U Unlabeled covariates
+#' @param mtry RF mtry value
+#' @param rf_engine Random forest engine ("ranger" or "randomForest")
+#' @param rf_trees Number of trees
+#' @param rf_min_node_size Minimum node size for ranger
+#' @param rf_num_threads Threads (ranger)
+#' @param rf_seed Random seed
+#'
+#' @return A list with:
+#'   \item{fit}{The fitted model object.}
+#'   \item{fhat_L}{Predicted conditional means \eqn{\hat\mu_f(X_L)} on labeled data.}
+#'   \item{fhat_U}{Predicted conditional means \eqn{\hat\mu_f(X_U)} on unlabeled data.}
+#'
+#' @importFrom stats glm predict binomial
+#' @importFrom ranger ranger
+#' @importFrom randomForest randomForest
+
+fit_predict_model_glm <- function(
+  model_type, X_L, y_L, X_U,
+  mtry = NULL,
+  rf_engine = c("ranger", "randomForest"),
+  rf_trees = 200,
+  rf_min_node_size = 5,
+  rf_num_threads = NULL,
+  rf_seed = NULL
+) {
+
+  model_type <- match.arg(model_type,
+                          c("glm_correct", "glm_mis", "glm_wrong", "rf"))
+  rf_engine  <- match.arg(rf_engine, c("ranger", "randomForest"))
+
+  ## Ensure column names for formula interface
+  if (is.matrix(X_L)) colnames(X_L) <- paste0("x", seq_len(ncol(X_L)))
+  if (is.matrix(X_U)) colnames(X_U) <- paste0("x", seq_len(ncol(X_U)))
+
+  dat_L <- data.frame(y = y_L, X_L)
+
+  ## GLM: CORRECT SPECIFICATION
+  if (model_type == "glm_correct") {
+
+    fit <- stats::glm(
+      y ~ x1 + x2 + x3,
+      data = dat_L,
+      family = binomial()
+    )
+
+    fhat_L <- stats::predict(fit, newdata = dat_L, type = "response")
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U), type = "response")
+
+  ## GLM: MIS-SPECIFIED (omits x2)
+  } else if (model_type == "glm_mis") {
+
+    fit <- stats::glm(
+      y ~ x1 + x3,
+      data = dat_L,
+      family = binomial()
+    )
+
+    fhat_L <- stats::predict(fit, newdata = dat_L, type = "response")
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U), type = "response")
+
+  ## GLM: WRONG MODEL (probit link + wrong structure)
+  } else if (model_type == "glm_wrong") {
+
+    fit <- stats::glm(
+      y ~ x1 + I(x2^2),
+      data = dat_L,
+      family = binomial(link = "probit")
+    )
+
+    fhat_L <- stats::predict(fit, newdata = dat_L, type = "response")
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U), type = "response")
+
+  ## RANDOM FOREST CLASSIFIER
+  } else if (model_type == "rf") {
+
+    ## Convert y to factor for classification
+    dat_L_rf <- dat_L
+    dat_L_rf$y <- factor(y_L, levels = c(0,1))
+
+    mtry_eff <- if (is.null(mtry)) floor(sqrt(ncol(X_L))) else mtry
+
+    if (rf_engine == "ranger" && requireNamespace("ranger", quietly = TRUE)) {
+
+      fit <- ranger::ranger(
+        y ~ ., data = dat_L_rf,
+        probability = TRUE,
+        num.trees   = rf_trees,
+        mtry        = mtry_eff,
+        min.node.size = rf_min_node_size,
+        seed        = rf_seed,
+        num.threads = rf_num_threads
+      )
+
+      fhat_L <- predict(fit, data = dat_L_rf)$predictions[, 2]
+      fhat_U <- predict(fit, data = as.data.frame(X_U))$predictions[, 2]
+
+    } else {
+
+      fit <- randomForest::randomForest(
+        y ~ ., data = dat_L_rf,
+        ntree = rf_trees,
+        mtry  = mtry_eff
+      )
+
+      fhat_L <- stats::predict(fit, newdata = dat_L_rf, type = "prob")[, 2]
+      fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U), type = "prob")[, 2]
+    }
+  }
+
+  ## Output
+  list(
+    fit    = fit,
+    fhat_L = as.numeric(fhat_L),
+    fhat_U = as.numeric(fhat_U)
+  )
+}
+
+simulate_one_draw_contrast <- function(
+  n_labeled,
+  X_sampler_L,
+  f_generator,
+  eps_sampler,
+  a,
+  delta
+) {
+  X <- X_sampler_L(n_labeled)
+  X_mat <- as.matrix(X)
+
+  f_true <- f_generator(X)
+  f_delta <- f_true + delta * as.numeric(X_mat %*% a)
+
+  y <- f_delta + eps_sampler(n_labeled)
+
+  list(
+    X = X,
+    y = y
+  )
+}
+
+compute_theta0 <- function(a, X_sampler_L, f_generator, n_ref = 5e5) {
+  Xref <- X_sampler_L(n_ref)
+  Xref_m <- as.matrix(Xref)
+  yref <- f_generator(Xref_m)
+
+  H <- crossprod(Xref_m) / n_ref
+  G <- crossprod(Xref_m, yref) / n_ref
+  beta_star <- solve(H, G)
+
+  as.numeric(sum(a * beta_star))
 }

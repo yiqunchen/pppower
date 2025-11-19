@@ -57,7 +57,7 @@ ppi_ols_empirical_power(
 
 \item{seed}{Optional seed.}
 
-\item{keep_reps}{Binary, whether or not output intermediate statistics. Default FALSE.}
+\item{keep_reps}{Logical; whether or not output intermediate statistics. Default FALSE.}
 }
 \value{
 A list with:
@@ -71,7 +71,7 @@ A list with:
 \item{se_theory}{Closed-form SE.}
 \item{theoretical_power}{Closed-form Wald power.}
 \item{cov_var_table}{Tidy diagnostic table.}
-\item{reps}{Raw replicate outputs.}
+\item{reps}{(Optional) Raw replicate-level results, if \code{keep_reps = TRUE}.}
 }
 \description{
 Runs a full Monte Carlo simulation for estimating power for the

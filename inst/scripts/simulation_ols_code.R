@@ -7,33 +7,22 @@ devtools::load_all()
 
 # Data-generating process
 
-compute_theta0 <- function(a, X_sampler_L, f_generator, n_ref = 5e5) {
-  Xref <- X_sampler_L(n_ref)
-  Xref_m <- as.matrix(Xref)
-  yref <- f_generator(Xref_m)
-
-  H <- crossprod(Xref_m) / n_ref
-  G <- crossprod(Xref_m, yref) / n_ref
-  beta_star <- solve(H, G)
-
-  as.numeric(sum(a * beta_star))
-}
-
 
 X_sampler_L <- function(n) data.frame(
   x1 = rnorm(n),
-  x2 = rnorm(n)
+  x2 = rnorm(n),
+  x3 = rnorm(n)
 )
 
 f_true <- function(X) {
   X <- as.data.frame(X)
-  with(X, 1 + 2 * x1 + 3.5 * x2)
+  with(X, 1 + 2 * x1 + 3.5 * x2 - x3)
 }
 
 contrasts_list <- list(
-  c1 = c(1, 0),     # β1
-  c2 = c(0, 1),     # β2
-  c3 = c(1, -1)     # β1 - β2
+  c1 = c(1, 0, 0),     # β1
+  c2 = c(0, 1, 0),     # β2
+  c3 = c(1, 0, -1)     # β1 - β3
 )
 
 contrast_names <- names(contrasts_list)
@@ -61,7 +50,7 @@ grid <- expand.grid(
   ppi_type = ppi_types,
   n = n_grid,
   lambda_mode = "plugin",
-  lambda_external = FALSE,
+  lambda_external = TRUE,
   stringsAsFactors = FALSE
 ) %>%
   mutate(
@@ -128,7 +117,6 @@ plot_df <- power_df %>%
 
 
 plot_contrast_power <- function(ct, plot_df, models) {
-  
   # Filter for selected contrast
   dfc <- plot_df %>%
     filter(contrast == ct) %>%
@@ -224,7 +212,41 @@ power_compare <- power_grid %>%
     model_type = factor(model_type, levels = models)
   )
 
-# Empirical vs Theoretical Power Scatterplot 
+
+# ppi_pp_data <- power_compare %>% filter(ppi_type == "PPI++")
+# write.csv(ppi_pp_data, "ppi_plus_plus_power.csv", row.names = FALSE)
+
+# plot_data <- power_compare %>%
+#   filter(ppi_type == "PPI++") %>%
+#   mutate(n = as.numeric(as.character(n)))  # ensure n is numeric for plotting
+
+# ppi_pp_data %>%
+#   filter(ppi_type == "PPI++") %>%
+#   mutate(n = as.numeric(as.character(n))) %>%
+#   group_by(model_type, contrast, n) %>%
+#   summarise(mean_lambda_hat = mean(avg_lambda_hat, na.rm = TRUE), .groups = "drop") %>%
+#   ggplot(aes(x = n, y = mean_lambda_hat, color = contrast)) +
+#   geom_point(size = 2) +
+#   geom_line(aes(group = contrast)) +
+#   facet_wrap(~ model_type) +
+#   labs(
+#     title = "Estimated Optimal λ̂ vs. Sample Size by Model Type (PPI++)",
+#     x = "Labeled Sample Size (n)",
+#     y = "Average λ̂ (Averaged over δ)",
+#     color = "Contrast"
+#   ) +
+#   theme_minimal(base_size = 14)
+
+# ppi_pp_data %>%
+#   filter(ppi_type == "PPI++") %>%
+#   mutate(n = as.numeric(as.character(n))) %>%
+#   ggplot(aes(x = se_theory, y = avg_se_hat, color = model_type)) +
+#   geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+#   geom_point(alpha = 0.7) +
+#   facet_wrap(~contrast) +
+#   labs(title = "Empirical SE vs. Theoretical SE",
+#        x = "Theoretical SE (closed-form)",
+#        y = "Empirical SE (across reps)")
 
 emp_theoretical_power <- ggplot(
   power_compare,
@@ -254,19 +276,3 @@ emp_theoretical_power <- ggplot(
   )
 
 print(emp_theoretical_power)
-
-p_error <- scatter_power %>%
-  mutate(err = empirical_power - theoretical_power) %>%
-  ggplot(aes(x = delta, y = err, color = ppi_type)) +
-  geom_hline(yintercept = 0, linetype = 2) +
-  geom_line() +
-  facet_grid(model_type ~ n) +
-  labs(
-    title = "Power Approximation Error",
-    subtitle = "Empirical - Theoretical",
-    x = expression(Delta),
-    y = "Error"
-  ) +
-  theme_bw(13)
-
-print(p_error)
