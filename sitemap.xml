@@ -8,6 +8,8 @@
 <url><loc>https://yiqunchen.github.io/pppower/index.html</loc></url>
 <url><loc>https://yiqunchen.github.io/pppower/reference/dot-predict_any.html</loc></url>
 <url><loc>https://yiqunchen.github.io/pppower/reference/fit_predict_model.html</loc></url>
+<url><loc>https://yiqunchen.github.io/pppower/reference/fit_predict_model_glm.html</loc></url>
+<url><loc>https://yiqunchen.github.io/pppower/reference/fit_predict_model_ols.html</loc></url>
 <url><loc>https://yiqunchen.github.io/pppower/reference/index.html</loc></url>
 <url><loc>https://yiqunchen.github.io/pppower/reference/n_required_pp.html</loc></url>
 <url><loc>https://yiqunchen.github.io/pppower/reference/n_required_ppi_pp.html</loc></url>
@@ -21,6 +23,8 @@
 <url><loc>https://yiqunchen.github.io/pppower/reference/power_ppi_pp_mean.html</loc></url>
 <url><loc>https://yiqunchen.github.io/pppower/reference/power_ppi_pp_ols.html</loc></url>
 <url><loc>https://yiqunchen.github.io/pppower/reference/ppi_empirical_power.html</loc></url>
+<url><loc>https://yiqunchen.github.io/pppower/reference/ppi_glm_empirical_power.html</loc></url>
+<url><loc>https://yiqunchen.github.io/pppower/reference/ppi_glm_rep_one.html</loc></url>
 <url><loc>https://yiqunchen.github.io/pppower/reference/ppi_mean_rep_one.html</loc></url>
 <url><loc>https://yiqunchen.github.io/pppower/reference/ppi_ols_empirical_power.html</loc></url>
 <url><loc>https://yiqunchen.github.io/pppower/reference/ppi_ols_fit.html</loc></url>
