@@ -2,7 +2,7 @@
 % Please edit documentation in R/required_n_ppi.R
 \name{n_required_ppi_pp}
 \alias{n_required_ppi_pp}
-\title{Required labeled sample size for PPI++ (mean or OLS)}
+\title{Required labeled sample size for PPI++ (mean estimator or OLS contrast)}
 \usage{
 n_required_ppi_pp(
   delta,
@@ -10,6 +10,8 @@ n_required_ppi_pp(
   alpha = 0.05,
   power = 0.8,
   type = c("mean", "ols"),
+  lambda_mode = c("vanilla", "oracle", "user"),
+  lambda_user = NULL,
   sigma_y2 = NULL,
   sigma_f2 = NULL,
   cov_y_f = NULL,
@@ -32,86 +34,189 @@ n_required_ppi_pp(
 )
 }
 \arguments{
-\item{delta}{Effect size. For mean estimation, \code{theta - theta0}; for OLS, \code{t(c) \%*\% beta - theta0}.}
+\item{delta}{Numeric scalar. Effect size being tested.
+\itemize{
+\item \strong{Mean case:} \eqn{\theta - \theta_0}.
+\item \strong{OLS case:} \eqn{a^\top \beta - \theta_0}.
+Must be nonzero.
+}}
 
-\item{N}{Unlabeled sample size.}
+\item{N}{Positive scalar. Size of the unlabeled dataset used to compute
+\eqn{\bar f_U}. Must satisfy \code{N > 0}.}
 
-\item{alpha}{Significance level.}
+\item{alpha}{Significance level for a two-sided Wald test. Default: \code{0.05}.}
 
-\item{power}{Desired power (e.g., 0.8 for 80\%).}
+\item{power}{Desired statistical power, e.g., \code{0.80}.}
 
-\item{type}{One of \code{"mean"} (default) or \code{"ols"}.}
+\item{type}{Character string specifying the estimation problem:
+\itemize{
+\item \code{"mean"} — mean estimator \eqn{\hat{\theta}_\lambda}.
+\item \code{"ols"}  — linear contrast \eqn{a^\top \hat{\beta}_\lambda}.
+}}
 
-\item{sigma_y2}{Variance of Y.}
+\item{lambda_mode}{Character string specifying λ:
+\itemize{
+\item \code{"vanilla"} — λ = 1.
+\item \code{"oracle"}  — λ = λ\*(n), updated using r = n/N.
+\item \code{"user"}    — λ fixed at user-supplied \code{lambda_user}.
+}}
 
-\item{sigma_f2}{Variance of predictions f(X).}
+\item{lambda_user}{Numeric. The λ value to use when \code{lambda_mode = "user"}. Otherwise ignored.}
 
-\item{cov_y_f}{Covariance between Y and f(X).}
+\item{sigma_y2}{Variance of the labeled outcomes \eqn{Y}. Optional if using
+\code{metrics}.}
 
-\item{var_f}{Variance of f(X); used interchangeably with \code{sigma_f2}.}
+\item{sigma_f2}{Variance of the predictions \eqn{f(X)}. Optional if using
+\code{metrics}.}
 
-\item{var_res}{Residual variance of Y - f(X).}
+\item{cov_y_f}{Covariance between \eqn{Y} and \eqn{f(X)}.}
 
-\item{metrics}{Optional list of predictive metrics (e.g., MSE, R2) from model validation.}
+\item{var_f}{Alias for \code{sigma_f2}. Provided for flexibility.}
 
-\item{metric_type}{Type of predictive metric: \code{"continuous"} or \code{"binary"}.}
+\item{var_res}{Residual variance \eqn{\Var(Y - f(X))}. Used if available.}
 
-\item{m_labeled}{Number of labeled samples used to estimate metrics.}
+\item{metrics}{Optional list containing predictive performance summaries such as:
+\itemize{
+\item mean squared error (MSE)
+\item \eqn{R^2}
+\item empirical covariance estimates
+Used as an alternative interface when \code{sigma_*} are not provided.
+}}
 
-\item{correction}{Logical; apply small-sample correction if \code{TRUE}.}
+\item{metric_type}{Character. One of \code{"continuous"} or \code{"binary"}.
+Determines how prediction metrics are translated to required moments.}
 
-\item{c}{Contrast vector for OLS contrasts (\code{t(c) \%*\% beta}).}
+\item{m_labeled}{Number of labeled samples used to estimate prediction metrics.
+Needed for small-sample corrections.}
 
-\item{H_L, H_U}{Per-observation Hessians for labeled and unlabeled data (used in sandwich variance for OLS).}
+\item{correction}{Logical. If TRUE (default), applies finite-sample corrections
+to adjust \eqn{\sigma_f^2} and \eqn{\Cov(Y,f)}.}
 
-\item{Sigma_YY}{Covariance of X(Y - X'beta*).}
+\item{c}{Numeric vector defining the contrast \eqn{a}. Must have length p.}
 
-\item{Sigma_ff_l, Sigma_ff_u}{Covariances of X(f(X) - X'beta*) for labeled/unlabeled data.}
+\item{H_L}{Per-observation Hessians for labeled design matrices.}
 
-\item{Sigma_Yf}{Cross-covariance between labeled and predicted score vectors.}
+\item{H_U}{Per-observation Hessians for labeled and unlabeled design
+matrices. For OLS, \eqn{H = X^\top X / n}. These are used in the sandwich
+variance formula.}
 
-\item{warn_smallN}{Warn if unlabeled N is small enough that finite-sample effects dominate.}
+\item{Sigma_YY}{Sandwich covariance term \eqn{\Sigma_{YY}}.}
 
-\item{smallN_threshold}{Threshold for triggering small-N warning (default = 500).}
+\item{Sigma_ff_l}{Sandwich covariance terms \eqn{\Sigma_{ff}}
+computed on labeled samples.}
 
-\item{mode}{Behavior if required n_star exceeds N.
-Either \code{"error"} (default) to throw an error, or \code{"cap"} to cap n_star = N and return achieved power.}
+\item{Sigma_ff_u}{Sandwich covariance terms \eqn{\Sigma_{ff}}
+computed on unlabeled samples.}
+
+\item{Sigma_Yf}{Cross-covariance sandwich term \eqn{\Sigma_{Yf}}.}
+
+\item{warn_smallN}{Logical. If TRUE, warns when \code{N < smallN_threshold}.}
+
+\item{smallN_threshold}{Numeric threshold at which to trigger a warning
+(default: 500).}
+
+\item{mode}{How to behave if the required n exceeds N:
+\itemize{
+\item \code{"error"} — throw an error (default)
+\item \code{"cap"}   — return n = N and attach attribute \code{"achieved_power"}.
+}}
 }
 \value{
-Integer labeled sample size (\code{n_star}).
+Integer labeled sample size \code{n_star}.
+When \code{mode = "cap"} and \code{n_star > N}, returns \code{N} and attaches
+\code{attr(n_star, "achieved_power")}.
 }
 \description{
-Computes the minimum labeled sample size (\code{n_star}) required to achieve a desired
-statistical power under the Prediction-Powered Plus (PPI++) framework.
-Supports both mean estimation and linear regression (PPI++–OLS).
+Computes the minimum number of labeled observations \eqn{n} required to achieve
+a desired power for Prediction-Powered Plus (PPI++) inference.
+
+The function supports:
+\itemize{
+\item \strong{Mean estimation} (scalar parameter)
+\item \strong{OLS linear contrast estimation} \eqn{a^\top \beta}
+}
+
+and three modes for the augmentation weight \eqn{\lambda}:
+\itemize{
+\item \code{"vanilla"} — \eqn{\lambda = 1} (standard PPI)
+\item \code{"oracle"}  — \eqn{\lambda = \lambda^\star} (variance-minimizing; ratio \eqn{r = n/N} updated iteratively)
+\item \code{"user"}    — \eqn{\lambda = \lambda_{\text{user}}} (user-specified)
+}
+
+The unlabeled sample size \eqn{N} contributes predictions \eqn{f(X)} that reduce
+the variance of the estimator. The function uses closed-form inversions when
+available, or numerical root-finding otherwise, to compute the minimal
+\eqn{n} satisfying the desired power constraint.
 }
 \examples{
-# PPI++ mean estimator using direct moments
-n_required_ppi_pp(
-  delta = 0.2, N = 4000, alpha = 0.05, power = 0.8,
-  sigma_y2 = 1.0, sigma_f2 = 0.4, cov_y_f = 0.18,
-  var_f = 0.4, var_res = 0.6
+
+metrics <- list(
+  type = "continuous",
+  mse = 0.6,
+  var_y = 1.0,
+  cov_y_f = 0.18,
+  m_obs = 300
 )
 
-# Using predictive metrics
-metrics_pp <- list(type = "continuous", mse = 0.6, var_y = 1.0, cov_y_f = 0.18, m_obs = 300)
 n_required_ppi_pp(
-  delta = 0.2, N = 4000, alpha = 0.05, power = 0.8,
-  metrics = metrics_pp, metric_type = "continuous"
+  delta = 0.25, N = 5000,
+  type = "mean",
+  metrics = metrics,
+  metric_type = "continuous",
+  lambda_mode = "vanilla"
 )
 
-# OLS example
-c_vec <- c(0, 1, 0)
-H_pop <- diag(3)
-Sigma_YY_pop <- diag(3)
-Sigma_ff_pop <- 0.5 * diag(3)
-Sigma_Yf_pop <- 0.3 * diag(3)
 n_required_ppi_pp(
-  delta = 0.15, N = 2000, alpha = 0.05, power = 0.8,
+  delta = 0.25, N = 5000,
+  type = "mean",
+  sigma_y2 = 1.0,
+  sigma_f2 = 0.4,
+  cov_y_f  = 0.18,
+  var_f    = 0.4,          # must supply
+  var_res  = 1.0 - 0.4,    # = 0.6
+  lambda_mode = "oracle"
+)
+
+n_required_ppi_pp(
+  delta = 0.25, N = 5000,
+  type = "mean",
+  sigma_y2 = 1.0,
+  sigma_f2 = 0.4,
+  cov_y_f  = 0.18,
+  var_f = 0.4,
+  var_res = 0.6,
+  lambda_mode = "user",
+  lambda_user = 0.5
+)
+
+p <- 3
+cvec <- c(1, 0, -1)
+Hpop <- diag(p)
+SYY  <- diag(p)
+Sff  <- 0.5 * diag(p)
+SYf  <- 0.3 * diag(p)
+ 
+## Vanilla λ=1
+n_required_ppi_pp(
+  delta = 0.15, N = 2000,
   type = "ols",
-  c = c_vec, H_L = H_pop, H_U = H_pop,
-  Sigma_YY = Sigma_YY_pop, Sigma_ff_l = Sigma_ff_pop,
-  Sigma_ff_u = Sigma_ff_pop, Sigma_Yf = Sigma_Yf_pop
+  c = cvec,
+  H_L = Hpop, H_U = Hpop,
+  Sigma_YY = SYY,
+  Sigma_ff_l = Sff, Sigma_ff_u = Sff,
+  Sigma_Yf   = SYf,
+  lambda_mode = "vanilla"
 )
 
+## Oracle λ*
+n_required_ppi_pp(
+  delta = 0.15, N = 2000,
+  type = "ols",
+  c = cvec,
+  H_L = Hpop, H_U = Hpop,
+  Sigma_YY = SYY,
+  Sigma_ff_l = Sff, Sigma_ff_u = Sff,
+  Sigma_Yf   = SYf,
+  lambda_mode = "oracle"
+)
 }

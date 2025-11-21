@@ -233,117 +233,223 @@ n_required_pp <- function(delta,
   n_capped
 }
 
-#' Required labeled sample size for PPI++ (mean or OLS)
+#' Required labeled sample size for PPI++ (mean estimator or OLS contrast)
 #'
 #' @description
-#' Computes the minimum labeled sample size (`n_star`) required to achieve a desired
-#' statistical power under the Prediction-Powered Plus (PPI++) framework.
-#' Supports both mean estimation and linear regression (PPI++–OLS).
+#' Computes the minimum number of labeled observations \eqn{n} required to achieve
+#' a desired power for Prediction-Powered Plus (PPI++) inference.
 #'
-#' @param delta Effect size. For mean estimation, `theta - theta0`; for OLS, `t(c) %*% beta - theta0`.
-#' @param N Unlabeled sample size.
-#' @param alpha Significance level.
-#' @param power Desired power (e.g., 0.8 for 80%).
-#' @param type One of `"mean"` (default) or `"ols"`.
+#' The function supports:
 #'
-#' @param sigma_y2 Variance of Y.
-#' @param sigma_f2 Variance of predictions f(X).
-#' @param cov_y_f Covariance between Y and f(X).
-#' @param var_f Variance of f(X); used interchangeably with `sigma_f2`.
-#' @param var_res Residual variance of Y - f(X).
-#' @param metrics Optional list of predictive metrics (e.g., MSE, R2) from model validation.
-#' @param metric_type Type of predictive metric: `"continuous"` or `"binary"`.
-#' @param m_labeled Number of labeled samples used to estimate metrics.
-#' @param correction Logical; apply small-sample correction if `TRUE`.
+#' * **Mean estimation** (scalar parameter)
+#' * **OLS linear contrast estimation** \eqn{a^\top \beta}
 #'
-#' @param c Contrast vector for OLS contrasts (`t(c) %*% beta`).
-#' @param H_L,H_U Per-observation Hessians for labeled and unlabeled data (used in sandwich variance for OLS).
-#' @param Sigma_YY Covariance of X(Y - X'beta*).
-#' @param Sigma_ff_l,Sigma_ff_u Covariances of X(f(X) - X'beta*) for labeled/unlabeled data.
-#' @param Sigma_Yf Cross-covariance between labeled and predicted score vectors.
+#' and three modes for the augmentation weight \eqn{\lambda}:
 #'
-#' @param warn_smallN Warn if unlabeled N is small enough that finite-sample effects dominate.
-#' @param smallN_threshold Threshold for triggering small-N warning (default = 500).
-#' @param mode Behavior if required n_star exceeds N.
-#'   Either `"error"` (default) to throw an error, or `"cap"` to cap n_star = N and return achieved power.
+#' * `"vanilla"` — \eqn{\lambda = 1} (standard PPI)
+#' * `"oracle"`  — \eqn{\lambda = \lambda^\star} (variance-minimizing; ratio \eqn{r = n/N} updated iteratively)
+#' * `"user"`    — \eqn{\lambda = \lambda_{\text{user}}} (user-specified)
 #'
-#' @return Integer labeled sample size (`n_star`).
+#' The unlabeled sample size \eqn{N} contributes predictions \eqn{f(X)} that reduce
+#' the variance of the estimator. The function uses closed-form inversions when
+#' available, or numerical root-finding otherwise, to compute the minimal
+#' \eqn{n} satisfying the desired power constraint.
+#' 
+#' @param delta Numeric scalar. Effect size being tested.  
+#'   * **Mean case:** \eqn{\theta - \theta_0}.  
+#'   * **OLS case:** \eqn{a^\top \beta - \theta_0}.  
+#'   Must be nonzero.
+#' @param N Positive scalar. Size of the unlabeled dataset used to compute
+#'   \eqn{\bar f_U}. Must satisfy \code{N > 0}.
+#' @param alpha Significance level for a two-sided Wald test. Default: \code{0.05}.
+#' @param power Desired statistical power, e.g., \code{0.80}.
+#' @param type Character string specifying the estimation problem:
+#'   * `"mean"` — mean estimator \eqn{\hat{\theta}_\lambda}.  
+#'   * `"ols"`  — linear contrast \eqn{a^\top \hat{\beta}_\lambda}.
+#' @param lambda_mode Character string specifying λ:
+#'   * `"vanilla"` — λ = 1.  
+#'   * `"oracle"`  — λ = λ\*(n), updated using r = n/N.  
+#'   * `"user"`    — λ fixed at user-supplied \code{lambda_user}.
+#' @param lambda_user Numeric. The λ value to use when \code{lambda_mode = "user"}. Otherwise ignored.
+#' 
+#' @param sigma_y2 Variance of the labeled outcomes \eqn{Y}. Optional if using
+#'   \code{metrics}.
+#' @param sigma_f2 Variance of the predictions \eqn{f(X)}. Optional if using
+#'   \code{metrics}.
+#' @param cov_y_f Covariance between \eqn{Y} and \eqn{f(X)}.
+#' @param var_f Alias for \code{sigma_f2}. Provided for flexibility.
+#' @param var_res Residual variance \eqn{\Var(Y - f(X))}. Used if available.
+#' @param metrics Optional list containing predictive performance summaries such as:
+#'   * mean squared error (MSE)  
+#'   * \eqn{R^2}
+#'   * empirical covariance estimates  
+#'   Used as an alternative interface when \code{sigma_*} are not provided.
 #'
-#' @examples
-#' # PPI++ mean estimator using direct moments
-#' n_required_ppi_pp(
-#'   delta = 0.2, N = 4000, alpha = 0.05, power = 0.8,
-#'   sigma_y2 = 1.0, sigma_f2 = 0.4, cov_y_f = 0.18,
-#'   var_f = 0.4, var_res = 0.6
-#' )
+#' @param metric_type Character. One of `"continuous"` or `"binary"`.
+#'   Determines how prediction metrics are translated to required moments.
+#' @param m_labeled Number of labeled samples used to estimate prediction metrics.
+#'   Needed for small-sample corrections.
+#' @param correction Logical. If TRUE (default), applies finite-sample corrections
+#'   to adjust \eqn{\sigma_f^2} and \eqn{\Cov(Y,f)}.
+#'  
+#' @param c Numeric vector defining the contrast \eqn{a}. Must have length p.
 #'
-#' # Using predictive metrics
-#' metrics_pp <- list(type = "continuous", mse = 0.6, var_y = 1.0, cov_y_f = 0.18, m_obs = 300)
-#' n_required_ppi_pp(
-#'   delta = 0.2, N = 4000, alpha = 0.05, power = 0.8,
-#'   metrics = metrics_pp, metric_type = "continuous"
-#' )
+#' @param H_L Per-observation Hessians for labeled design matrices.
+#' @param H_U Per-observation Hessians for labeled and unlabeled design
+#'   matrices. For OLS, \eqn{H = X^\top X / n}. These are used in the sandwich
+#'   variance formula.
 #'
-#' # OLS example
-#' c_vec <- c(0, 1, 0)
-#' H_pop <- diag(3)
-#' Sigma_YY_pop <- diag(3)
-#' Sigma_ff_pop <- 0.5 * diag(3)
-#' Sigma_Yf_pop <- 0.3 * diag(3)
-#' n_required_ppi_pp(
-#'   delta = 0.15, N = 2000, alpha = 0.05, power = 0.8,
-#'   type = "ols",
-#'   c = c_vec, H_L = H_pop, H_U = H_pop,
-#'   Sigma_YY = Sigma_YY_pop, Sigma_ff_l = Sigma_ff_pop,
-#'   Sigma_ff_u = Sigma_ff_pop, Sigma_Yf = Sigma_Yf_pop
-#' )
+#' @param Sigma_YY Sandwich covariance term \eqn{\Sigma_{YY}}.
+#' @param Sigma_ff_l Sandwich covariance terms \eqn{\Sigma_{ff}}
+#'   computed on labeled samples.
+#' @param Sigma_ff_u Sandwich covariance terms \eqn{\Sigma_{ff}}
+#'   computed on unlabeled samples.
+#' @param Sigma_Yf Cross-covariance sandwich term \eqn{\Sigma_{Yf}}.
 #'
+#' @param warn_smallN Logical. If TRUE, warns when \code{N < smallN_threshold}.
+#'
+#' @param smallN_threshold Numeric threshold at which to trigger a warning
+#'   (default: 500).
+#'
+#' @param mode How to behave if the required n exceeds N:
+#'   * `"error"` — throw an error (default)
+#'   * `"cap"`   — return n = N and attach attribute `"achieved_power"`.
+#'
+#' @return
+#' Integer labeled sample size `n_star`.  
+#' When `mode = "cap"` and `n_star > N`, returns `N` and attaches
+#' `attr(n_star, "achieved_power")`.
+#' 
 #' @export
-n_required_ppi_pp <- function(delta,
-                              N,
-                              alpha = 0.05,
-                              power = 0.80,
-                              type = c("mean", "ols"),
-                              # --- mean inputs ---
-                              sigma_y2 = NULL,
-                              sigma_f2 = NULL,
-                              cov_y_f = NULL,
-                              var_f = NULL,
-                              var_res = NULL,
-                              metrics = NULL,
-                              metric_type = NULL,
-                              m_labeled = NULL,
-                              correction = TRUE,
-                              # --- OLS inputs ---
-                              c = NULL,
-                              H_L = NULL,
-                              H_U = NULL,
-                              Sigma_YY = NULL,
-                              Sigma_ff_l = NULL,
-                              Sigma_ff_u = NULL,
-                              Sigma_Yf = NULL,
-                              warn_smallN = TRUE,
-                              smallN_threshold = 500,
-                              mode = c("error", "cap")) {
+#' 
+#' @importFrom stats uniroot
+#' 
+#' @examples
+#' 
+#' metrics <- list(
+#'   type = "continuous",
+#'   mse = 0.6,
+#'   var_y = 1.0,
+#'   cov_y_f = 0.18,
+#'   m_obs = 300
+#' )
+#'
+#' n_required_ppi_pp(
+#'   delta = 0.25, N = 5000,
+#'   type = "mean",
+#'   metrics = metrics,
+#'   metric_type = "continuous",
+#'   lambda_mode = "vanilla"
+#' )
+#'
+#' n_required_ppi_pp(
+#'   delta = 0.25, N = 5000,
+#'   type = "mean",
+#'   sigma_y2 = 1.0,
+#'   sigma_f2 = 0.4,
+#'   cov_y_f  = 0.18,
+#'   var_f    = 0.4,          # must supply
+#'   var_res  = 1.0 - 0.4,    # = 0.6
+#'   lambda_mode = "oracle"
+#' )
+#' 
+#' n_required_ppi_pp(
+#'   delta = 0.25, N = 5000,
+#'   type = "mean",
+#'   sigma_y2 = 1.0,
+#'   sigma_f2 = 0.4,
+#'   cov_y_f  = 0.18,
+#'   var_f = 0.4,
+#'   var_res = 0.6,
+#'   lambda_mode = "user",
+#'   lambda_user = 0.5
+#' )
+#' 
+#' p <- 3
+#' cvec <- c(1, 0, -1)
+#' Hpop <- diag(p)
+#' SYY  <- diag(p)
+#' Sff  <- 0.5 * diag(p)
+#' SYf  <- 0.3 * diag(p)
+#'  
+#' ## Vanilla λ=1
+#' n_required_ppi_pp(
+#'   delta = 0.15, N = 2000,
+#'   type = "ols",
+#'   c = cvec,
+#'   H_L = Hpop, H_U = Hpop,
+#'   Sigma_YY = SYY,
+#'   Sigma_ff_l = Sff, Sigma_ff_u = Sff,
+#'   Sigma_Yf   = SYf,
+#'   lambda_mode = "vanilla"
+#' )
+#' 
+#' ## Oracle λ*
+#' n_required_ppi_pp(
+#'   delta = 0.15, N = 2000,
+#'   type = "ols",
+#'   c = cvec,
+#'   H_L = Hpop, H_U = Hpop,
+#'   Sigma_YY = SYY,
+#'   Sigma_ff_l = Sff, Sigma_ff_u = Sff,
+#'   Sigma_Yf   = SYf,
+#'   lambda_mode = "oracle"
+#' )
+
+n_required_ppi_pp <- function(
+  delta, 
+  N,
+  alpha = 0.05, 
+  power = 0.80,
+  type = c("mean", "ols"),
+  lambda_mode = c("vanilla", "oracle", "user"),
+  lambda_user = NULL,
+  # mean inputs:
+  sigma_y2 = NULL, 
+  sigma_f2 = NULL, 
+  cov_y_f = NULL,
+  var_f = NULL, 
+  var_res = NULL, 
+  metrics = NULL,
+  metric_type = NULL, 
+  m_labeled = NULL, 
+  correction = TRUE,  # Correct for variance or not
+  # OLS inputs:
+  c = NULL, 
+  H_L = NULL, 
+  H_U = NULL,
+  Sigma_YY = NULL, 
+  Sigma_ff_l = NULL,
+  Sigma_ff_u = NULL, 
+  Sigma_Yf = NULL,
+  warn_smallN = TRUE, 
+  smallN_threshold = 500,
+  mode = c("error", "cap")
+) {
   type <- match.arg(type)
+  lambda_mode <- match.arg(lambda_mode)
   mode <- match.arg(mode)
 
-  if (!is.numeric(delta) || length(delta) != 1L || !is.finite(delta) || delta == 0)
-    stop("delta must be a non-zero finite numeric scalar.", call. = FALSE)
-  if (!is.numeric(N) || length(N) != 1L || N <= 0)
-    stop("N must be a positive numeric scalar.", call. = FALSE)
+  ## Basic validation
+  if (!is.numeric(delta) || length(delta) != 1 || delta == 0)
+    stop("delta must be a non-zero numeric scalar.")
+  if (!is.numeric(N) || N <= 0)
+    stop("N must be a positive scalar.")
 
   if (warn_smallN && N < smallN_threshold)
-    warning("Unlabeled N is quite small; finite-N term may dominate.", call. = FALSE)
+    warning("N is small; finite-N effects may dominate.")
 
-  z_alpha <- stats::qnorm(1 - alpha / 2)
-  z_beta  <- stats::qnorm(power)
-  c0 <- z_alpha + z_beta
-  if (!is.finite(c0) || c0 <= 0)
-    stop("Unable to compute z-scores for the requested alpha/power.", call. = FALSE)
+  ## z-values
+  z_alpha <- qnorm(1 - alpha/2)
+  z_beta  <- qnorm(power)
+  S2 <- (delta / (z_alpha + z_beta))^2
+
+  ####  MEAN ESTIMATION CASE
 
   if (type == "mean") {
-    moments <- resolve_ppi_pp_moments(
+
+    ## Extract or compute predictive moments
+    mm <- resolve_ppi_pp_moments(
       sigma_y2 = sigma_y2,
       sigma_f2 = sigma_f2,
       cov_y_f  = cov_y_f,
@@ -351,150 +457,190 @@ n_required_ppi_pp <- function(delta,
       var_res  = var_res,
       metrics  = metrics,
       metric_type = metric_type,
-      m_labeled  = m_labeled,
+      m_labeled = m_labeled,
       correction = correction
     )
+    sy2 <- mm$sigma_y2
+    sf2 <- mm$sigma_f2
+    cyf <- mm$cov_y_f
 
-    sigma_y2 <- moments$sigma_y2
-    sigma_f2 <- moments$sigma_f2
-    cov_y_f  <- moments$cov_y_f
-
-    if (!is.finite(sigma_f2) || sigma_f2 <= 0) {
-      stop("sigma_f2 must be positive", call. = FALSE)
+    if (!is.finite(sf2) || sf2 <= 0) {
+  stop("sigma_f2 must be positive", call. = FALSE)
     }
 
-    S2 <- (delta / c0)^2
-    term_common <- sigma_y2 - (cov_y_f^2 / sigma_f2)
-    discrim <- (sigma_y2 - S2 * N)^2 + 4 * S2 * N * term_common
-    if (discrim < 0)
-      stop("Infeasible: power target cannot be met with supplied moments.")
+    # Optional consistency check:
+    if (cyf^2 > sy2 * sf2 + 1e-8) {
+      stop("Infeasible: moments imply |Cov(Y,f)| > sqrt(Var(Y)Var(f)).", call. = FALSE)
+    }
 
-    numerator <- sigma_y2 - S2 * N + sqrt(discrim)
-    denom <- 2 * S2
-    n_star <- ceiling(numerator / denom)
+    ## Choose lambda
+    r <- NA
+    if (lambda_mode == "vanilla") {
+      var_fun <- function(n) {
+        sy2/n + sf2/N + sf2/n - 2*(cyf/n)
+      }
+    } else if (lambda_mode == "user") {
+      if (is.null(lambda_user))
+        stop("lambda_user must be provided when lambda_mode='user'")
+      lambda <- lambda_user
 
-    achieved_fun <- power_ppi_pp_mean
-    achieved_args <- list(
-      delta = delta, N = N, n = N, alpha = alpha,
-      sigma_y2 = sigma_y2, sigma_f2 = sigma_f2,
-      cov_y_f = cov_y_f,
-      var_f = moments$var_f, var_res = moments$var_res
+      var_fun <- function(n) {
+        lambda^2 * (sf2/N + sf2/n) + sy2/n - 2 * lambda * (cyf/n)
+      }
+
+    } else if (lambda_mode == "oracle") {
+
+      ## exact closed-form oracle variance (Section 3)
+      ## Var(theta_hat_{λ*})
+      var_fun <- function(n) {
+        sy2/n - (cyf^2 / sf2) * (N / (n*(n+N)))
+      }
+    }
+
+    ## Solve var_fun(n) ≤ S2
+    obj <- function(n) var_fun(n) - S2
+    root <- tryCatch(
+      uniroot(obj, c(2, 1e6))$root,
+      error = function(e) NA_real_
     )
+
+    if (is.na(root)) {
+      if (mode == "error") {
+        stop("Infeasible: cannot find n achieving required power.")
+      } else {
+        # mode == "cap": cap at n = N and report achieved power
+        n_capped <- as.integer(N)
+        varN <- var_fun(N)
+        achieved <- 1 - pnorm(z_alpha - delta / sqrt(varN))
+        warning(
+          sprintf(
+            "Required n exceeds search interval; capping to n = N. Achieved power = %.4f (target: %.4f).",
+            achieved, power
+          ),
+          call. = FALSE
+        )
+        attr(n_capped, "achieved_power") <- achieved
+        return(n_capped)
+      }
+    }
+
+    ## Root found, return n*
+    n_star <- as.integer(ceiling(root))
+
+    ## If feasible
+    if (n_star <= N) return(n_star)
+
+    ## n_star > N
+    if (mode == "error") {
+      stop(sprintf("Required n=%d exceeds N=%d.", n_star, N), call. = FALSE)
+    }
+    ## mode = "cap"
+    n_capped <- as.integer(N)
+    varN <- var_fun(N)
+    achieved <- 1 - pnorm(z_alpha - delta / sqrt(varN))
+    attr(n_capped, "achieved_power") <- achieved
+    return(n_capped)
+
   }
+
+  ####  OLS CONTRAST CASE
 
   if (type == "ols") {
+    ## Check inputs
     if (is.null(c) || is.null(H_L) || is.null(H_U) ||
         is.null(Sigma_YY) || is.null(Sigma_ff_l) ||
-        is.null(Sigma_ff_u) || is.null(Sigma_Yf)) {
-      stop("OLS mode requires c, H_L, H_U, Sigma_YY, Sigma_ff_l, Sigma_ff_u, and Sigma_Yf.")
+        is.null(Sigma_ff_u) || is.null(Sigma_Yf))
+      stop("OLS requires c, H_L, H_U, Sigma_YY, Sigma_ff_l, Sigma_ff_u, Sigma_Yf.")
+
+    H_L <- as.matrix(H_L)
+    H_U <- as.matrix(H_U)
+    c   <- as.numeric(c)
+
+    # Objects for population level Hessians & contrasts
+
+    H_pop <- H_U
+    Hinv_pop <- solve(H_pop)
+
+    A_pop <- as.numeric(t(c) %*% Hinv_pop %*% Sigma_ff_u %*% Hinv_pop %*% c)
+    C_pop <- as.numeric(t(c) %*% Hinv_pop %*% Sigma_Yf   %*% Hinv_pop %*% c)
+
+    ## Choose lambda
+    if (lambda_mode == "vanilla") {
+      lambda <- 1
+    } else if (lambda_mode == "user") {
+      if (is.null(lambda_user))
+        stop("lambda_user must be provided for lambda_mode='user'")
+      lambda <- lambda_user
     }
 
-    lambda <- 1
-    H_mix <- (1 - lambda) * H_L + lambda * H_U
-    bread_inv <- solve(H_mix)
+    if (lambda_mode %in% c("vanilla", "user")) {
+      lambda <- if (lambda_mode == "vanilla") 1 else lambda_user
 
-    coef_var <- function(n) {
-      middle <- Sigma_YY / n +
-        lambda^2 * (Sigma_ff_u / N + Sigma_ff_l / n) -
-        2 * lambda * Sigma_Yf / n
-      as.numeric(t(c) %*% bread_inv %*% middle %*% bread_inv %*% c)
+      var_fun <- function(n) {
+        H_mix <- (1 - lambda)*H_L + lambda*H_U
+        Hinv  <- solve(H_mix)
+        middle <- Sigma_YY/n +
+          lambda^2 * (Sigma_ff_u/N + Sigma_ff_l/n) -
+          2 * lambda * (Sigma_Yf/n)
+        as.numeric(t(c) %*% Hinv %*% middle %*% Hinv %*% c)
+      }
+
+    } else {
+
+      var_fun <- function(n) {
+        r <- n/N
+        lambda_star <- C_pop / ((1+r)*A_pop)
+        lambda_star <- max(0, min(1, lambda_star))
+
+        # Hessian for variance at λ*
+        H_mix <- (1 - lambda_star)*H_L + lambda_star*H_U
+        Hinv  <- solve(H_mix)
+
+        middle <- Sigma_YY/n +
+          lambda_star^2 * (Sigma_ff_u/N + Sigma_ff_l/n) -
+          2 * lambda_star * (Sigma_Yf/n)
+
+        out <- as.numeric(t(c) %*% Hinv %*% middle %*% Hinv %*% c)
+        out
+      }
     }
 
-    target <- (delta / c0)^2
-    objective <- function(n) coef_var(n) - target
 
-    # Root finding of the objective function
-    root <- tryCatch(stats::uniroot(objective, c(2, 1e6))$root,
-                 error = function(e) NA_real_)
-    if (is.na(root))
-      stop("Infeasible: unable to find n satisfying desired power.", call. = FALSE)
+    obj <- function(n) var_fun(n) - S2
+    root <- tryCatch(uniroot(obj, interval = c(2, 1e6))$root,
+                    error = function(e) NA_real_)
 
-    n_star <- ceiling(root)
+    # if infeasible
 
-    achieved_fun <- power_ppi_pp_ols
-    achieved_args <- list(
-      delta = delta, N = N, n = N, alpha = alpha,
-      contrast = c,
-      H_L = H_L, H_U = H_U,
-      Sigma_YY = Sigma_YY,
-      Sigma_ff_l = Sigma_ff_l,
-      Sigma_ff_u = Sigma_ff_u,
-      Sigma_Yf = Sigma_Yf,
-      lambda = lambda
-    )
+    if (is.na(root)) {
+      if (mode == "error") {
+        stop("Infeasible: cannot find n achieving required power.")
+      } else {
+        n_capped <- as.integer(N)
+        vN <- var_fun(N)
+        achieved <- 1 - pnorm(z_alpha - delta / sqrt(vN))
+        warning(sprintf(
+          "Required n exceeds search interval; capping to n = N. Achieved power = %.4f (target %.4f).",
+          achieved, power
+        ), call. = FALSE)
+        attr(n_capped, "achieved_power") <- achieved
+        return(n_capped)
+      }
+    }
+
+    n_star <- as.integer(ceiling(root))
+
+    if (n_star <= N) return(n_star)
+
+    if (mode == "error") {
+      stop(sprintf("Required n=%d exceeds N=%d.", n_star, N))
+    }
+
+    # mode = "cap" 
+    n_capped <- as.integer(N)
+    vN <- var_fun(N)
+    achieved <- 1 - pnorm(z_alpha - delta / sqrt(vN))
+    attr(n_capped, "achieved_power") <- achieved
+    return(n_capped)
   }
-
-  if (!is.finite(n_star) || n_star <= 0)
-    stop("Infeasible: required n is non-positive or undefined.", call. = FALSE)
-
-  if (n_star <= N)
-    return(as.integer(n_star))
-
-  if (mode == "error") {
-    stop(
-      sprintf("Infeasible: required n = %d exceeds N = %d.", n_star, as.integer(N)),
-      call. = FALSE
-    )
-  }
-
-  # CAP + WARNING
-  n_capped <- as.integer(N)
-  achieved <- do.call(achieved_fun, achieved_args)
-  warning(
-    sprintf(
-      "Required n = %d exceeds N = %d. Capping to n = N.\nAchieved power = %.4f (target: %.4f).",
-      n_star, n_capped, achieved, power
-    ),
-    call. = FALSE
-  )
-  attr(n_capped, "achieved_power") <- achieved
-  n_capped
-}
-
-# A closed-form formula by inverting the equation (22) from the write up
-n_required_ppi_pp_ols_closed <- function(
-  delta, N, alpha = 0.05, power = 0.90,
-  c, H, Sigma_YY, Sigma_ff, Sigma_Yf
-) {
-  stopifnot(is.numeric(delta), length(delta) == 1, is.finite(delta), delta != 0)
-  stopifnot(is.numeric(N), length(N) == 1, N > 0)
-  c  <- as.numeric(c)
-  H  <- as.matrix(H)
-  Sy <- as.matrix(Sigma_YY)
-  Sf <- as.matrix(Sigma_ff)
-  Syf<- as.matrix(Sigma_Yf)
-  p <- length(c)
-  if (!all(dim(H) == p)) stop("dim(H) must match length(c)")
-  if (!all(dim(Sy) == p) || !all(dim(Sf) == p) || !all(dim(Syf) == p))
-    stop("All Sigma_* must be p x p to match c")
-
-  # z-constants and S^2
-  z_alpha <- stats::qnorm(1 - alpha / 2)
-  z_beta  <- stats::qnorm(power)
-  S2 <- (delta / (z_alpha + z_beta))^2
-  if (!is.finite(S2) || S2 <= 0) stop("Invalid alpha/power/delta.")
-
-  Hinv <- solve(H)
-  A <- as.numeric(t(c) %*% Hinv %*% Sf  %*% Hinv %*% c)   # >= 0
-  B <- as.numeric(t(c) %*% Hinv %*% Syf %*% Hinv %*% c)
-  C <- as.numeric(t(c) %*% Hinv %*% Sy  %*% Hinv %*% c)   # > 0
-
-  if (A <= 0 || C <= 0) stop("Require A>0 and C>0 for a meaningful contrast.")
-  K <- B^2 / A                                           # <= C by Cauchy–Schwarz
-
-  # Discriminant and closed-form root
-  a <- S2 * N
-  b <- S2 * N - C
-  d <- (S2 * N + C)^2 - 4 * S2 * N * K
-  if (!is.finite(d) || d < 0) {
-    stop("Infeasible: power target cannot be met with supplied moments and N.")
-  }
-
-  r_star <- (C - S2 * N + sqrt(d)) / (2 * S2 * N)
-  if (!is.finite(r_star) || r_star <= 0) {
-    stop("Infeasible: required r <= 0. Increase N or |delta|, or relax alpha/power.")
-  }
-
-  n_star <- ceiling(r_star * N)
-  as.integer(n_star)
 }
