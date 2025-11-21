@@ -591,27 +591,16 @@ these components:</p>
 <span>  alpha      <span class="op">=</span> <span class="va">alpha</span>,</span>
 <span>  power      <span class="op">=</span> <span class="va">target</span>,</span>
 <span>  type       <span class="op">=</span> <span class="st">"ols"</span>,</span>
+<span>  lambda_mode <span class="op">=</span> <span class="st">"oracle"</span>,</span>
 <span>  c          <span class="op">=</span> <span class="va">c_vec</span>,</span>
 <span>  H_L        <span class="op">=</span> <span class="va">H_pop</span>,</span>
 <span>  H_U        <span class="op">=</span> <span class="va">H_pop</span>,</span>
 <span>  Sigma_YY   <span class="op">=</span> <span class="va">Sigma_YY_pop</span>,</span>
 <span>  Sigma_ff_l <span class="op">=</span> <span class="va">Sigma_ff_pop</span>,</span>
 <span>  Sigma_ff_u <span class="op">=</span> <span class="va">Sigma_ff_pop</span>,</span>
-<span>  Sigma_Yf   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>, nrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">Sigma_YY_pop</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">Sigma_ff_pop</span><span class="op">)</span><span class="op">)</span></span>
+<span>  Sigma_Yf   <span class="op">=</span> <span class="va">Sigma_Yf_pop</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 757</span></span>
-<span></span>
-<span><span class="va">n_star</span> <span class="op">&lt;-</span> <span class="fu">pppower</span><span class="fu">:::</span><span class="fu">n_required_ppi_pp_ols_closed</span><span class="op">(</span></span>
-<span>  delta     <span class="op">=</span> <span class="va">delta</span>,</span>
-<span>  N         <span class="op">=</span> <span class="va">N</span>,</span>
-<span>  alpha     <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  power     <span class="op">=</span> <span class="va">target</span>,</span>
-<span>  c         <span class="op">=</span> <span class="va">c_vec</span>,</span>
-<span>  H         <span class="op">=</span> <span class="va">H_pop</span>,</span>
-<span>  Sigma_YY  <span class="op">=</span> <span class="va">Sigma_YY_pop</span>,</span>
-<span>  Sigma_ff  <span class="op">=</span> <span class="va">Sigma_ff_pop</span>,  <span class="co"># single Σ_ff, same as in variance formula</span></span>
-<span>  Sigma_Yf  <span class="op">=</span> <span class="va">Sigma_Yf_pop</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 283</span></span></code></pre></div>
 <hr>
 </div>
 </div>
