@@ -162,25 +162,76 @@ ppi_glm_rep_one <- function(
     lambda_hat <- 1
   } else {
 
-    # compute Σ_YY, Σ_ff, Σ_Yf based on labeled data
-    resid_L <- y_L - muhat_L              # Y - μ_f
-    XY_resid <- sweep(X_L, 1, resid_L, `*`)
-    Sigma_YY <- cov(XY_resid)
+    if (lambda_external) {
 
-    ff_L <- (muhat_L - mu_L)              # μ_f - μ_β
-    X_ff <- sweep(X_L, 1, ff_L, `*`)
-    Sigma_ff <- cov(X_ff)
+      ##  External Labeled Sample 
+      sim_ext <- simulate_one_draw_contrast(
+        n_labeled   = n_external,
+        X_sampler_L = X_sampler_L,
+        f_generator = f_generator,
+        eps_sampler = NULL,
+        a           = a,
+        delta       = delta
+      )
 
-    Sigma_Yf <- cov(XY_resid, X_ff)
+      X_ext_df <- sim_ext$X
+      y_ext    <- sim_ext$y
+      X_ext <- as.matrix(X_ext_df)
 
-    Jinv_U <- solve(J_U)
-    B <- t(a) %*% Jinv_U %*% Sigma_ff %*% Jinv_U %*% a
-    C <- t(a) %*% Jinv_U %*% Sigma_Yf %*% Jinv_U %*% a
+      ## Predict f on external data using model from main sample
+      m_ext <- fit_predict_model_glm(
+        model_type,
+        X_L_df, y_L,
+        X_ext_df
+      )
+      muhat_ext <- m_ext$fhat_U
 
-    r <- n / N
-    lambda_hat <- as.numeric(C / ((1+r) * B))
-    lambda_hat <- max(0, min(1, lambda_hat))
-  }
+      ## External moment matrices
+      mu_ext_true <- plogis(f_generator(X_ext_df))
+      resid_ext   <- y_ext - muhat_ext
+      XY_ext      <- sweep(X_ext, 1, resid_ext, `*`)
+      Sigma_YY_ext <- cov(XY_ext)
+
+      ff_ext <- muhat_ext - mu_ext_true
+      X_ff_ext <- sweep(X_ext, 1, ff_ext, `*`)
+      Sigma_ff_ext <- cov(X_ff_ext)
+
+      Sigma_Yf_ext <- cov(XY_ext, X_ff_ext)
+
+      ## External-based B, C
+      Jinv_U <- solve(J_U)
+      B_ext <- t(a) %*% Jinv_U %*% Sigma_ff_ext %*% Jinv_U %*% a
+      C_ext <- t(a) %*% Jinv_U %*% Sigma_Yf_ext %*% Jinv_U %*% a
+
+      r <- n / N
+      lambda_hat <- as.numeric(C_ext / ((1+r) * B_ext))
+      lambda_hat <- max(0, min(1, lambda_hat))
+
+    } else if (lambda_mode == "plugin") {
+
+      resid_L <- y_L - muhat_L
+      XY_resid <- sweep(X_L, 1, resid_L, `*`)
+      Sigma_YY <- cov(XY_resid)
+
+      ff_L <- (muhat_L - mu_L)
+      X_ff <- sweep(X_L, 1, ff_L, `*`)
+      Sigma_ff <- cov(X_ff)
+
+      Sigma_Yf <- cov(XY_resid, X_ff)
+
+      Jinv_U <- solve(J_U)
+      B <- t(a) %*% Jinv_U %*% Sigma_ff %*% Jinv_U %*% a
+      C <- t(a) %*% Jinv_U %*% Sigma_Yf %*% Jinv_U %*% a
+
+      r <- n / N
+      lambda_hat <- as.numeric(C / ((1+r)*B))
+      lambda_hat <- max(0, min(1, lambda_hat))
+
+    } else {
+      stop("Oracle lambda not implemented for GLM")
+    }
+
+  } ## end PPI++ branch
 
   ## Solve PPI / PPI++ estimating equation
   # score: U(β) = X (Y - μ_β)
