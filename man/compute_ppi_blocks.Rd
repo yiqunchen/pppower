@@ -57,8 +57,8 @@ regression-based estimands (OLS or GLM contrasts).
 
 This helper wraps:
 \itemize{
-\item \code{\link[=compute_hessian_fisher]{compute_hessian_fisher()}} — model Hessian or Fisher information
-\item \code{\link[=compute_sigma_blocks]{compute_sigma_blocks()}}   — Σ-block covariance components
+\item \code{compute_hessian_fisher} — model Hessian or Fisher information
+\item \code{compute_sigma_blocks}   — Σ-block covariance components
 }
 
 and produces a unified object that can be passed directly to
@@ -103,9 +103,5 @@ n_required_ppi_pp(
 
 }
 \seealso{
-\itemize{
-\item \code{\link[=compute_hessian_fisher]{compute_hessian_fisher()}}
-\item \code{\link[=compute_sigma_blocks]{compute_sigma_blocks()}}
-\item \code{\link[=n_required_ppi_pp]{n_required_ppi_pp()}} — sample size solver for PPI / PPI++
-}
+\link{n_required_ppi_pp}
 }

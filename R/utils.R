@@ -361,8 +361,8 @@ compute_sigma_blocks <- function(
 #' regression-based estimands (OLS or GLM contrasts).
 #'
 #' This helper wraps:
-#'   * [compute_hessian_fisher()] — model Hessian or Fisher information  
-#'   * [compute_sigma_blocks()]   — Σ-block covariance components  
+#'   * \code{compute_hessian_fisher} — model Hessian or Fisher information  
+#'   * \code{compute_sigma_blocks}   — Σ-block covariance components
 #'
 #' and produces a unified object that can be passed directly to
 #' [n_required_ppi_pp()] for labeled sample size calculations.
@@ -435,10 +435,7 @@ compute_sigma_blocks <- function(
 #'   Sigma_Yf = blocks$Sigma_Yf
 #' )
 #'
-#' @seealso
-#' * [compute_hessian_fisher()]  
-#' * [compute_sigma_blocks()]  
-#' * [n_required_ppi_pp()] — sample size solver for PPI / PPI++
+#' @seealso \link{n_required_ppi_pp}
 #'
 #' @export
 compute_ppi_blocks <- function(
