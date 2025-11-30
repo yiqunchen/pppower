@@ -51,6 +51,9 @@ for GLM PPI/PPI++."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
   <ul class="dropdown-menu" role="menu"><li>
       <a href="../articles/intro-ppi.html">Prediction-Powered Power Planning</a>
     </li>
+    <li>
+      <a href="../articles/ppi-sample-size.html">Prediction-Powered Sample Size Calculation</a>
+    </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -91,7 +94,7 @@ for GLM PPI/PPI++.</p>
 <span>  <span class="va">X_sampler_L</span>,</span>
 <span>  <span class="va">f_generator</span>,</span>
 <span>  eps_sampler <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  model_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"glm_correct"</span>, <span class="st">"glm_mis"</span>, <span class="st">"glm_wrong"</span>, <span class="st">"rf"</span><span class="op">)</span>,</span>
+<span>  model_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"glm_correct"</span>, <span class="st">"glm_mis"</span>, <span class="st">"glm_wrong"</span>, <span class="st">"rf"</span>, <span class="st">"oracle"</span><span class="op">)</span>,</span>
 <span>  <span class="va">a</span>,</span>
 <span>  delta <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  ppi_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PPI"</span>, <span class="st">"PPI++"</span><span class="op">)</span>,</span>
@@ -101,7 +104,8 @@ for GLM PPI/PPI++.</p>
 <span>  n_external <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="va">n</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span>,</span>
 <span>  PPIpp_crossfit <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  use_true_J <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -143,7 +147,7 @@ for GLM PPI/PPI++.</p>
 
 
 <dt id="arg-ppi-type">ppi_type<a class="anchor" aria-label="anchor" href="#arg-ppi-type"></a></dt>
-<dd><p>Either "PPI" (\eqn\lambda=1) or "PPI++".</p></dd>
+<dd><p>Either "PPI" (\(\lambda = 1\)) or "PPI++".</p></dd>
 
 
 <dt id="arg-theta-">theta0<a class="anchor" aria-label="anchor" href="#arg-theta-"></a></dt>
@@ -151,12 +155,12 @@ for GLM PPI/PPI++.</p>
 
 
 <dt id="arg-lambda-mode">lambda_mode<a class="anchor" aria-label="anchor" href="#arg-lambda-mode"></a></dt>
-<dd><p>For PPI++: "plugin" (estimate \eqn\lambda)
+<dd><p>For PPI++: "plugin" (estimate \(\lambda\))
 or "oracle" (not implemented internally).</p></dd>
 
 
 <dt id="arg-lambda-external">lambda_external<a class="anchor" aria-label="anchor" href="#arg-lambda-external"></a></dt>
-<dd><p>Logical; if TRUE, estimate \eqn\lambda
+<dd><p>Logical; if TRUE, estimate \(\lambda\)
 using an external labeled sample.</p></dd>
 
 
