@@ -61,6 +61,8 @@ for PPI++.}
 \item{alpha}{Wald test significance level.}
 
 \item{seed}{Optional random seed.}
+
+\item{use_true_J}{Logical; if TRUE, use true Fisher J instead of estimated.}
 }
 \value{
 A list with:

@@ -14,7 +14,7 @@ vignette: >
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   fig.path = "figures/ppi-sample-size-",
-  fig.width = 6, fig.height = 4,
+  fig.width = 10, fig.height = 8,
   collapse = TRUE, comment = "#>"
 )
 library(pppower)
@@ -380,7 +380,7 @@ attr(out, "achieved_power")
 
 This chunk visualizes how required ($n$) decreases as effect size grows, and how oracle $\lambda$ for PPI++ estimator provides a clear reduction in sample size estimations over vanilla PPI:
 
-```{r power-curve-sample-size}
+```{r power-curve-sample-size, warning=FALSE, fig.align="center"}
 delta_grid <- seq(0.10, 0.40, length.out = 40)
 
 ## Shared parameters (mean-estimation case)
@@ -451,7 +451,7 @@ ggplot(df, aes(delta, n, color = mode)) +
     x = "Effect size δ",
     color = "λ-mode"
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 12) +
   theme(
     legend.position = "top",
     plot.title = element_text(face = "bold")
@@ -461,6 +461,7 @@ ggplot(df, aes(delta, n, color = mode)) +
 ## Summary
 
 This vignette demonstrated:
+
 - How to compute PPI / PPI++ sample size for mean estimation and regression.
 - How to use direct moments or prediction metrics (continuous or classification).
 - How to incorporate OLS or GLM models into contrast-based inference.

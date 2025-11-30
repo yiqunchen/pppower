@@ -46,6 +46,7 @@
 #'   for PPI++.
 #' @param alpha Wald test significance level.
 #' @param seed Optional random seed.
+#' @param use_true_J Logical; if TRUE, use true Fisher J instead of estimated.
 #' 
 #' @return A list with:
 #'   \item{theta_hat}{Estimated contrast \eqn{a^\top \hat\beta}.}
@@ -308,41 +309,6 @@ ppi_glm_rep_one <- function(
 
   beta_hat <- as.numeric(beta)
 
-  # glm_fit <- glm.fit(X_L, y_L, family = binomial())
-  # beta_glm <- glm_fit$coefficients
-
-  # # Compute score corrections
-  # eta_hat_L <- as.numeric(X_L %*% beta_glm)
-  # mu_hat_L_fit  <- plogis(eta_hat_L)
-  # mu_hat_U_fit <- plogis(as.numeric(X_U %*% beta_glm))
-
-  # U_L <- crossprod(X_L, (y_L - mu_hat_L_fit)) / n
-  # U_U <- crossprod(X_U, (muhat_U - mu_hat_U_fit)) / N
-  # U_f <- crossprod(X_L, (muhat_L - mu_hat_L_fit)) / n  ## Eq (24)
-
-  # w_L_hat <- mu_hat_L_fit * (1 - mu_hat_L_fit)
-  # w_U_hat <- mu_hat_U_fit * (1 - mu_hat_U_fit)
-
-  # J_L_hat <- crossprod(X_L * w_L_hat, X_L) / n
-  # J_U_hat <- crossprod(X_U * w_U_hat, X_U) / N
-
-
-  # Jeff <- if (ppi_type == "PPI") {
-  #   J_L_hat + J_U_hat
-  # } else {
-  #   (1 - lambda_hat)*J_L_hat + lambda_hat*J_U_hat
-  # }
-
-  # U_lambda <- if (ppi_type == "PPI") {
-  #   U_L + U_U
-  # } else {
-  #   U_L + lambda_hat*(U_U - U_f)
-  # }
-
-  # # One-step PPI/PPI++ estimator
-  # ridge <- 1e-8
-  # beta_hat <- beta_glm + solve(Jeff + diag(ridge, p), U_lambda)
-
   ## Compute variance components at β_hat
   eta_L_hat <- as.numeric(X_L %*% beta_hat)
   eta_U_hat <- as.numeric(X_U %*% beta_hat)
@@ -481,8 +447,19 @@ if (ppi_type == "PPI") {
 #' @param PPIpp_crossfit Logical; whether to use 2-fold cross-fitting for PPI++.
 #' @param alpha Wald test significance level.
 #' @param seed Optional random seed.
+#' @param use_true_J Logical; if TRUE, use true Fisher J instead of estimated.
 #' @param keep_reps Logical; if \code{TRUE}, return the full list of replicate
 #'   outputs from \code{ppi_glm_rep_one()}.
+#' @param theta_shift_mode Character string specifying how the effect shift is applied.
+#'   Must be one of:
+#'   \describe{
+#'     \item{`"population"`}{Shift is applied to the population-level
+#'       contrast \eqn{c^\top \beta}.}
+#'     \item{`"empirical_global"`}{Shift is applied once to a globally estimated
+#'       contrast, shared by all Monte Carlo replicates.}
+#'     \item{`"empirical_rep"`}{Shift is applied separately **within each** Monte Carlo
+#'       replicate based on its own empirical estimate.}
+#'   }
 #'
 #' @return A list with:
 #'   \item{empirical_power}{Empirical rejection probability over \eqn{R} reps.}

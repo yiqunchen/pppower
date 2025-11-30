@@ -34,11 +34,13 @@ devtools::install_github("yiqunchen/pppower")
 ## Vignettes
 
 - **Prediction-Powered Power Planning**  
+- **Prediction-Powered Sample Size Calculation**
 
 Open in R:  
 
 ``` r
 vignette("intro-ppi", package = "pppower")
+vignette("ppi-sample-size", package = "pppower")
 ```
 
 ```{r session-info, echo = FALSE}

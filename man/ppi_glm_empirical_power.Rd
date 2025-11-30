@@ -64,8 +64,21 @@ external labeled sample.}
 
 \item{seed}{Optional random seed.}
 
+\item{use_true_J}{Logical; if TRUE, use true Fisher J instead of estimated.}
+
 \item{keep_reps}{Logical; if \code{TRUE}, return the full list of replicate
 outputs from \code{ppi_glm_rep_one()}.}
+
+\item{theta_shift_mode}{Character string specifying how the effect shift is applied.
+Must be one of:
+\describe{
+\item{\code{"population"}}{Shift is applied to the population-level
+contrast \eqn{c^\top \beta}.}
+\item{\code{"empirical_global"}}{Shift is applied once to a globally estimated
+contrast, shared by all Monte Carlo replicates.}
+\item{\code{"empirical_rep"}}{Shift is applied separately \strong{within each} Monte Carlo
+replicate based on its own empirical estimate.}
+}}
 }
 \value{
 A list with:
