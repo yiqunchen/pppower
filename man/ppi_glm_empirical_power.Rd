@@ -21,7 +21,9 @@ ppi_glm_empirical_power(
   PPIpp_crossfit = TRUE,
   alpha = 0.05,
   seed = 1,
-  keep_reps = FALSE
+  use_true_J = FALSE,
+  keep_reps = FALSE,
+  theta_shift_mode = c("population", "empirical_global", "empirical_rep")
 )
 }
 \arguments{

@@ -194,6 +194,28 @@ n_required_ppi_pp <- function(
   z_beta  <- qnorm(power)
   S2      <- (delta / (z_alpha + z_beta))^2
 
+  ## Binary metric helpers
+  infer_p_y_if_missing <- function(metrics) {
+    if (!is.null(metrics$p_y)) return(metrics$p_y)
+
+    # Classification: attempt to infer p_y
+    if (!is.null(metrics$tp) && !is.null(metrics$fn) && !is.null(metrics$m_obs)) {
+      return((metrics$tp + metrics$fn) / metrics$m_obs)
+    }
+
+    NULL
+  }
+
+  infer_var_y <- function(metrics) {
+    # continuous case
+    if (!is.null(metrics$var_y)) return(metrics$var_y)
+
+    # binary case p(1-p)
+    if (!is.null(metrics$p_y)) return(metrics$p_y * (1 - metrics$p_y))
+
+    NULL
+  }
+
   ####  MEAN ESTIMATION CASE (PPI / PPI++)
   if (type == "mean") {
 
@@ -222,7 +244,28 @@ n_required_ppi_pp <- function(
 
     } else {
 
-      ## B. Metrics-based mode: derive moments from metrics/var_f/var_res
+      ## Metrics-based mode: derive moments from metrics/var_f/var_res
+
+      if (is.null(metrics))
+        stop("Must supply metrics list when moments are not provided.")
+
+      # infer m_labeled
+      if (is.null(m_labeled)) {
+        m_labeled <- metrics$m_obs %||% stop("metrics$m_obs is required.")
+      }
+
+      # infer metric type
+      metric_type <- metric_type %||% metrics$type %||%
+        stop("metric_type must be provided or stored in metrics$type.")
+
+      metric_type_clean <- match.arg(tolower(metric_type),
+                                     c("continuous", "classification", "prob"))
+
+      # auto-infer p_y if classification
+      if (metric_type_clean != "continuous") {
+        metrics$p_y <- metrics$p_y %||% infer_p_y_if_missing(metrics)
+      }
+
       vars <- resolve_ppi_variances(
         var_f       = var_f,
         var_res     = var_res,
@@ -235,30 +278,15 @@ n_required_ppi_pp <- function(
       sf2  <- vars$var_f       # Var(f)
       vres <- vars$var_res     # Var(Y - f)
 
-      if (!is.finite(sf2) || sf2 <= 0) {
-        stop("Var(f) must be positive.", call. = FALSE)
-      }
+      if (sf2 <= 0) stop("Var(f) must be positive.")
 
-      ## Var(Y) from metrics: either var_y (continuous) or p_y (binary)
-      if (!is.null(metrics$var_y)) {
-        sy2 <- metrics$var_y
-      } else if (!is.null(metrics$p_y)) {
-        sy2 <- metrics$p_y * (1 - metrics$p_y)
-      } else {
-        stop("For mean model: metrics must include var_y (continuous) or p_y (binary).",
-             call. = FALSE)
-      }
+      sy2 <- infer_var_y(metrics)
+      if (is.null(sy2))
+        stop("metrics must include var_y (continuous) or p_y (binary).")
 
-      if (!is.finite(sy2) || sy2 < 0) {
-        stop("Var(Y) must be non-negative.", call. = FALSE)
-      }
-
-      ## Universal identity: Var(Y-f) = Var(Y) + Var(f) - 2 Cov(Y,f)
       cyf <- (sy2 + sf2 - vres) / 2
-
-      if (cyf^2 > sy2 * sf2 + 1e-8) {
-        stop("Infeasible: |Cov(Y,f)| > sqrt(Var(Y)Var(f)).", call. = FALSE)
-      }
+      if (cyf^2 > sy2 * sf2 + 1e-8) stop("Infeasible: |Cov(Y,f)| > sqrt(Var(Y)Var(f)).")
+      
     }
 
     ## C. Define variance(n) under lambda_mode

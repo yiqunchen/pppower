@@ -20,10 +20,10 @@
 #' @param a Contrast vector of length \eqn{p}.
 #' @param delta Effect size injected via \eqn{f(X) + \delta (X^\top a)}.
 #' @param theta0 Null value of the contrast \eqn{\theta=a^\top\beta^\star}.
-#' @param ppi_type Either "PPI" (\\eqn{\\lambda=1}) or "PPI++".
-#' @param lambda_mode For PPI++: "plugin" (estimate \\eqn{\\lambda})
+#' @param ppi_type Either "PPI" ({\eqn{\lambda = 1}}) or "PPI++".
+#' @param lambda_mode For PPI++: "plugin" (estimate {\eqn{\lambda}})
 #'   or "oracle" (not implemented internally).
-#' @param lambda_external Logical; if TRUE, estimate \\eqn{\\lambda}
+#' @param lambda_external Logical; if TRUE, estimate {\eqn{\lambda}}
 #'   using an external labeled sample.
 #' @param n_external Size of the external labeled set if
 #'   \code{lambda_external = TRUE}.
@@ -85,7 +85,7 @@ ppi_ols_rep_one <- function(
 
   # inject contrast-aligned signal shift
   f_L <- f_L_true + delta * as.numeric(X_L %*% a)
-  f_U <- f_U_true + delta * as.numeric(X_U %*% a)
+  #f_U <- f_U_true + delta * as.numeric(X_U %*% a)
 
   y_L <- f_L + eps_sampler(n)
 
@@ -103,8 +103,8 @@ ppi_ols_rep_one <- function(
 
       m <- fit_predict_model_ols(
         model_type,
-        X_L[tr, , drop=FALSE], y_L[tr],
-        X_U
+        X_L_df[tr, , drop = FALSE], y_L[tr],
+        X_U_df
       )
 
       fhat_L[te] <- as.numeric(.predict_any(m$fit, X_L[te, , drop=FALSE]))
@@ -116,8 +116,8 @@ ppi_ols_rep_one <- function(
 
   } else {
     ## Non-cross-fit model (PPI or PPI++)
-    m <- fit_predict_model_ols(model_type, X_L, y_L, X_U)
-    fhat_L <- as.numeric(.predict_any(m$fit, X_L))
+    m <- fit_predict_model_ols(model_type, X_L_df, y_L, X_U_df)
+    fhat_L <- as.numeric(.predict_any(m$fit, X_L_df))
     fhat_U <- m$fhat_U
   }
 
@@ -231,12 +231,14 @@ ppi_ols_rep_one <- function(
 
   ## Sandwich SE for PPI / PPI++
   Hinv <- solve(H_p)
-  A_mat <- Sigma_YY / n
-  B_mat <- Sigma_ff * (lambda_hat^2) * (1/N + 1/n)
-  C_mat <- (-2 * lambda_hat / n) * Sigma_Yf
-  Mid <- A_mat + B_mat + C_mat
+  A_scalar <- as.numeric(t(a) %*% Hinv %*% Sigma_YY %*% Hinv %*% a)
+  B_scalar <- as.numeric(t(a) %*% Hinv %*% Sigma_ff %*% Hinv %*% a)
+  C_scalar <- as.numeric(t(a) %*% Hinv %*% Sigma_Yf %*% Hinv %*% a)
 
-  Vhat <- t(a) %*% Hinv %*% Mid %*% Hinv %*% a
+  Vhat <- A_scalar / n +
+    lambda_hat^2 * (B_scalar / N + B_scalar / n) -
+    2 * lambda_hat * C_scalar / n
+
   se_hat <- sqrt(as.numeric(Vhat))
 
   z_stat <- (theta_hat - theta0) / se_hat
@@ -254,7 +256,10 @@ ppi_ols_rep_one <- function(
     H_U = H_U,
     Sigma_YY_hat = Sigma_YY,
     Sigma_ff_hat = Sigma_ff,
-    Sigma_Yf_hat = Sigma_Yf
+    Sigma_Yf_hat = Sigma_Yf,
+    A_hat        = A_scalar,
+    B_hat        = B_scalar,
+    C_hat        = C_scalar
   )
 }
 
@@ -362,59 +367,24 @@ ppi_ols_empirical_power <- function(
   empirical_power <- mean(reject_vec)
   mc_se_power     <- sqrt(empirical_power * (1 - empirical_power) / R)
 
-  A_vals <- numeric(R)
-  B_vals <- numeric(R)
-  C_vals <- numeric(R)
-
-  se_theory_vec   <- numeric(R)
-  power_theory_vec <- numeric(R)
+  A_vals <- vapply(reps, `[[`, numeric(1), "A_hat")
+  B_vals <- vapply(reps, `[[`, numeric(1), "B_hat")
+  C_vals <- vapply(reps, `[[`, numeric(1), "C_hat")
 
   z_alpha <- qnorm(1 - alpha/2)
 
-  ## analytic contrast shift:  θ* - θ0 = δ‖a‖²
+  ## analytic contrast shift:  θ* - θ0 = δ‖a‖^2
   theta_shift <- delta * sum(a * a)
 
+  se_theory_vec <- se_vec
+  power_theory_vec <- numeric(R)
+
   for (r in seq_len(R)) {
-    x  <- reps[[r]]
-
-    lambda_r <- x$lambda_hat
-    H_L_r    <- x$H_L
-    H_U_r    <- x$H_U
-    SYY_r    <- x$Sigma_YY_hat
-    Sff_r    <- x$Sigma_ff_hat
-    SYf_r    <- x$Sigma_Yf_hat
-
-    ## H_p for this replicate
-    if (ppi_type == "PPI") {
-      H_p_r <- H_U_r
-    } else {
-      H_p_r <- (1 - lambda_r) * H_L_r + lambda_r * H_U_r
-    }
-    Hinv_r <- solve(H_p_r)
-
-    ## Sandwich components
-    A_r <- as.numeric(t(a) %*% Hinv_r %*% SYY_r %*% Hinv_r %*% a)
-    B_r <- as.numeric(t(a) %*% Hinv_r %*% Sff_r %*% Hinv_r %*% a)
-    C_r <- as.numeric(t(a) %*% Hinv_r %*% SYf_r %*% Hinv_r %*% a)
-
-    A_vals[r] <- A_r
-    B_vals[r] <- B_r
-    C_vals[r] <- C_r
-
-    ## Variance for replicate r
-    V_r <- A_r / n +
-      lambda_r^2 * (B_r / N + B_r / n) -
-      2 * lambda_r * C_r / n
-
-    se_theory_r <- sqrt(V_r)
-    se_theory_vec[r] <- se_theory_r
-
-    ## Noncentral Z mean
+    se_theory_r <- se_theory_vec[r]
     mu_r <- theta_shift / se_theory_r
 
-    ## Theoretical power for replicate r
-    p_r <- pnorm(-z_alpha + mu_r) + (1 - pnorm(z_alpha + mu_r))
-    power_theory_vec[r] <- p_r
+    power_theory_vec[r] <-
+      pnorm(-z_alpha + mu_r) + (1 - pnorm(z_alpha + mu_r))
   }
 
   ## Averages across R

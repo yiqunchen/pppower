@@ -41,14 +41,14 @@ ppi_ols_rep_one(
 
 \item{delta}{Effect size injected via \eqn{f(X) + \delta (X^\top a)}.}
 
-\item{ppi_type}{Either "PPI" (\\eqn{\\lambda=1}) or "PPI++".}
+\item{ppi_type}{Either "PPI" ({\eqn{\lambda = 1}}) or "PPI++".}
 
 \item{theta0}{Null value of the contrast \eqn{\theta=a^\top\beta^\star}.}
 
-\item{lambda_mode}{For PPI++: "plugin" (estimate \\eqn{\\lambda})
+\item{lambda_mode}{For PPI++: "plugin" (estimate {\eqn{\lambda}})
 or "oracle" (not implemented internally).}
 
-\item{lambda_external}{Logical; if TRUE, estimate \\eqn{\\lambda}
+\item{lambda_external}{Logical; if TRUE, estimate {\eqn{\lambda}}
 using an external labeled sample.}
 
 \item{n_external}{Size of the external labeled set if

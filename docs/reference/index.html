@@ -34,6 +34,9 @@
   <ul class="dropdown-menu" role="menu"><li>
       <a href="../articles/intro-ppi.html">Prediction-Powered Power Planning</a>
     </li>
+    <li>
+      <a href="../articles/ppi-sample-size.html">Prediction-Powered Sample Size Calculation</a>
+    </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -52,9 +55,13 @@
           <p class="section-desc"></p>
         </th>
       </tr></tbody><tbody><tr><td>
-          <p><code><a href="n_required_PP.html">n_required_PP()</a></code> </p>
+          <p><code><a href="compute_ppi_blocks.html">compute_ppi_blocks()</a></code> </p>
         </td>
-        <td><p>Required labeled sample size for desired PPI power</p></td>
+        <td><p>Construct Hessian/Fisher and Covariance Blocks for PPI/PPI++ Regression</p></td>
+      </tr><tr><td>
+          <p><code><a href="n_required_ppi_pp.html">n_required_ppi_pp()</a></code> </p>
+        </td>
+        <td><p>Required labeled sample size for PPI++ (mean or regression/contrast inference)</p></td>
       </tr><tr><td>
           <p><code><a href="plot_type1_error_curve.html">plot_type1_error_curve()</a></code> </p>
         </td>
@@ -74,7 +81,7 @@
       </tr><tr><td>
           <p><code><a href="power_curve_mean_dgp.html">power_curve_mean_dgp()</a></code> </p>
         </td>
-        <td><p>Power curve using Gaussian/Binomial DGPs</p></td>
+        <td><p>Power curve for PPI mean with supplied population moments</p></td>
       </tr><tr><td>
           <p><code><a href="power_ppi_mean.html">power_ppi_mean()</a></code> </p>
         </td>
@@ -84,6 +91,26 @@
         </td>
         <td><p>Power for prediction-powered linear regression (OLS) estimator</p></td>
       </tr><tr><td>
+          <p><code><a href="power_ppi_pp_mean.html">power_ppi_pp_mean()</a></code> </p>
+        </td>
+        <td><p>Power for the PPI++ mean estimator</p></td>
+      </tr><tr><td>
+          <p><code><a href="power_ppi_pp_ols.html">power_ppi_pp_ols()</a></code> </p>
+        </td>
+        <td><p>Power for the PPI++ OLS estimator</p></td>
+      </tr><tr><td>
+          <p><code><a href="ppi_empirical_power.html">ppi_empirical_power()</a></code> </p>
+        </td>
+        <td><p>Monte Carlo Estimation of Empirical and Close-Form Power for PPI / PPI++ mean estimation</p></td>
+      </tr><tr><td>
+          <p><code><a href="ppi_glm_empirical_power.html">ppi_glm_empirical_power()</a></code> </p>
+        </td>
+        <td><p>Monte Carlo Estimation of Empirical and Closed-Form Power for GLM PPI / PPI++</p></td>
+      </tr><tr><td>
+          <p><code><a href="ppi_ols_empirical_power.html">ppi_ols_empirical_power()</a></code> </p>
+        </td>
+        <td><p>Monte Carlo Estimation of Empirical and Closed-Form Power for OLS PPI / PPI++</p></td>
+      </tr><tr><td>
           <p><code><a href="ppi_ols_fit.html">ppi_ols_fit()</a></code> </p>
         </td>
         <td><p>Fit Prediction-Powered OLS (user-facing)</p></td>
@@ -91,6 +118,10 @@
           <p><code><a href="ppi_ols_wald.html">ppi_ols_wald()</a></code> </p>
         </td>
         <td><p>Wald test for a linear contrast of OLS</p></td>
+      </tr><tr><td>
+          <p><code><a href="ppi_plus_ols_fit.html">ppi_plus_ols_fit()</a></code> </p>
+        </td>
+        <td><p>Fit PPI++ OLS with sandwich variability</p></td>
       </tr><tr><td>
           <p><code><a href="pppower.html">pppower</a></code> </p>
         </td>
@@ -102,7 +133,19 @@
       </tr><tr><td>
           <p><code><a href="simulate_power.html">simulate_power()</a></code> </p>
         </td>
-        <td><p>Monte Carlo power for the PP mean estimator</p></td>
+        <td><p>Monte Carlo vs. analytical power for PPI / PPI++ mean estimation</p></td>
+      </tr><tr><td>
+          <p><code><a href="simulate_power_ppi_mean.html">simulate_power_ppi_mean()</a></code> </p>
+        </td>
+        <td><p>Monte Carlo power for the PPI mean estimator</p></td>
+      </tr><tr><td>
+          <p><code><a href="simulate_power_ppi_pp_ols.html">simulate_power_ppi_pp_ols()</a></code> </p>
+        </td>
+        <td><p>Monte Carlo power for the PPI++ OLS estimator (iid sample from the DGP)</p></td>
+      </tr><tr><td>
+          <p><code><a href="simulate_power_ppiplus_mean.html">simulate_power_ppiplus_mean()</a></code> </p>
+        </td>
+        <td><p>Monte Carlo power for the PPI++ mean estimator</p></td>
       </tr><tr><td>
           <p><code><a href="type1_error_curve_mean.html">type1_error_curve_mean()</a></code> </p>
         </td>
@@ -110,7 +153,7 @@
       </tr><tr><td>
           <p><code><a href="type1_error_curve_mean_dgp.html">type1_error_curve_mean_dgp()</a></code> </p>
         </td>
-        <td><p>Type I error curve using Gaussian/Binomial DGPs</p></td>
+        <td><p>Type I error and power curve for the PPI mean estimator</p></td>
       </tr></tbody></table></div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

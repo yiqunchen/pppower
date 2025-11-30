@@ -2,41 +2,44 @@
 % Please edit documentation in R/utils.R
 \name{fit_predict_model_glm}
 \alias{fit_predict_model_glm}
-\title{Fit Predictive Model for GLM PPI / PPI++ (Internal Helper)}
+\title{Fit predictive model for GLM-based PPI/PPI++}
 \usage{
 fit_predict_model_glm(
   model_type,
   X_L,
   y_L,
   X_U,
+  fold_index = NULL,
   mtry = NULL,
-  rf_engine = c("ranger", "randomForest"),
+  rf_engine = "ranger",
   rf_trees = 200,
   rf_min_node_size = 5,
   rf_num_threads = NULL,
-  rf_seed = NULL
+  f_generator = NULL
 )
 }
 \arguments{
-\item{model_type}{Type of model ("glm_correct", "glm_mis", "glm_wrong", "rf")}
+\item{model_type}{One of \code{"glm_correct"}, \code{"glm_mis"}, \code{"glm_wrong"}, \code{"rf"}, \code{"oracle"}.}
 
-\item{X_L}{Labeled covariates}
+\item{X_L}{Labeled covariate matrix/data frame.}
 
-\item{y_L}{Labeled outcomes}
+\item{y_L}{Labeled response vector.}
 
-\item{X_U}{Unlabeled covariates}
+\item{X_U}{Unlabeled covariates.}
 
-\item{mtry}{RF mtry value}
+\item{fold_index}{Optional vector of fold assignments for cross-fitting.}
 
-\item{rf_engine}{Random forest engine ("ranger" or "randomForest")}
+\item{mtry}{Random forest mtry parameter.}
 
-\item{rf_trees}{Number of trees}
+\item{rf_engine}{Random forest engine (\code{"ranger"} or \code{"randomForest"}).}
 
-\item{rf_min_node_size}{Minimum node size for ranger}
+\item{rf_trees}{Number of trees for RF.}
 
-\item{rf_num_threads}{Threads (ranger)}
+\item{rf_min_node_size}{Minimum node size for RF.}
 
-\item{rf_seed}{Random seed}
+\item{rf_num_threads}{Number of threads for RF.}
+
+\item{f_generator}{Required if \code{model_type = "oracle"}; function returning linear predictor η(x).}
 }
 \value{
 A list with:
@@ -45,10 +48,6 @@ A list with:
 \item{fhat_U}{Predicted conditional means \eqn{\hat\mu_f(X_U)} on unlabeled data.}
 }
 \description{
-Internal unified interface for GLMs and random forests used in the
-PPI / PPI++ GLM simulation framework.
-This function fits a predictive model on labeled data \code{(X_L, y_L)}
-and returns fitted objects and predictions on both labeled and
-unlabeled covariates.
+Fit predictive model for GLM-based PPI/PPI++
 }
 \keyword{internal}

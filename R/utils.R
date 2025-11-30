@@ -353,6 +353,94 @@ compute_sigma_blocks <- function(
   )
 }
 
+#' Construct Hessian/Fisher and Covariance Blocks for PPI/PPI++ Regression
+#'
+#' @description
+#' Computes all required Hessian/Fisher information matrices and covariance
+#' blocks used by Prediction-Powered Inference (PPI) and PPI++ for
+#' regression-based estimands (OLS or GLM contrasts).
+#'
+#' This helper wraps:
+#'   * [compute_hessian_fisher()] — model Hessian or Fisher information  
+#'   * [compute_sigma_blocks()]   — Σ-block covariance components  
+#'
+#' and produces a unified object that can be passed directly to
+#' [n_required_ppi_pp()] for labeled sample size calculations.
+#'
+#' @param model_type Character string: `"ols"` or `"glm"`.
+#'   Determines whether the estimator is linear regression (OLS) or a GLM.
+#'
+#' @param X_l Matrix of labeled covariates (n × p).
+#' @param Y_l Vector of labeled responses (required for OLS and GLM).
+#' @param f_l Vector of model predictions on labeled data.
+#'
+#' @param X_u Matrix of unlabeled covariates (N × p).
+#' @param f_u Vector of model predictions on unlabeled data.
+#'
+#' @param beta Numeric vector of regression coefficients used for Hessian/Fisher
+#'   evaluation. Required for GLM; optional for OLS.
+#'
+#' @param family GLM family (`"binomial"` or `"gaussian"`). Only used for
+#'   `model_type = "glm"`.
+#'
+#' @return
+#' A named list of matrices:
+#'
+#' \describe{
+#'   \item{H_L}{Labeled-data Hessian / Fisher information (p × p)}
+#'   \item{H_U}{Unlabeled-data Hessian / Fisher information (p × p)}
+#'   \item{Sigma_YY}{Covariance of labeled score (`Y − Xβ`) (p × p)}
+#'   \item{Sigma_ff_l}{Covariance of prediction score on labeled data (p × p)}
+#'   \item{Sigma_ff_u}{Covariance of prediction score on unlabeled data (p × p)}
+#'   \item{Sigma_Yf}{Cross-covariance between labeled scores and prediction scores (p × p)}
+#' }
+#'
+#' These matrices are exactly the inputs needed for
+#' [n_required_ppi_pp()] in `type = "regression"` mode.
+#'
+#' @examples
+#' set.seed(1)
+#' p <- 3
+#' n_l <- 400
+#' n_u <- 2000
+#'
+#' X_l <- matrix(rnorm(n_l * p), n_l, p)
+#' X_u <- matrix(rnorm(n_u * p), n_u, p)
+#' beta <- c(1, -0.5, 0.3)
+#'
+#' # Labeled response and predictions
+#' Y_l <- drop(X_l %*% beta + rnorm(n_l))
+#' f_l <- drop(X_l %*% beta + rnorm(n_l, sd = 0.3))
+#' f_u <- drop(X_u %*% beta + rnorm(n_u, sd = 0.3))
+#'
+#' blocks <- compute_ppi_blocks(
+#'   model_type = "ols",
+#'   X_l = X_l, Y_l = Y_l, f_l = f_l,
+#'   X_u = X_u, f_u = f_u,
+#'   beta = beta
+#' )
+#'
+#' # Use in sample size solver:
+#' c_vec <- c(1, 0, 0)
+#' delta <- as.numeric(t(c_vec) %*% beta)
+#'
+#' n_required_ppi_pp(
+#'   delta = delta, N = n_u,
+#'   type = "regression", lambda_mode = "oracle",
+#'   c = c_vec,
+#'   H_L = blocks$H_L, H_U = blocks$H_U,
+#'   Sigma_YY = blocks$Sigma_YY,
+#'   Sigma_ff_l = blocks$Sigma_ff_l,
+#'   Sigma_ff_u = blocks$Sigma_ff_u,
+#'   Sigma_Yf = blocks$Sigma_Yf
+#' )
+#'
+#' @seealso
+#' * [compute_hessian_fisher()]  
+#' * [compute_sigma_blocks()]  
+#' * [n_required_ppi_pp()] — sample size solver for PPI / PPI++
+#'
+#' @export
 compute_ppi_blocks <- function(
   model_type = c("ols","glm"),
   X_l, Y_l, f_l,
@@ -646,26 +734,21 @@ fit_predict_model_ols <- function(model_type, X_L, y_L, X_U,
   )
 }
 
-#' Fit Predictive Model for GLM PPI / PPI++ (Internal Helper)
-#' @description
-#' Internal unified interface for GLMs and random forests used in the
-#' PPI / PPI++ GLM simulation framework.  
-#' This function fits a predictive model on labeled data \code{(X_L, y_L)}
-#' and returns fitted objects and predictions on both labeled and
-#' unlabeled covariates.
+#' Fit predictive model for GLM-based PPI/PPI++
+#'
+#' @param model_type One of `"glm_correct"`, `"glm_mis"`, `"glm_wrong"`, `"rf"`, `"oracle"`.
+#' @param X_L Labeled covariate matrix/data frame.
+#' @param y_L Labeled response vector.
+#' @param X_U Unlabeled covariates.
+#' @param fold_index Optional vector of fold assignments for cross-fitting.
+#' @param mtry Random forest mtry parameter.
+#' @param rf_engine Random forest engine (`"ranger"` or `"randomForest"`).
+#' @param rf_trees Number of trees for RF.
+#' @param rf_min_node_size Minimum node size for RF.
+#' @param rf_num_threads Number of threads for RF.
+#' @param f_generator Required if `model_type = "oracle"`; function returning linear predictor η(x).
 #' 
 #' @keywords internal
-#'
-#' @param model_type Type of model ("glm_correct", "glm_mis", "glm_wrong", "rf")
-#' @param X_L Labeled covariates
-#' @param y_L Labeled outcomes
-#' @param X_U Unlabeled covariates
-#' @param mtry RF mtry value
-#' @param rf_engine Random forest engine ("ranger" or "randomForest")
-#' @param rf_trees Number of trees
-#' @param rf_min_node_size Minimum node size for ranger
-#' @param rf_num_threads Threads (ranger)
-#' @param rf_seed Random seed
 #'
 #' @return A list with:
 #'   \item{fit}{The fitted model object.}
