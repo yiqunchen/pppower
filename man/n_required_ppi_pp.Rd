@@ -2,14 +2,14 @@
 % Please edit documentation in R/required_n_ppi.R
 \name{n_required_ppi_pp}
 \alias{n_required_ppi_pp}
-\title{Required labeled sample size for PPI++ (mean estimator or OLS contrast)}
+\title{Required labeled sample size for PPI++ (mean or regression/contrast inference)}
 \usage{
 n_required_ppi_pp(
   delta,
   N,
   alpha = 0.05,
   power = 0.8,
-  type = c("mean", "ols"),
+  type = c("mean", "regression"),
   lambda_mode = c("vanilla", "oracle", "user"),
   lambda_user = NULL,
   sigma_y2 = NULL,
@@ -36,187 +36,175 @@ n_required_ppi_pp(
 \arguments{
 \item{delta}{Numeric scalar. Effect size being tested.
 \itemize{
-\item \strong{Mean case:} \eqn{\theta - \theta_0}.
-\item \strong{OLS case:} \eqn{a^\top \beta - \theta_0}.
+\item \strong{Mean case:} difference from the null, \eqn{\theta - \theta_0}.
+\item \strong{Regression case:} \eqn{a^\top \beta - \theta_0}.
 Must be nonzero.
 }}
 
-\item{N}{Positive scalar. Size of the unlabeled dataset used to compute
-\eqn{\bar f_U}. Must satisfy \code{N > 0}.}
+\item{N}{Positive scalar. Number of unlabeled observations providing predictions.}
 
-\item{alpha}{Significance level for a two-sided Wald test. Default: \code{0.05}.}
+\item{alpha}{Significance level (two-sided). Default: \code{0.05}.}
 
-\item{power}{Desired statistical power, e.g., \code{0.80}.}
+\item{power}{Desired statistical power. Default: \code{0.80}.}
 
-\item{type}{Character string specifying the estimation problem:
+\item{type}{\code{"mean"} or \code{"regression"}.
+\code{"regression"} covers both \strong{OLS} and \strong{canonical GLM} contrasts.}
+
+\item{lambda_mode}{\code{"vanilla"}, \code{"oracle"}, or \code{"user"}.}
+
+\item{lambda_user}{Scalar specifying \eqn{\lambda} when
+\code{lambda_mode = "user"}.}
+
+\item{sigma_y2}{Variance of labeled outcomes \eqn{\Var(Y)}.}
+
+\item{sigma_f2}{Variance of predictions \eqn{\Var(f(X))}.}
+
+\item{cov_y_f}{Covariance \eqn{\Cov(Y, f(X))}.}
+
+\item{var_f}{Optional alias for \code{sigma_f2}.}
+
+\item{var_res}{Residual variance \eqn{\Var(Y - f(X))}.}
+
+\item{metrics}{List of predictive metrics such as:
 \itemize{
-\item \code{"mean"} — mean estimator \eqn{\hat{\theta}_\lambda}.
-\item \code{"ols"}  — linear contrast \eqn{a^\top \hat{\beta}_\lambda}.
+\item \code{mse}
+\item \code{r2}
+\item \code{var_y}
+\item \code{p_y} (binary)
+\item \code{bias}
+Required when direct moments are not supplied.
 }}
 
-\item{lambda_mode}{Character string specifying λ:
-\itemize{
-\item \code{"vanilla"} — λ = 1.
-\item \code{"oracle"}  — λ = λ\*(n), updated using r = n/N.
-\item \code{"user"}    — λ fixed at user-supplied \code{lambda_user}.
-}}
+\item{metric_type}{\code{"continuous"} or \code{"binary"}.
+Determines how \code{metrics} is interpreted.}
 
-\item{lambda_user}{Numeric. The λ value to use when \code{lambda_mode = "user"}. Otherwise ignored.}
+\item{m_labeled}{Number of labeled samples used to compute prediction metrics.}
 
-\item{sigma_y2}{Variance of the labeled outcomes \eqn{Y}. Optional if using
-\code{metrics}.}
+\item{correction}{Logical; apply finite-sample adjustment when deriving metrics.}
 
-\item{sigma_f2}{Variance of the predictions \eqn{f(X)}. Optional if using
-\code{metrics}.}
+\item{c}{Contrast vector \eqn{a}.}
 
-\item{cov_y_f}{Covariance between \eqn{Y} and \eqn{f(X)}.}
+\item{H_L}{Labeled Hessian/Fisher block.}
 
-\item{var_f}{Alias for \code{sigma_f2}. Provided for flexibility.}
+\item{H_U}{Unlabeled Hessian/Fisher block.}
 
-\item{var_res}{Residual variance \eqn{\Var(Y - f(X))}. Used if available.}
+\item{Sigma_YY}{Labeled covariance block \eqn{\Sigma_{YY}}.}
 
-\item{metrics}{Optional list containing predictive performance summaries such as:
-\itemize{
-\item mean squared error (MSE)
-\item \eqn{R^2}
-\item empirical covariance estimates
-Used as an alternative interface when \code{sigma_*} are not provided.
-}}
+\item{Sigma_ff_l}{Labeled covariance block \eqn{\Sigma_{ff}}.}
 
-\item{metric_type}{Character. One of \code{"continuous"} or \code{"binary"}.
-Determines how prediction metrics are translated to required moments.}
+\item{Sigma_ff_u}{Unlabeled covariance block \eqn{\Sigma_{ff}}.}
 
-\item{m_labeled}{Number of labeled samples used to estimate prediction metrics.
-Needed for small-sample corrections.}
+\item{Sigma_Yf}{Cross-covariance \eqn{\Sigma_{Yf}}.}
 
-\item{correction}{Logical. If TRUE (default), applies finite-sample corrections
-to adjust \eqn{\sigma_f^2} and \eqn{\Cov(Y,f)}.}
+\item{warn_smallN}{Logical. Warn when \code{N < smallN_threshold}.}
 
-\item{c}{Numeric vector defining the contrast \eqn{a}. Must have length p.}
+\item{smallN_threshold}{Numeric. Default \code{500}.}
 
-\item{H_L}{Per-observation Hessians for labeled design matrices.}
-
-\item{H_U}{Per-observation Hessians for labeled and unlabeled design
-matrices. For OLS, \eqn{H = X^\top X / n}. These are used in the sandwich
-variance formula.}
-
-\item{Sigma_YY}{Sandwich covariance term \eqn{\Sigma_{YY}}.}
-
-\item{Sigma_ff_l}{Sandwich covariance terms \eqn{\Sigma_{ff}}
-computed on labeled samples.}
-
-\item{Sigma_ff_u}{Sandwich covariance terms \eqn{\Sigma_{ff}}
-computed on unlabeled samples.}
-
-\item{Sigma_Yf}{Cross-covariance sandwich term \eqn{\Sigma_{Yf}}.}
-
-\item{warn_smallN}{Logical. If TRUE, warns when \code{N < smallN_threshold}.}
-
-\item{smallN_threshold}{Numeric threshold at which to trigger a warning
-(default: 500).}
-
-\item{mode}{How to behave if the required n exceeds N:
-\itemize{
-\item \code{"error"} — throw an error (default)
-\item \code{"cap"}   — return n = N and attach attribute \code{"achieved_power"}.
-}}
+\item{mode}{\code{"error"} or \code{"cap"}.
+\code{"cap"} returns \code{n = N} with an \code{"achieved_power"} attribute.}
 }
 \value{
-Integer labeled sample size \code{n_star}.
-When \code{mode = "cap"} and \code{n_star > N}, returns \code{N} and attaches
-\code{attr(n_star, "achieved_power")}.
+Integer required sample size \code{n_star}.
+If capped, returns \code{N} with attribute \code{"achieved_power"}.
 }
 \description{
-Computes the minimum number of labeled observations \eqn{n} required to achieve
-a desired power for Prediction-Powered Plus (PPI++) inference.
+Computes the minimum labeled sample size \eqn{n} required to achieve a desired
+statistical power for Prediction-Powered Plus (PPI++) inference.
 
-The function supports:
+This function supports:
+
+\strong{1. Mean estimation}
+
+Estimating a scalar parameter \eqn{\theta = \mathbb{E}[Y]} using
+prediction-powered estimators with augmentation weight \eqn{\lambda}.
+
+\strong{2. Regression contrast estimation}
+
+Estimating a linear contrast \eqn{a^\top \beta^\star} in either:
 \itemize{
-\item \strong{Mean estimation} (scalar parameter)
-\item \strong{OLS linear contrast estimation} \eqn{a^\top \beta}
+\item \strong{OLS} (ordinary least squares)
+\item \strong{GLM} with canonical link (e.g., logistic or Poisson regression)
 }
 
-and three modes for the augmentation weight \eqn{\lambda}:
+via sandwich/Fisher blocks computed on labeled and unlabeled samples.
+
+The augmentation weight \eqn{\lambda} may be:
 \itemize{
 \item \code{"vanilla"} — \eqn{\lambda = 1} (standard PPI)
-\item \code{"oracle"}  — \eqn{\lambda = \lambda^\star} (variance-minimizing; ratio \eqn{r = n/N} updated iteratively)
-\item \code{"user"}    — \eqn{\lambda = \lambda_{\text{user}}} (user-specified)
+\item \code{"user"} — user-specified \eqn{\lambda}
+\item \code{"oracle"} — variance-minimizing \eqn{\lambda^\star(n)} that depends on \eqn{r = n/N}
 }
 
-The unlabeled sample size \eqn{N} contributes predictions \eqn{f(X)} that reduce
-the variance of the estimator. The function uses closed-form inversions when
-available, or numerical root-finding otherwise, to compute the minimal
-\eqn{n} satisfying the desired power constraint.
+The unlabeled sample size \eqn{N} contributes predictions \eqn{f(X)} that lower
+the estimator variance.
 }
 \examples{
 
+## Example 1: Using prediction metrics
 metrics <- list(
-  type = "continuous",
-  mse = 0.6,
-  var_y = 1.0,
-  cov_y_f = 0.18,
-  m_obs = 300
+  type   = "continuous",
+  mse    = 0.6,
+  var_y  = 1.0,
+  m_obs  = 300
 )
 
 n_required_ppi_pp(
-  delta = 0.25, N = 5000,
-  type = "mean",
-  metrics = metrics,
+  delta       = 0.25,
+  N           = 5000,
+  type        = "mean",
+  metrics     = metrics,
   metric_type = "continuous",
   lambda_mode = "vanilla"
 )
 
+
+## Example 2: Direct-moment supply
 n_required_ppi_pp(
-  delta = 0.25, N = 5000,
-  type = "mean",
-  sigma_y2 = 1.0,
-  sigma_f2 = 0.4,
-  cov_y_f  = 0.18,
-  var_f    = 0.4,          # must supply
-  var_res  = 1.0 - 0.4,    # = 0.6
+  delta      = 0.25,
+  N          = 5000,
+  type       = "mean",
+  sigma_y2   = 1.0,
+  sigma_f2   = 0.4,
+  cov_y_f    = 0.18,
   lambda_mode = "oracle"
 )
 
-n_required_ppi_pp(
-  delta = 0.25, N = 5000,
-  type = "mean",
-  sigma_y2 = 1.0,
-  sigma_f2 = 0.4,
-  cov_y_f  = 0.18,
-  var_f = 0.4,
-  var_res = 0.6,
-  lambda_mode = "user",
-  lambda_user = 0.5
-)
 
+## Generate synthetic blocks for a 3-D contrast
 p <- 3
 cvec <- c(1, 0, -1)
 Hpop <- diag(p)
 SYY  <- diag(p)
 Sff  <- 0.5 * diag(p)
 SYf  <- 0.3 * diag(p)
- 
-## Vanilla λ=1
+
+## Vanilla λ = 1
 n_required_ppi_pp(
-  delta = 0.15, N = 2000,
-  type = "ols",
-  c = cvec,
-  H_L = Hpop, H_U = Hpop,
-  Sigma_YY = SYY,
-  Sigma_ff_l = Sff, Sigma_ff_u = Sff,
-  Sigma_Yf   = SYf,
+  delta       = 0.15,
+  N           = 2000,
+  type        = "regression",
+  c           = cvec,
+  H_L         = Hpop,
+  H_U         = Hpop,
+  Sigma_YY    = SYY,
+  Sigma_ff_l  = Sff,
+  Sigma_ff_u  = Sff,
+  Sigma_Yf    = SYf,
   lambda_mode = "vanilla"
 )
 
 ## Oracle λ*
 n_required_ppi_pp(
-  delta = 0.15, N = 2000,
-  type = "ols",
-  c = cvec,
-  H_L = Hpop, H_U = Hpop,
-  Sigma_YY = SYY,
-  Sigma_ff_l = Sff, Sigma_ff_u = Sff,
-  Sigma_Yf   = SYf,
+  delta       = 0.15,
+  N           = 2000,
+  type        = "regression",
+  c           = cvec,
+  H_L         = Hpop,
+  H_U         = Hpop,
+  Sigma_YY    = SYY,
+  Sigma_ff_l  = Sff,
+  Sigma_ff_u  = Sff,
+  Sigma_Yf    = SYf,
   lambda_mode = "oracle"
 )
 }

@@ -341,21 +341,6 @@ ols_ppiplus_multi
 
 ```
 
-### Sample-size planning
-
-`n_required_pp()` solves for the labeled sample size that meets a power target.
-
-```{r mean-n}
-n_required_pp(
-  delta = delta,
-  N = N,
-  alpha = alpha,
-  power = 0.80,
-  type = "mean",
-  var_f = var_f,
-  var_res = var_res
-)
-```
 
 ### Power and Type I error curves
 
@@ -502,33 +487,21 @@ abs(ols_mc$empirical_power - ols_mc$analytical_power)
 
 target <- 0.90
 
-n_required_pp(
-  delta = delta,
-  N = N,
-  alpha = alpha,
-  power = target,
-  type = "ols",
-  V_u = Sigma_ff_pop,
-  V_l = Sigma_YY_pop,
-  c = c_vec
-)
-
 n_required_ppi_pp(
-  delta      = delta,
-  N          = N,
-  alpha      = alpha,
-  power      = target,
-  type       = "ols",
+  delta       = delta,
+  N           = N,
+  alpha       = alpha,
+  power       = target,
+  type        = "regression",
   lambda_mode = "oracle",
-  c          = c_vec,
-  H_L        = H_pop,
-  H_U        = H_pop,
-  Sigma_YY   = Sigma_YY_pop,
-  Sigma_ff_l = Sigma_ff_pop,
-  Sigma_ff_u = Sigma_ff_pop,
-  Sigma_Yf   = Sigma_Yf_pop
+  c           = c_vec,
+  H_L         = H_pop,
+  H_U         = H_pop,
+  Sigma_YY    = Sigma_YY_pop,
+  Sigma_ff_l  = Sigma_ff_pop,
+  Sigma_ff_u  = Sigma_ff_pop,
+  Sigma_Yf    = Sigma_Yf_pop
 )
-
 ```
 
 ---
@@ -538,11 +511,10 @@ n_required_ppi_pp(
 | Task                                          | Functions                                                            |
 |-----------------------------------------------|-----------------------------------------------------------------------|
 | Generate cross-fitted superpopulation         | `simulate_crossfit_data()`                                           |
-| Mean estimator power & calibration            | `power_ppi_mean()`, `simulate_power()`, `pppower:::simulate_power_ppi_mean()` |
-| Mean estimator sample size                    | `n_required_pp(type = "mean", ...)`                                   |
+| Mean estimator power & calibration            | `power_ppi_mean()`, `simulate_power()`, `pppower:::simulate_power_ppi_mean()` |                             |
 | Mean estimator curves                         | `power_curve_mean()`, `type1_error_curve_mean[_dgp]()`, `plot_type1_error_curve()` |
 | Fit prediction-powered OLS                    | `ppi_ols_fit()`, `summary()`                                          |
 | OLS contrasts and power                       | `pppower:::ppi_ols_wald()`, `power_ppi_ols()`, `pppower:::simulate_power_ppi_ols()`       |
-| OLS sample size                               | `n_required_pp(type = "ols", ...)`                                    |
+| Sample size                                   | `n_required_ppi_pp()`                                    |
 
 Together these tools help you explore prediction quality, diagnose finite-sample effects, and plan labeled sample sizes for both mean and regression targets.

@@ -251,6 +251,154 @@ resolve_ppi_variances <- function(var_f = NULL,
   list(var_f = vars$var_f, var_res = vars$var_res)
 }
 
+compute_hessian_fisher <- function(
+  model_type = c("ols", "glm"),
+  X,
+  Y = NULL,         # optional for OLS, unused for GLM fisher
+  beta = NULL,      # required for GLM
+  family = NULL     # required for GLM
+) {
+  model_type <- match.arg(model_type)
+  n <- nrow(X)
+
+  if (model_type == "ols") {
+
+    # H = (1/n) Xᵀ X
+    H <- crossprod(X) / n
+    return(H)
+  }
+
+  # GLM case (canonical link)
+  if (is.null(beta))
+    stop("GLM requires 'beta' (coefficient vector).")
+
+  if (is.null(family))
+    stop("GLM requires 'family' (e.g., 'binomial','poisson','gaussian').")
+
+  eta <- as.numeric(X %*% beta)
+
+  W <- switch(family,
+              "binomial" = {
+                mu <- 1 / (1 + exp(-eta))
+                mu * (1 - mu)   # canonical logit variance
+              },
+              "poisson" = {
+                mu <- exp(eta)
+                mu               # canonical log variance
+              },
+              "gaussian" = rep(1, n),   # canonical identity
+              stop("Unsupported GLM family: ", family)
+  )
+
+  Wmat <- diag(W, n, n)
+
+  J <- t(X) %*% Wmat %*% X / n
+  return(J)
+}
+
+compute_sigma_blocks <- function(
+  X_l, Y_l, f_l,
+  X_u, f_u,
+  model_type = c("ols","glm"),
+  beta = NULL,
+  family = NULL
+) {
+  model_type <- match.arg(model_type)
+
+  n_l <- nrow(X_l)
+  n_u <- nrow(X_u)
+
+  # Compute means μ_l, μ_u for GLM or OLS fitted value
+  if (model_type == "ols") {
+
+    mu_l <- as.numeric(X_l %*% beta)
+    mu_u <- as.numeric(X_u %*% beta)
+
+  } else {
+
+    eta_l <- as.numeric(X_l %*% beta)
+    eta_u <- as.numeric(X_u %*% beta)
+
+    mu_l <- switch(family,
+                   "binomial" = 1 / (1 + exp(-eta_l)),
+                   "poisson"  = exp(eta_l),
+                   "gaussian" = eta_l,
+                   stop("Unsupported GLM family: ", family)
+    )
+
+    mu_u <- switch(family,
+                   "binomial" = 1 / (1 + exp(-eta_u)),
+                   "poisson"  = exp(eta_u),
+                   "gaussian" = eta_u,
+                   stop("Unsupported GLM family: ", family)
+    )
+  }
+
+  # Score residuals
+  res_Y_l <- Y_l - mu_l
+  res_f_l <- f_l - mu_l
+  res_f_u <- f_u - mu_u
+
+  # Σ blocks
+  Sigma_YY   <- crossprod(X_l * res_Y_l) / n_l
+  Sigma_ff_l <- crossprod(X_l * res_f_l) / n_l
+  Sigma_ff_u <- crossprod(X_u * res_f_u) / n_u
+  Sigma_Yf   <- crossprod(X_l * res_Y_l, X_l * res_f_l) / n_l
+
+  list(
+    Sigma_YY   = Sigma_YY,
+    Sigma_ff_l = Sigma_ff_l,
+    Sigma_ff_u = Sigma_ff_u,
+    Sigma_Yf   = Sigma_Yf
+  )
+}
+
+compute_ppi_blocks <- function(
+  model_type = c("ols","glm"),
+  X_l, Y_l, f_l,
+  X_u, f_u,
+  beta = NULL,
+  family = NULL
+) {
+  model_type <- match.arg(model_type)
+
+  # Hessians / Fisher information
+  H_L <- compute_hessian_fisher(
+    model_type = model_type,
+    X = X_l,
+    Y = Y_l,
+    beta = beta,
+    family = family
+  )
+
+  H_U <- compute_hessian_fisher(
+    model_type = model_type,
+    X = X_u,
+    Y = NULL,
+    beta = beta,
+    family = family
+  )
+
+  # Covariance Σ-blocks
+  sig <- compute_sigma_blocks(
+    X_l = X_l, Y_l = Y_l, f_l = f_l,
+    X_u = X_u, f_u = f_u,
+    model_type = model_type,
+    beta = beta,
+    family = family
+  )
+
+  # Output list
+  list(
+    H_L         = H_L,
+    H_U         = H_U,
+    Sigma_YY    = sig$Sigma_YY,
+    Sigma_ff_l  = sig$Sigma_ff_l,
+    Sigma_ff_u  = sig$Sigma_ff_u,
+    Sigma_Yf    = sig$Sigma_Yf
+  )
+}
+
 #' Generate One Labeled + Unlabeled Sample
 #'
 #' @keywords internal
@@ -379,7 +527,6 @@ fit_predict_model <- function(model_type, X_L, y_L, X_U,
         mtry          = mtry_eff,
         min.node.size = rf_min_node_size,
         importance    = "none",
-        seed          = rf_seed,
         num.threads   = rf_num_threads
       )
       fhat_U <- predict(fit, data = as.data.frame(X_U))$predictions
@@ -473,8 +620,11 @@ fit_predict_model_ols <- function(model_type, X_L, y_L, X_U,
         mtry          = mtry_eff,
         min.node.size = rf_min_node_size,
         importance    = "none",
-        seed          = rf_seed,
-        num.threads   = rf_num_threads
+        write.forest  = TRUE,
+        keep.inbag    = FALSE,
+        save.memory   = TRUE,
+        num.threads   = rf_num_threads,
+        verbose       = FALSE
       )
       fhat_U <- predict(fit, data = as.data.frame(X_U))$predictions
       
@@ -482,7 +632,9 @@ fit_predict_model_ols <- function(model_type, X_L, y_L, X_U,
       fit <- randomForest::randomForest(
         y ~ ., data = dat_L,
         ntree = rf_trees,
-        mtry  = mtry_eff
+        mtry  = mtry_eff,
+        keep.forest = FALSE,
+        keep.inbag  = FALSE
       )
       fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
     }
@@ -525,99 +677,122 @@ fit_predict_model_ols <- function(model_type, X_L, y_L, X_U,
 #' @importFrom randomForest randomForest
 
 fit_predict_model_glm <- function(
-  model_type, X_L, y_L, X_U,
+  model_type,
+  X_L, y_L, X_U,
+  fold_index = NULL,
   mtry = NULL,
-  rf_engine = c("ranger", "randomForest"),
+  rf_engine = "ranger",
   rf_trees = 200,
   rf_min_node_size = 5,
   rf_num_threads = NULL,
-  rf_seed = NULL
-) {
+  f_generator = NULL   # only needed for oracle
+  ) {
 
-  model_type <- match.arg(model_type,
-                          c("glm_correct", "glm_mis", "glm_wrong", "rf"))
+  model_type <- match.arg(
+    model_type,
+    c("glm_correct", "glm_mis", "glm_wrong", "rf", "oracle")
+  )
   rf_engine  <- match.arg(rf_engine, c("ranger", "randomForest"))
 
-  ## Ensure column names for formula interface
+  ## Coerce to data.frames safely
   if (is.matrix(X_L)) colnames(X_L) <- paste0("x", seq_len(ncol(X_L)))
   if (is.matrix(X_U)) colnames(X_U) <- paste0("x", seq_len(ncol(X_U)))
 
-  dat_L <- data.frame(y = y_L, X_L)
+  X_L_df <- as.data.frame(X_L)
+  X_U_df <- as.data.frame(X_U)
 
-  ## GLM: CORRECT SPECIFICATION
+  dat_L <- data.frame(y = y_L, X_L_df)
+
+  ## If cross-fitting, restrict the training set
+  if (!is.null(fold_index)) {
+    dat_train <- dat_L[fold_index, , drop = FALSE]
+  } else {
+    dat_train <- dat_L
+  }
+
+
+  ## ORACLE MODEL: perfect predictions μ_f(x) = μ*(x)
+  if (model_type == "oracle") {
+    if (is.null(f_generator)) {
+      stop("Oracle model requires f_generator.")
+    }
+
+    ## Compute true η(x) from population model
+    eta_L_true <- f_generator(X_L_df)
+    eta_U_true <- f_generator(X_U_df)
+
+    ## Apply logistic link
+    mu_L_true <- plogis(eta_L_true)
+    mu_U_true <- plogis(eta_U_true)
+
+    return(list(
+      fit    = NULL,
+      fhat_L = as.numeric(mu_L_true),
+      fhat_U = as.numeric(mu_U_true)
+    ))
+  }
+
+  ## GLM (Correct)
   if (model_type == "glm_correct") {
 
     fit <- stats::glm(
       y ~ x1 + x2 + x3,
-      data = dat_L,
-      family = binomial()
+      data = dat_train,
+      family = binomial(link = "logit")
     )
 
-    fhat_L <- stats::predict(fit, newdata = dat_L, type = "response")
-    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U), type = "response")
-
-  ## GLM: MIS-SPECIFIED (omits x2)
+  ## GLM Mis-specified
   } else if (model_type == "glm_mis") {
 
     fit <- stats::glm(
       y ~ x1 + x3,
-      data = dat_L,
-      family = binomial()
+      data = dat_train,
+      family = binomial(link = "logit")
     )
 
-    fhat_L <- stats::predict(fit, newdata = dat_L, type = "response")
-    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U), type = "response")
-
-  ## GLM: WRONG MODEL (probit link + wrong structure)
+  ## GLM Wrong (still logistic)
   } else if (model_type == "glm_wrong") {
 
     fit <- stats::glm(
       y ~ x1 + I(x2^2),
-      data = dat_L,
-      family = binomial(link = "probit")
+      data = dat_train,
+      family = binomial(link = "logit")
     )
 
-    fhat_L <- stats::predict(fit, newdata = dat_L, type = "response")
-    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U), type = "response")
-
-  ## RANDOM FOREST CLASSIFIER
+  ## Random Forest
   } else if (model_type == "rf") {
 
-    ## Convert y to factor for classification
-    dat_L_rf <- dat_L
-    dat_L_rf$y <- factor(y_L, levels = c(0,1))
+    dat_train_rf <- dat_train
+    dat_train_rf$y <- factor(dat_train_rf$y, levels = c(0,1))
 
     mtry_eff <- if (is.null(mtry)) floor(sqrt(ncol(X_L))) else mtry
 
-    if (rf_engine == "ranger" && requireNamespace("ranger", quietly = TRUE)) {
+    if (rf_engine == "ranger") {
 
       fit <- ranger::ranger(
-        y ~ ., data = dat_L_rf,
+        y ~ ., data = dat_train_rf,
         probability = TRUE,
         num.trees   = rf_trees,
         mtry        = mtry_eff,
         min.node.size = rf_min_node_size,
-        seed        = rf_seed,
         num.threads = rf_num_threads
       )
 
-      fhat_L <- predict(fit, data = dat_L_rf)$predictions[, 2]
-      fhat_U <- predict(fit, data = as.data.frame(X_U))$predictions[, 2]
+      fhat_L <- predict(fit, data = dat_L)$predictions[, 2]
+      fhat_U <- predict(fit, data = X_U_df)$predictions[, 2]
 
-    } else {
-
-      fit <- randomForest::randomForest(
-        y ~ ., data = dat_L_rf,
-        ntree = rf_trees,
-        mtry  = mtry_eff
-      )
-
-      fhat_L <- stats::predict(fit, newdata = dat_L_rf, type = "prob")[, 2]
-      fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U), type = "prob")[, 2]
+      return(list(
+        fit = fit,
+        fhat_L = as.numeric(fhat_L),
+        fhat_U = as.numeric(fhat_U)
+      ))
     }
   }
 
-  ## Output
+  ## Predictions for labeled and unlabeled
+  fhat_L <- predict(fit, newdata = dat_L, type = "response")
+  fhat_U <- predict(fit, newdata = X_U_df, type = "response")
+
   list(
     fit    = fit,
     fhat_L = as.numeric(fhat_L),
@@ -640,6 +815,29 @@ simulate_one_draw_contrast <- function(
   f_delta <- f_true + delta * as.numeric(X_mat %*% a)
 
   y <- f_delta + eps_sampler(n_labeled)
+
+  list(
+    X = X,
+    y = y
+  )
+}
+
+simulate_one_draw_contrast_glm <- function(
+  n_labeled,
+  X_sampler_L,
+  f_generator,   # returns linear predictor η(x)
+  a,             # contrast vector
+  delta
+) {
+  X <- X_sampler_L(n_labeled)
+  X_mat <- as.matrix(X)
+
+  eta_true  <- f_generator(X)
+  eta_delta <- eta_true + delta * as.numeric(X_mat %*% a)
+
+  mu <- plogis(eta_delta)
+
+  y <- rbinom(n_labeled, 1, mu)
 
   list(
     X = X,
