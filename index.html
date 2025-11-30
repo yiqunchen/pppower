@@ -88,12 +88,16 @@
 <h2 id="vignettes">Vignettes<a class="anchor" aria-label="anchor" href="#vignettes"></a>
 </h2>
 <ul>
-<li><strong>Prediction-Powered Power Planning</strong></li>
+<li>
+<strong>Prediction-Powered Power Planning</strong><br>
+</li>
+<li><strong>Prediction-Powered Sample Size Calculation</strong></li>
 </ul>
 <p>Open in R:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"intro-ppi"</span>, package <span class="op">=</span> <span class="st">"pppower"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co">#&gt; ─ Session info ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"intro-ppi"</span>, package <span class="op">=</span> <span class="st">"pppower"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"ppi-sample-size"</span>, package <span class="op">=</span> <span class="st">"pppower"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co">#&gt; ─ Session info ───────────────────────────────────────────────────────────</span></span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt;  setting  value</span></span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;  version  R version 4.3.1 Patched (2023-07-19 r84711)</span></span>
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt;  os       Rocky Linux 9.4 (Blue Onyx)</span></span>
@@ -103,89 +107,107 @@
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;  collate  en_US.UTF-8</span></span>
 <span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;  ctype    en_US.UTF-8</span></span>
 <span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;  tz       US/Eastern</span></span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;  date     2025-10-21</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;  date     2025-11-29</span></span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt;  pandoc   3.1.3 @ /jhpce/shared/community/core/conda_R/4.3/bin/ (via rmarkdown)</span></span>
 <span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt;  quarto   NA</span></span>
 <span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; ─ Packages ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;  ! package     * version    date (UTC) lib source</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt;    brio          1.1.3      2021-11-30 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;    bslib         0.5.1      2023-08-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;    cachem        1.0.8      2023-05-01 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;    callr         3.7.3      2022-11-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt;    cli           3.6.1      2023-03-23 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt;    commonmark    1.9.0      2023-03-17 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt;    crayon        1.5.2      2022-09-29 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt;    curl          7.0.0      2025-08-19 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt;    desc          1.4.3      2023-12-10 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt;    devtools      2.4.5      2022-10-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt;    diffobj       0.3.5      2021-10-05 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt;    digest        0.6.33     2023-07-07 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt;    ellipsis      0.3.2      2021-04-29 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt;    evaluate      1.0.5      2025-08-27 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt;    fansi         1.0.4      2023-01-22 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;    fastmap       1.1.1      2023-02-24 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt;    fs            1.6.3      2023-07-20 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt;    glue          1.6.2      2022-02-24 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt;    htmltools     0.5.6      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt;    htmlwidgets   1.6.2      2023-03-17 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt;    httpuv        1.6.11     2023-05-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt;    jquerylib     0.1.4      2021-04-26 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt;    jsonlite      1.8.7      2023-06-29 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt;    knitr         1.44       2023-09-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt;    later         1.3.1      2023-05-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt;    lifecycle     1.0.4      2023-11-07 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;    magrittr      2.0.3      2022-03-30 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt;    memoise       2.0.1      2021-11-26 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt;    mime          0.12       2021-09-28 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt;    miniUI        0.1.2      2025-04-17 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="co">#&gt;    pillar        1.9.0      2023-03-22 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a><span class="co">#&gt;    pkgbuild      1.4.8      2025-05-26 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a><span class="co">#&gt;    pkgconfig     2.0.3      2019-09-22 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a><span class="co">#&gt;    pkgload       1.4.1      2025-09-23 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a><span class="co">#&gt;  P pppower     * 0.0.0.9000 2025-10-08 [?] load_all()</span></span>
-<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a><span class="co">#&gt;    prettyunits   1.1.1      2020-01-24 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a><span class="co">#&gt;    processx      3.8.2      2023-06-30 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a><span class="co">#&gt;    profvis       0.3.8      2023-05-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a><span class="co">#&gt;    promises      1.2.1      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a><span class="co">#&gt;    ps            1.7.5      2023-04-18 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a><span class="co">#&gt;    purrr         1.0.2      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a><span class="co">#&gt;    R6            2.5.1      2021-08-19 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a><span class="co">#&gt;    rcmdcheck     1.4.0      2021-09-27 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a><span class="co">#&gt;    Rcpp          1.0.11     2023-07-06 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a><span class="co">#&gt;    remotes       2.5.0      2024-03-17 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a><span class="co">#&gt;    rlang         1.1.1      2023-04-28 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a><span class="co">#&gt;    rmarkdown     2.30       2025-09-28 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a><span class="co">#&gt;    roxygen2      7.2.3      2022-12-08 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a><span class="co">#&gt;    rprojroot     2.1.1      2025-08-26 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a><span class="co">#&gt;    rstudioapi    0.15.0     2023-07-07 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-67"><a href="#cb3-67" tabindex="-1"></a><span class="co">#&gt;    sass          0.4.7      2023-07-15 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-68"><a href="#cb3-68" tabindex="-1"></a><span class="co">#&gt;    sessioninfo   1.2.3      2025-02-05 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-69"><a href="#cb3-69" tabindex="-1"></a><span class="co">#&gt;    shiny         1.7.5      2023-08-12 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-70"><a href="#cb3-70" tabindex="-1"></a><span class="co">#&gt;    stringi       1.7.12     2023-01-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-71"><a href="#cb3-71" tabindex="-1"></a><span class="co">#&gt;    stringr       1.5.0      2022-12-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-72"><a href="#cb3-72" tabindex="-1"></a><span class="co">#&gt;    testthat    * 3.1.10     2023-07-06 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-73"><a href="#cb3-73" tabindex="-1"></a><span class="co">#&gt;    tibble        3.2.1      2023-03-20 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-74"><a href="#cb3-74" tabindex="-1"></a><span class="co">#&gt;    urlchecker    1.0.1      2021-11-30 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-75"><a href="#cb3-75" tabindex="-1"></a><span class="co">#&gt;    usethis       3.2.1      2025-09-06 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-76"><a href="#cb3-76" tabindex="-1"></a><span class="co">#&gt;    utf8          1.2.3      2023-01-31 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-77"><a href="#cb3-77" tabindex="-1"></a><span class="co">#&gt;    vctrs         0.6.3      2023-06-14 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-78"><a href="#cb3-78" tabindex="-1"></a><span class="co">#&gt;    waldo         0.6.2      2025-07-11 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-79"><a href="#cb3-79" tabindex="-1"></a><span class="co">#&gt;    withr         3.0.2      2024-10-28 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-80"><a href="#cb3-80" tabindex="-1"></a><span class="co">#&gt;    xfun          0.40       2023-08-09 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-81"><a href="#cb3-81" tabindex="-1"></a><span class="co">#&gt;    xml2          1.3.5      2023-07-06 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-82"><a href="#cb3-82" tabindex="-1"></a><span class="co">#&gt;    xopen         1.0.0      2018-09-17 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-83"><a href="#cb3-83" tabindex="-1"></a><span class="co">#&gt;    xtable        1.8-4      2019-04-21 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-84"><a href="#cb3-84" tabindex="-1"></a><span class="co">#&gt;    yaml          2.3.7      2023-01-23 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-85"><a href="#cb3-85" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-86"><a href="#cb3-86" tabindex="-1"></a><span class="co">#&gt;  [1] /users/mguo/R/4.3</span></span>
-<span id="cb3-87"><a href="#cb3-87" tabindex="-1"></a><span class="co">#&gt;  [2] /jhpce/shared/community/core/conda_R/4.3/R/lib64/R/site-library</span></span>
-<span id="cb3-88"><a href="#cb3-88" tabindex="-1"></a><span class="co">#&gt;  [3] /jhpce/shared/community/core/conda_R/4.3/R/lib64/R/library</span></span>
-<span id="cb3-89"><a href="#cb3-89" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-90"><a href="#cb3-90" tabindex="-1"></a><span class="co">#&gt;  * ── Packages attached to the search path.</span></span>
-<span id="cb3-91"><a href="#cb3-91" tabindex="-1"></a><span class="co">#&gt;  P ── Loaded and on-disk path mismatch.</span></span>
-<span id="cb3-92"><a href="#cb3-92" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-93"><a href="#cb3-93" tabindex="-1"></a><span class="co">#&gt; ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</span></span></code></pre></div>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; ─ Packages ───────────────────────────────────────────────────────────────</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;  ! package      * version    date (UTC) lib source</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt;    askpass        1.2.0      2023-09-03 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;    brio           1.1.3      2021-11-30 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;    cachem         1.0.8      2023-05-01 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;    callr          3.7.3      2022-11-02 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt;    cli            3.6.5      2025-04-23 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt;    colorspace     2.1-0      2023-01-23 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt;    commonmark     1.9.0      2023-03-17 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt;    crayon         1.5.2      2022-09-29 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt;    credentials    2.0.1      2023-09-06 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt;    curl           7.0.0      2025-08-19 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt;    desc           1.4.3      2023-12-10 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt;    devtools       2.4.5      2022-10-11 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt;    diffobj        0.3.5      2021-10-05 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt;    digest         0.6.33     2023-07-07 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt;    dplyr        * 1.1.3      2023-09-03 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;    ellipsis       0.3.2      2021-04-29 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt;    evaluate       1.0.5      2025-08-27 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt;    fansi          1.0.4      2023-01-22 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt;    farver         2.1.1      2022-07-06 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt;    fastmap        1.1.1      2023-02-24 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt;    fs             1.6.3      2023-07-20 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt;    generics       0.1.4      2025-05-09 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt;    gert           1.9.3      2023-08-07 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt;    ggplot2      * 3.4.3      2023-08-14 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt;    glue           1.8.0      2024-09-30 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt;    gtable         0.3.4      2023-08-21 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;    htmltools      0.5.6      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt;    htmlwidgets    1.6.2      2023-03-17 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt;    httpuv         1.6.11     2023-05-11 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt;    knitr          1.44       2023-09-11 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="co">#&gt;    labeling       0.4.3      2023-08-29 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a><span class="co">#&gt;    later          1.3.1      2023-05-02 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a><span class="co">#&gt;    lattice        0.21-8     2023-04-05 [3] CRAN (R 4.3.1)</span></span>
+<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a><span class="co">#&gt;    lifecycle      1.0.4      2023-11-07 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a><span class="co">#&gt;    magrittr       2.0.4      2025-09-12 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a><span class="co">#&gt;    Matrix         1.6-1.1    2023-09-18 [3] CRAN (R 4.3.1)</span></span>
+<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a><span class="co">#&gt;    memoise        2.0.1      2021-11-26 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a><span class="co">#&gt;    mime           0.12       2021-09-28 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a><span class="co">#&gt;    miniUI         0.1.2      2025-04-17 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a><span class="co">#&gt;    munsell        0.5.0      2018-06-12 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a><span class="co">#&gt;    openssl        2.1.1      2023-09-25 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a><span class="co">#&gt;    pillar         1.9.0      2023-03-22 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a><span class="co">#&gt;    pkgbuild       1.4.8      2025-05-26 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a><span class="co">#&gt;    pkgconfig      2.0.3      2019-09-22 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a><span class="co">#&gt;    pkgdown        2.0.7      2022-12-14 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a><span class="co">#&gt;    pkgload        1.4.1      2025-09-23 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a><span class="co">#&gt;  P pppower      * 0.0.0.9000 2025-11-17 [?] load_all()</span></span>
+<span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a><span class="co">#&gt;    praise         1.0.0      2015-08-11 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a><span class="co">#&gt;    prettyunits    1.1.1      2020-01-24 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a><span class="co">#&gt;    processx       3.8.2      2023-06-30 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-67"><a href="#cb3-67" tabindex="-1"></a><span class="co">#&gt;    profvis        0.3.8      2023-05-02 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-68"><a href="#cb3-68" tabindex="-1"></a><span class="co">#&gt;    promises       1.2.1      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-69"><a href="#cb3-69" tabindex="-1"></a><span class="co">#&gt;    ps             1.7.5      2023-04-18 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-70"><a href="#cb3-70" tabindex="-1"></a><span class="co">#&gt;    purrr          1.0.2      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-71"><a href="#cb3-71" tabindex="-1"></a><span class="co">#&gt;    R6             2.6.1      2025-02-15 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-72"><a href="#cb3-72" tabindex="-1"></a><span class="co">#&gt;    randomForest   4.7-1.2    2024-09-22 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-73"><a href="#cb3-73" tabindex="-1"></a><span class="co">#&gt;    ranger         0.17.0     2024-11-08 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-74"><a href="#cb3-74" tabindex="-1"></a><span class="co">#&gt;    rcmdcheck      1.4.0      2021-09-27 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-75"><a href="#cb3-75" tabindex="-1"></a><span class="co">#&gt;    Rcpp           1.1.0      2025-07-02 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-76"><a href="#cb3-76" tabindex="-1"></a><span class="co">#&gt;    remotes        2.5.0      2024-03-17 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-77"><a href="#cb3-77" tabindex="-1"></a><span class="co">#&gt;    rlang          1.1.6      2025-04-11 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-78"><a href="#cb3-78" tabindex="-1"></a><span class="co">#&gt;    rmarkdown      2.30       2025-09-28 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-79"><a href="#cb3-79" tabindex="-1"></a><span class="co">#&gt;    roxygen2       7.2.3      2022-12-08 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-80"><a href="#cb3-80" tabindex="-1"></a><span class="co">#&gt;    rprojroot      2.1.1      2025-08-26 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-81"><a href="#cb3-81" tabindex="-1"></a><span class="co">#&gt;    rstudioapi     0.15.0     2023-07-07 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-82"><a href="#cb3-82" tabindex="-1"></a><span class="co">#&gt;    scales         1.2.1      2022-08-20 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-83"><a href="#cb3-83" tabindex="-1"></a><span class="co">#&gt;    sessioninfo    1.2.3      2025-02-05 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-84"><a href="#cb3-84" tabindex="-1"></a><span class="co">#&gt;    shiny          1.7.5      2023-08-12 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-85"><a href="#cb3-85" tabindex="-1"></a><span class="co">#&gt;    stringi        1.7.12     2023-01-11 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-86"><a href="#cb3-86" tabindex="-1"></a><span class="co">#&gt;    stringr        1.5.0      2022-12-02 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-87"><a href="#cb3-87" tabindex="-1"></a><span class="co">#&gt;    sys            3.4.2      2023-05-23 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-88"><a href="#cb3-88" tabindex="-1"></a><span class="co">#&gt;    testthat     * 3.1.10     2023-07-06 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-89"><a href="#cb3-89" tabindex="-1"></a><span class="co">#&gt;    tibble         3.2.1      2023-03-20 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-90"><a href="#cb3-90" tabindex="-1"></a><span class="co">#&gt;    tidyr        * 1.3.0      2023-01-24 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-91"><a href="#cb3-91" tabindex="-1"></a><span class="co">#&gt;    tidyselect     1.2.0      2022-10-10 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-92"><a href="#cb3-92" tabindex="-1"></a><span class="co">#&gt;    urlchecker     1.0.1      2021-11-30 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-93"><a href="#cb3-93" tabindex="-1"></a><span class="co">#&gt;    usethis        3.2.1      2025-09-06 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-94"><a href="#cb3-94" tabindex="-1"></a><span class="co">#&gt;    utf8           1.2.6      2025-06-08 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-95"><a href="#cb3-95" tabindex="-1"></a><span class="co">#&gt;    vctrs          0.6.5      2023-12-01 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-96"><a href="#cb3-96" tabindex="-1"></a><span class="co">#&gt;    waldo          0.6.2      2025-07-11 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-97"><a href="#cb3-97" tabindex="-1"></a><span class="co">#&gt;    withr          3.0.2      2024-10-28 [1] CRAN (R 4.3.1)</span></span>
+<span id="cb3-98"><a href="#cb3-98" tabindex="-1"></a><span class="co">#&gt;    xfun           0.40       2023-08-09 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-99"><a href="#cb3-99" tabindex="-1"></a><span class="co">#&gt;    xml2           1.3.5      2023-07-06 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-100"><a href="#cb3-100" tabindex="-1"></a><span class="co">#&gt;    xopen          1.0.0      2018-09-17 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-101"><a href="#cb3-101" tabindex="-1"></a><span class="co">#&gt;    xtable         1.8-4      2019-04-21 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-102"><a href="#cb3-102" tabindex="-1"></a><span class="co">#&gt;    yaml           2.3.7      2023-01-23 [2] CRAN (R 4.3.1)</span></span>
+<span id="cb3-103"><a href="#cb3-103" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-104"><a href="#cb3-104" tabindex="-1"></a><span class="co">#&gt;  [1] /users/mguo/R/4.3</span></span>
+<span id="cb3-105"><a href="#cb3-105" tabindex="-1"></a><span class="co">#&gt;  [2] /jhpce/shared/community/core/conda_R/4.3/R/lib64/R/site-library</span></span>
+<span id="cb3-106"><a href="#cb3-106" tabindex="-1"></a><span class="co">#&gt;  [3] /jhpce/shared/community/core/conda_R/4.3/R/lib64/R/library</span></span>
+<span id="cb3-107"><a href="#cb3-107" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-108"><a href="#cb3-108" tabindex="-1"></a><span class="co">#&gt;  * ── Packages attached to the search path.</span></span>
+<span id="cb3-109"><a href="#cb3-109" tabindex="-1"></a><span class="co">#&gt;  P ── Loaded and on-disk path mismatch.</span></span>
+<span id="cb3-110"><a href="#cb3-110" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-111"><a href="#cb3-111" tabindex="-1"></a><span class="co">#&gt; ──────────────────────────────────────────────────────────────────────────</span></span></code></pre></div>
 </div>
 </div>
   </div>

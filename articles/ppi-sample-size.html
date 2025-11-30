@@ -544,28 +544,29 @@ estimations over vanilla PPI:</p>
 <span>    x <span class="op">=</span> <span class="st">"Effect size δ"</span>,</span>
 <span>    color <span class="op">=</span> <span class="st">"λ-mode"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">theme_minimal</span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">theme_minimal</span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">theme</span><span class="op">(</span></span>
 <span>    legend.position <span class="op">=</span> <span class="st">"top"</span>,</span>
 <span>    plot.title <span class="op">=</span> <span class="fu">element_text</span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use `linewidth` instead.</span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span></code></pre></div>
-<p><img src="figures/ppi-sample-size-power-curve-sample-size-1.png" class="r-plt" width="576"></p>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="figures/ppi-sample-size-power-curve-sample-size-1.png" class="r-plt" width="960" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
 </h2>
-<p>This vignette demonstrated: - How to compute PPI / PPI++ sample size
-for mean estimation and regression. - How to use direct moments or
-prediction metrics (continuous or classification). - How to incorporate
-OLS or GLM models into contrast-based inference. - When sample sizes
-become infeasible and how to handle caps. - How
+<p>This vignette demonstrated:</p>
+<ul>
+<li>How to compute PPI / PPI++ sample size for mean estimation and
+regression.</li>
+<li>How to use direct moments or prediction metrics (continuous or
+classification).</li>
+<li>How to incorporate OLS or GLM models into contrast-based
+inference.</li>
+<li>When sample sizes become infeasible and how to handle caps.</li>
+<li>How
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
-affects the required labeled sample size.</p>
+affects the required labeled sample size.</li>
+</ul>
 <p>PPI++ typically yields the smallest labeled sample size, especially
 when the prediction model is strong and the correlation (
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">v</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathrm{Cov}(Y,f(X))</annotation></semantics></math>

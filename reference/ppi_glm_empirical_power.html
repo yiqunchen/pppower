@@ -192,9 +192,31 @@ external labeled sample.</p></dd>
 <dd><p>Optional random seed.</p></dd>
 
 
+<dt id="arg-use-true-j">use_true_J<a class="anchor" aria-label="anchor" href="#arg-use-true-j"></a></dt>
+<dd><p>Logical; if TRUE, use true Fisher J instead of estimated.</p></dd>
+
+
 <dt id="arg-keep-reps">keep_reps<a class="anchor" aria-label="anchor" href="#arg-keep-reps"></a></dt>
 <dd><p>Logical; if <code>TRUE</code>, return the full list of replicate
 outputs from <code><a href="ppi_glm_rep_one.html">ppi_glm_rep_one()</a></code>.</p></dd>
+
+
+<dt id="arg-theta-shift-mode">theta_shift_mode<a class="anchor" aria-label="anchor" href="#arg-theta-shift-mode"></a></dt>
+<dd><p>Character string specifying how the effect shift is applied.
+Must be one of:</p><dl><dt><code>"population"</code></dt>
+<dd><p>Shift is applied to the population-level
+contrast \(c^\top \beta\).</p></dd>
+
+<dt><code>"empirical_global"</code></dt>
+<dd><p>Shift is applied once to a globally estimated
+contrast, shared by all Monte Carlo replicates.</p></dd>
+
+<dt><code>"empirical_rep"</code></dt>
+<dd><p>Shift is applied separately <strong>within each</strong> Monte Carlo
+replicate based on its own empirical estimate.</p></dd>
+
+
+</dl></dd>
 
 </dl></div>
     <div id="value">
