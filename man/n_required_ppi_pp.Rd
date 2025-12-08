@@ -55,15 +55,15 @@ Must be nonzero.
 \item{lambda_user}{Scalar specifying \eqn{\lambda} when
 \code{lambda_mode = "user"}.}
 
-\item{sigma_y2}{Variance of labeled outcomes \eqn{\Var(Y)}.}
+\item{sigma_y2}{Variance of labeled outcomes \eqn{\mathrm{Var}(Y)}.}
 
-\item{sigma_f2}{Variance of predictions \eqn{\Var(f(X))}.}
+\item{sigma_f2}{Variance of predictions \eqn{\mathrm{Var}(f(X))}.}
 
-\item{cov_y_f}{Covariance \eqn{\Cov(Y, f(X))}.}
+\item{cov_y_f}{Covariance \eqn{\mathrm{Cov}(Y, f(X))}.}
 
 \item{var_f}{Optional alias for \code{sigma_f2}.}
 
-\item{var_res}{Residual variance \eqn{\Var(Y - f(X))}.}
+\item{var_res}{Residual variance \eqn{\mathrm{Var}(Y - f(X))}.}
 
 \item{metrics}{List of predictive metrics such as:
 \itemize{
@@ -151,6 +151,8 @@ metrics <- list(
 n_required_ppi_pp(
   delta       = 0.25,
   N           = 5000,
+  alpha       = 0.05,
+  power       = 0.90,
   type        = "mean",
   metrics     = metrics,
   metric_type = "continuous",
@@ -162,6 +164,8 @@ n_required_ppi_pp(
 n_required_ppi_pp(
   delta      = 0.25,
   N          = 5000,
+  alpha       = 0.05,
+  power       = 0.90,
   type       = "mean",
   sigma_y2   = 1.0,
   sigma_f2   = 0.4,
@@ -182,6 +186,8 @@ SYf  <- 0.3 * diag(p)
 n_required_ppi_pp(
   delta       = 0.15,
   N           = 2000,
+  alpha       = 0.05,
+  power       = 0.90,
   type        = "regression",
   c           = cvec,
   H_L         = Hpop,
@@ -197,6 +203,8 @@ n_required_ppi_pp(
 n_required_ppi_pp(
   delta       = 0.15,
   N           = 2000,
+  alpha       = 0.05,
+  power       = 0.90,
   type        = "regression",
   c           = cvec,
   H_L         = Hpop,

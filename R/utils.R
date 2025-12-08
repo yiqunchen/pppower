@@ -652,82 +652,101 @@ fit_predict_model <- function(model_type, X_L, y_L, X_U,
 #' @importFrom stats glm predict
 #' @importFrom ranger ranger
 #' @importFrom randomForest randomForest
-fit_predict_model_ols <- function(model_type, X_L, y_L, X_U,
-                              mtry = NULL,
-                              rf_engine = c("ranger", "randomForest"),
-                              rf_trees = 200,
-                              rf_min_node_size = 5,
-                              rf_num_threads = NULL,
-                              rf_seed = NULL) {
-  
-  model_type <- match.arg(model_type, c("glm_correct", "glm_mis", "glm_wrong", "rf"))
-  rf_engine  <- match.arg(rf_engine, c("ranger", "randomForest"))
-  
-  ## Ensure column names for formula models
+fit_predict_model_ols <- function(
+  model_type,
+  X_L, y_L,
+  X_U,
+  crossfit = FALSE,
+  mtry = NULL,
+  rf_engine = c("ranger", "randomForest"),
+  rf_trees = 200,
+  rf_min_node_size = 5,
+  rf_num_threads = NULL,
+  rf_seed = NULL
+) {
+
+  model_type <- match.arg(model_type, c("glm_correct","glm_mis","glm_wrong","rf"))
+  rf_engine  <- match.arg(rf_engine)
+
+  ## Ensure colnames
   if (is.matrix(X_L)) colnames(X_L) <- paste0("x", seq_len(ncol(X_L)))
   if (is.matrix(X_U)) colnames(X_U) <- paste0("x", seq_len(ncol(X_U)))
-  
+
   dat_L <- data.frame(y = y_L, X_L)
-  
-  ## --- GLM MODELS ---
-  if (model_type == "glm_correct") {
-    
-    ## Correct: true regression is y = β0 + β1 x1 + β2 x2
-    #fit <- stats::glm(y ~ x1 + x2, data = dat_L)
-    fit <- stats::glm(y ~ x1 + x2 + x3, data = dat_L)
-    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
-    
-  } else if (model_type == "glm_mis") {
-    
-    ## Misspecified: omit x2
-    #fit <- stats::glm(y ~ x1, data = dat_L)
-    fit <- stats::glm(y ~ x1 + x2, data = dat_L)
-    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
-    
-  } else if (model_type == "glm_wrong") {
-    
-    ## Wrong with interaction terms
-    #fit <- stats::glm(y ~ I(x1 * x2), data = dat_L)
-    fit <- stats::glm(y ~ x1, data = dat_L)
-    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
-    
-  ## RANDOM FOREST 
-  } else if (model_type == "rf") {
-    
-    mtry_eff <- if (is.null(mtry)) floor(sqrt(ncol(X_L))) else mtry
-    use_rgr  <- (rf_engine == "ranger") && requireNamespace("ranger", quietly = TRUE)
-    
-    if (use_rgr) {
-      fit <- ranger::ranger(
-        y ~ ., 
-        data = dat_L,
-        num.trees     = rf_trees,
-        mtry          = mtry_eff,
+
+  ## Unified train function: returns *fit only*
+  train_model <- function(dat) {
+    if (model_type == "glm_correct") return(glm(y ~ x1 + x2 + x3, data = dat))
+    if (model_type == "glm_mis")     return(glm(y ~ x1 + x2, data = dat))
+    if (model_type == "glm_wrong")   return(glm(y ~ x1, data = dat))
+
+    ## RF case
+    if (!is.null(rf_seed)) set.seed(rf_seed)
+    mtry_eff <- if (is.null(mtry)) floor(sqrt(ncol(dat)-1)) else mtry
+
+    if (rf_engine == "ranger") {
+      return(ranger::ranger(
+        y ~ ., data = dat,
+        num.trees = rf_trees,
+        mtry = mtry_eff,
         min.node.size = rf_min_node_size,
-        importance    = "none",
-        write.forest  = TRUE,
-        keep.inbag    = FALSE,
-        save.memory   = TRUE,
-        num.threads   = rf_num_threads,
-        verbose       = FALSE
-      )
-      fhat_U <- predict(fit, data = as.data.frame(X_U))$predictions
-      
+        write.forest = TRUE,
+        num.threads = rf_num_threads
+      ))
     } else {
-      fit <- randomForest::randomForest(
-        y ~ ., data = dat_L,
+      return(randomForest::randomForest(
+        y ~ ., data = dat,
         ntree = rf_trees,
-        mtry  = mtry_eff,
-        keep.forest = FALSE,
-        keep.inbag  = FALSE
-      )
-      fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
+        mtry = mtry_eff
+      ))
     }
   }
-  
+
+  ## Predict-any helper
+  pred_any <- function(fit, X) {
+    if (model_type == "rf" && rf_engine == "ranger")
+      return(predict(fit, data = as.data.frame(X))$predictions)
+    return(predict(fit, newdata = as.data.frame(X), type = "link"))
+  }
+
+  ## CROSS-FIT
+  if (crossfit) {
+    n <- nrow(dat_L)
+    fold_id <- sample(rep(1:2, length.out=n))
+
+    fhat_L <- numeric(n)
+    fhat_U_all <- list()
+    fit_list <- list()
+
+    for (fold in 1:2) {
+      tr <- which(fold_id != fold)
+      te <- which(fold_id == fold)
+
+      dat_train <- dat_L[tr,]
+
+      fit <- train_model(dat_train)
+      fit_list[[fold]] <- fit
+
+      fhat_L[te] <- pred_any(fit, X_L[te,])
+      fhat_U_all[[fold]] <- pred_any(fit, X_U)
+    }
+
+    fhat_U <- Reduce("+", fhat_U_all) / 2
+
+    return(list(
+      fit_list = fit_list,
+      fhat_L   = fhat_L,
+      fhat_U   = fhat_U
+    ))
+  }
+
+  ## NO CROSS-FIT
+  fit <- train_model(dat_L)
+
   list(
     fit    = fit,
-    fhat_U = as.numeric(fhat_U)
+    fhat_L = pred_any(fit, X_L),
+    fhat_U = pred_any(fit, X_U)
   )
 }
 
@@ -755,26 +774,25 @@ fit_predict_model_ols <- function(model_type, X_L, y_L, X_U,
 #' @importFrom stats glm predict binomial
 #' @importFrom ranger ranger
 #' @importFrom randomForest randomForest
-
 fit_predict_model_glm <- function(
   model_type,
-  X_L, y_L, X_U,
-  fold_index = NULL,
+  X_L, y_L,
+  X_U,
+  fold_index = NULL,     # optional training indices (cross-fitting)
   mtry = NULL,
-  rf_engine = "ranger",
+  rf_engine = c("ranger", "randomForest"),
   rf_trees = 200,
   rf_min_node_size = 5,
   rf_num_threads = NULL,
-  f_generator = NULL   # only needed for oracle
-  ) {
+  f_generator = NULL     # used ONLY for oracle model
+) {
 
   model_type <- match.arg(
     model_type,
     c("glm_correct", "glm_mis", "glm_wrong", "rf", "oracle")
   )
-  rf_engine  <- match.arg(rf_engine, c("ranger", "randomForest"))
+  rf_engine <- match.arg(rf_engine)
 
-  ## Coerce to data.frames safely
   if (is.matrix(X_L)) colnames(X_L) <- paste0("x", seq_len(ncol(X_L)))
   if (is.matrix(X_U)) colnames(X_U) <- paste0("x", seq_len(ncol(X_U)))
 
@@ -783,96 +801,112 @@ fit_predict_model_glm <- function(
 
   dat_L <- data.frame(y = y_L, X_L_df)
 
-  ## If cross-fitting, restrict the training set
-  if (!is.null(fold_index)) {
-    dat_train <- dat_L[fold_index, , drop = FALSE]
+  ## If cross-fitting, train only on the subset:
+  dat_train <- if (!is.null(fold_index)) {
+    dat_L[fold_index, , drop = FALSE]
   } else {
-    dat_train <- dat_L
+    dat_L
   }
 
-
-  ## ORACLE MODEL: perfect predictions μ_f(x) = μ*(x)
+  ## ORACLE MODEL: perfect predictions from population f(X)
   if (model_type == "oracle") {
+
     if (is.null(f_generator)) {
       stop("Oracle model requires f_generator.")
     }
 
-    ## Compute true η(x) from population model
-    eta_L_true <- f_generator(X_L_df)
-    eta_U_true <- f_generator(X_U_df)
+    eta_L <- f_generator(X_L_df)
+    eta_U <- f_generator(X_U_df)
 
-    ## Apply logistic link
-    mu_L_true <- plogis(eta_L_true)
-    mu_U_true <- plogis(eta_U_true)
+    ## Logistic mean μ(x) = expit(η)
+    mu_L <- plogis(eta_L)
+    mu_U <- plogis(eta_U)
 
     return(list(
       fit    = NULL,
-      fhat_L = as.numeric(mu_L_true),
-      fhat_U = as.numeric(mu_U_true)
+      fhat_L = as.numeric(mu_L),
+      fhat_U = as.numeric(mu_U)
     ))
   }
 
-  ## GLM (Correct)
-  if (model_type == "glm_correct") {
 
-    fit <- stats::glm(
-      y ~ x1 + x2 + x3,
-      data = dat_train,
-      family = binomial(link = "logit")
-    )
+  ## TRAINING FUNCTION (returns model fit only)
+  train_model <- function(dat) {
 
-  ## GLM Mis-specified
-  } else if (model_type == "glm_mis") {
-
-    fit <- stats::glm(
-      y ~ x1 + x3,
-      data = dat_train,
-      family = binomial(link = "logit")
-    )
-
-  ## GLM Wrong (still logistic)
-  } else if (model_type == "glm_wrong") {
-
-    fit <- stats::glm(
-      y ~ x1 + I(x2^2),
-      data = dat_train,
-      family = binomial(link = "logit")
-    )
-
-  ## Random Forest
-  } else if (model_type == "rf") {
-
-    dat_train_rf <- dat_train
-    dat_train_rf$y <- factor(dat_train_rf$y, levels = c(0,1))
-
-    mtry_eff <- if (is.null(mtry)) floor(sqrt(ncol(X_L))) else mtry
-
-    if (rf_engine == "ranger") {
-
-      fit <- ranger::ranger(
-        y ~ ., data = dat_train_rf,
-        probability = TRUE,
-        num.trees   = rf_trees,
-        mtry        = mtry_eff,
-        min.node.size = rf_min_node_size,
-        num.threads = rf_num_threads
-      )
-
-      fhat_L <- predict(fit, data = dat_L)$predictions[, 2]
-      fhat_U <- predict(fit, data = X_U_df)$predictions[, 2]
-
-      return(list(
-        fit = fit,
-        fhat_L = as.numeric(fhat_L),
-        fhat_U = as.numeric(fhat_U)
-      ))
+    ## GLM correct
+    if (model_type == "glm_correct") {
+      return(glm(y ~ x1 + x2 + x3, data = dat,
+                 family = binomial(link = "logit")))
     }
+
+    ## GLM mis
+    if (model_type == "glm_mis") {
+      return(glm(y ~ x1 + x2, data = dat,
+                 family = binomial(link = "logit")))
+    }
+
+    ## GLM wrong
+    if (model_type == "glm_wrong") {
+      return(glm(y ~ x1, data = dat,
+                 family = binomial(link = "logit")))
+    }
+
+    ## RANDOM FOREST
+    if (model_type == "rf") {
+
+      dat_rf <- dat
+      dat_rf$y <- factor(dat_rf$y, levels = c(0,1))
+
+      mtry_eff <- if (is.null(mtry)) floor(sqrt(ncol(dat) - 1)) else mtry
+
+      if (rf_engine == "ranger") {
+        return(
+          ranger::ranger(
+            y ~ ., data = dat_rf,
+            probability = TRUE,
+            num.trees   = rf_trees,
+            mtry        = mtry_eff,
+            min.node.size = rf_min_node_size,
+            num.threads = rf_num_threads
+          )
+        )
+      } else {
+        return(
+          randomForest::randomForest(
+            y ~ ., data = dat_rf,
+            ntree = rf_trees,
+            mtry  = mtry_eff
+          )
+        )
+      }
+    }
+
+    stop("Unsupported model_type.")
   }
 
-  ## Predictions for labeled and unlabeled
-  fhat_L <- predict(fit, newdata = dat_L, type = "response")
-  fhat_U <- predict(fit, newdata = X_U_df, type = "response")
 
+  ## PREDICT FUNCTION: unified prediction interface
+  pred_any <- function(fit, newX) {
+    if (model_type == "rf") {
+      if (rf_engine == "ranger") {
+        return(predict(fit, data = newX)$predictions[, 2])
+      } else {
+        return(predict(fit, newdata = newX, type = "prob")[, 2])
+      }
+    }
+    ## GLM cases
+    return(predict(fit, newdata = newX, type = "response"))
+  }
+
+
+  ## TRAIN FINAL MODEL ON dat_train
+  fit <- train_model(dat_train)
+
+  ## PREDICT on FULL LABELED + UNLABELED (no further splitting)
+  fhat_L <- pred_any(fit, dat_L)
+  fhat_U <- pred_any(fit, X_U_df)
+
+  ## RETURN
   list(
     fit    = fit,
     fhat_L = as.numeric(fhat_L),
@@ -935,4 +969,31 @@ compute_theta0 <- function(a, X_sampler_L, f_generator, n_ref = 5e5) {
   beta_star <- solve(H, G)
 
   as.numeric(sum(a * beta_star))
+}
+
+#' @keywords internal
+#' @importFrom stats quasibinomial
+compute_theta_shift_glm <- function(delta, a, X_sampler, f_generator, M = 50000) {
+
+  # Generate a large synthetic "population"
+  X <- as.matrix(X_sampler(M))
+
+  # Baseline & shifted linear predictors
+  eta0 <- f_generator(X)
+  eta1 <- eta0 + delta * as.numeric(X %*% a)
+
+  # Logistic mean functions
+  mu0 <- plogis(eta0)
+  mu1 <- plogis(eta1)
+
+  # Fit "population" GLMs using fractional responses
+  # quasibinomial allows mu in (0,1) as responses without warnings
+  fit_frac <- function(X, mu) {
+    glm.fit(X, mu, family = quasibinomial(link = "logit"))$coefficients
+  }
+
+  beta0 <- fit_frac(X, mu0)
+  beta1 <- fit_frac(X, mu1)
+
+  as.numeric(sum(a * beta1) - sum(a * beta0))
 }

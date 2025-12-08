@@ -11,7 +11,7 @@ fit_predict_model_glm(
   X_U,
   fold_index = NULL,
   mtry = NULL,
-  rf_engine = "ranger",
+  rf_engine = c("ranger", "randomForest"),
   rf_trees = 200,
   rf_min_node_size = 5,
   rf_num_threads = NULL,

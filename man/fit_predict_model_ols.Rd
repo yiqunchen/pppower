@@ -9,6 +9,7 @@ fit_predict_model_ols(
   X_L,
   y_L,
   X_U,
+  crossfit = FALSE,
   mtry = NULL,
   rf_engine = c("ranger", "randomForest"),
   rf_trees = 200,
