@@ -113,7 +113,9 @@ such that the asymptotic variance meets the target power level.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
 <span>  <span class="va">delta</span>, <span class="va">N</span>,</span>
-<span>  type       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mean"</span>, <span class="st">"regression"</span><span class="op">)</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  power <span class="op">=</span> <span class="fl">0.80</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mean"</span>, <span class="st">"regression"</span><span class="op">)</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"vanilla"</span>, <span class="st">"oracle"</span>, <span class="st">"user"</span><span class="op">)</span>,</span>
 <span>  lambda_user <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="co"># mean inputs</span></span>
@@ -135,6 +137,13 @@ for regression (OLS/GLM), or a shift in the mean.</li>
 <code>N</code>: size of the unlabeled dataset, typically very
 large.</li>
 <li>
+<code>alpha</code>: Significance level (two-sided). Default value is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.05</mn><annotation encoding="application/x-tex">0.05</annotation></semantics></math>.</li>
+<li>
+<code>power</code>: Desired statistical power that you want to
+achieve. Default value is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.80</mn><annotation encoding="application/x-tex">0.80</annotation></semantics></math>.</li>
+<li>
 <code>lambda_mode</code>: determines whether
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
 is fixed at 1 (Vanilla PPI estimator), chosen by the user
@@ -142,9 +151,12 @@ is fixed at 1 (Vanilla PPI estimator), chosen by the user
 <ul>
 <li>For mean mode, you may provide moments (<code>sigma_y2</code>,
 <code>sigma_f2</code>, <code>cov_y_f</code>) or prediction metrics
-(<code>mse</code>, <code>var_f</code>, accuracy, etc.).</li>
+(<code>mse</code>, <code>var_f</code>, accuracy, etc.).
+<ul>
 <li>For regression mode, you pass Hessians and covariance blocks
 computed by <code><a href="../reference/compute_ppi_blocks.html">compute_ppi_blocks()</a></code>.</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

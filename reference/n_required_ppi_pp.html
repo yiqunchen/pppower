@@ -159,15 +159,15 @@ Must be nonzero.</p></li>
 
 
 <dt id="arg-sigma-y-">sigma_y2<a class="anchor" aria-label="anchor" href="#arg-sigma-y-"></a></dt>
-<dd><p>Variance of labeled outcomes \(\Var(Y)\).</p></dd>
+<dd><p>Variance of labeled outcomes \(\mathrm{Var}(Y)\).</p></dd>
 
 
 <dt id="arg-sigma-f-">sigma_f2<a class="anchor" aria-label="anchor" href="#arg-sigma-f-"></a></dt>
-<dd><p>Variance of predictions \(\Var(f(X))\).</p></dd>
+<dd><p>Variance of predictions \(\mathrm{Var}(f(X))\).</p></dd>
 
 
 <dt id="arg-cov-y-f">cov_y_f<a class="anchor" aria-label="anchor" href="#arg-cov-y-f"></a></dt>
-<dd><p>Covariance \(\Cov(Y, f(X))\).</p></dd>
+<dd><p>Covariance \(\mathrm{Cov}(Y, f(X))\).</p></dd>
 
 
 <dt id="arg-var-f">var_f<a class="anchor" aria-label="anchor" href="#arg-var-f"></a></dt>
@@ -175,7 +175,7 @@ Must be nonzero.</p></li>
 
 
 <dt id="arg-var-res">var_res<a class="anchor" aria-label="anchor" href="#arg-var-res"></a></dt>
-<dd><p>Residual variance \(\Var(Y - f(X))\).</p></dd>
+<dd><p>Residual variance \(\mathrm{Var}(Y - f(X))\).</p></dd>
 
 
 <dt id="arg-metrics">metrics<a class="anchor" aria-label="anchor" href="#arg-metrics"></a></dt>
@@ -262,25 +262,29 @@ If capped, returns <code>N</code> with attribute <code>"achieved_power"</code>.<
 <span class="r-in"><span><span class="fu">n_required_ppi_pp</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  delta       <span class="op">=</span> <span class="fl">0.25</span>,</span></span>
 <span class="r-in"><span>  N           <span class="op">=</span> <span class="fl">5000</span>,</span></span>
+<span class="r-in"><span>  alpha       <span class="op">=</span> <span class="fl">0.05</span>,</span></span>
+<span class="r-in"><span>  power       <span class="op">=</span> <span class="fl">0.90</span>,</span></span>
 <span class="r-in"><span>  type        <span class="op">=</span> <span class="st">"mean"</span>,</span></span>
 <span class="r-in"><span>  metrics     <span class="op">=</span> <span class="va">metrics</span>,</span></span>
 <span class="r-in"><span>  metric_type <span class="op">=</span> <span class="st">"continuous"</span>,</span></span>
 <span class="r-in"><span>  lambda_mode <span class="op">=</span> <span class="st">"vanilla"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 77</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 103</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Example 2: Direct-moment supply</span></span></span>
 <span class="r-in"><span><span class="fu">n_required_ppi_pp</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  delta      <span class="op">=</span> <span class="fl">0.25</span>,</span></span>
 <span class="r-in"><span>  N          <span class="op">=</span> <span class="fl">5000</span>,</span></span>
+<span class="r-in"><span>  alpha       <span class="op">=</span> <span class="fl">0.05</span>,</span></span>
+<span class="r-in"><span>  power       <span class="op">=</span> <span class="fl">0.90</span>,</span></span>
 <span class="r-in"><span>  type       <span class="op">=</span> <span class="st">"mean"</span>,</span></span>
 <span class="r-in"><span>  sigma_y2   <span class="op">=</span> <span class="fl">1.0</span>,</span></span>
 <span class="r-in"><span>  sigma_f2   <span class="op">=</span> <span class="fl">0.4</span>,</span></span>
 <span class="r-in"><span>  cov_y_f    <span class="op">=</span> <span class="fl">0.18</span>,</span></span>
 <span class="r-in"><span>  lambda_mode <span class="op">=</span> <span class="st">"oracle"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 116</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 155</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Generate synthetic blocks for a 3-D contrast</span></span></span>
@@ -295,6 +299,8 @@ If capped, returns <code>N</code> with attribute <code>"achieved_power"</code>.<
 <span class="r-in"><span><span class="fu">n_required_ppi_pp</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  delta       <span class="op">=</span> <span class="fl">0.15</span>,</span></span>
 <span class="r-in"><span>  N           <span class="op">=</span> <span class="fl">2000</span>,</span></span>
+<span class="r-in"><span>  alpha       <span class="op">=</span> <span class="fl">0.05</span>,</span></span>
+<span class="r-in"><span>  power       <span class="op">=</span> <span class="fl">0.90</span>,</span></span>
 <span class="r-in"><span>  type        <span class="op">=</span> <span class="st">"regression"</span>,</span></span>
 <span class="r-in"><span>  c           <span class="op">=</span> <span class="va">cvec</span>,</span></span>
 <span class="r-in"><span>  H_L         <span class="op">=</span> <span class="va">Hpop</span>,</span></span>
@@ -305,12 +311,14 @@ If capped, returns <code>N</code> with attribute <code>"achieved_power"</code>.<
 <span class="r-in"><span>  Sigma_Yf    <span class="op">=</span> <span class="va">SYf</span>,</span></span>
 <span class="r-in"><span>  lambda_mode <span class="op">=</span> <span class="st">"vanilla"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 761</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1097</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Oracle λ*</span></span></span>
 <span class="r-in"><span><span class="fu">n_required_ppi_pp</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  delta       <span class="op">=</span> <span class="fl">0.15</span>,</span></span>
 <span class="r-in"><span>  N           <span class="op">=</span> <span class="fl">2000</span>,</span></span>
+<span class="r-in"><span>  alpha       <span class="op">=</span> <span class="fl">0.05</span>,</span></span>
+<span class="r-in"><span>  power       <span class="op">=</span> <span class="fl">0.90</span>,</span></span>
 <span class="r-in"><span>  type        <span class="op">=</span> <span class="st">"regression"</span>,</span></span>
 <span class="r-in"><span>  c           <span class="op">=</span> <span class="va">cvec</span>,</span></span>
 <span class="r-in"><span>  H_L         <span class="op">=</span> <span class="va">Hpop</span>,</span></span>
@@ -321,7 +329,7 @@ If capped, returns <code>N</code> with attribute <code>"achieved_power"</code>.<
 <span class="r-in"><span>  Sigma_Yf    <span class="op">=</span> <span class="va">SYf</span>,</span></span>
 <span class="r-in"><span>  lambda_mode <span class="op">=</span> <span class="st">"oracle"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 602</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 815</span>
 </code></pre></div>
     </div>
   </div>
