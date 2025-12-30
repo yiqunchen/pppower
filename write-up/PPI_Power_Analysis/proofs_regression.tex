@@ -1,0 +1,532 @@
+\section{Proof of Section~\ref{sec:OLS}}
+\subsection{Proof of Equations~\eqref{eq:ppi-ols-var-full} and~\eqref{eq:ppi-ols-var-reduc}}
+\label{subsec:proof-ols-var}
+We write \[g(H,G) \coloneqq H^{-1}G= \beta^\star.\]
+We first recall that for any invertible matrix $H$,\[
+\mathrm{d}H^{-1}=-H^{-1}(\mathrm{d}H)H^{-1},
+\]since\[
+0=\mathrm{d}I=\mathrm{d}\left(H^{-1}H\right)=H^{-1}\left(\mathrm{d}H\right)+\mathrm{d}\left(H^{-1}\right)H
+\]
+It follows that \[\mathrm{d}g=\left(\mathrm{d}H^{-1}\right)G+H^{-1}\left(\mathrm{d}G\right)=-H^{-1}(\mathrm{d}H)H^{-1}G+H^{-1}\left(\mathrm{d}G\right)=-H^{-1}(\mathrm{d}H)g+H^{-1}\left(\mathrm{d}G\right).\]
+We then have \[
+\widehat{g} - g
+\;\approx\;
+-\,H^{-1}(\widehat{H} - H)g
+\;+\;
+H^{-1}(\widehat{G} - G).
+\]
+\shengyi{$\|\widehat H - H\| = O_p(n^{-1/2})$}
+
+\noindent Therefore, since $g=\beta^\star$, $G$, and $H$ are fixed matrices, \begin{align*}
+    \Var\left(\hat{\beta}_{\mathrm{PPI}}\right)
+    =\Var\left(\hat{\beta}_{\mathrm{PPI}}-\beta^\star\right)
+    =\Var\left(\hat{g}-g\right)
+    &\approx\Var\left(-\,H^{-1}(\widehat{H} - H)g\;+\;H^{-1}(\widehat{G} - G)\right)\\
+    &=H^{-1}\Var\left(-\,(\widehat{H} - H)g\;+\;(\widehat{G} - G)\right)\left(H^{-1}\right)^\top\\
+    &=H^{-1}\Var\left(-\,\widehat{H}g\;+\;\widehat{G}\right)H^{-1},
+\end{align*}where $H\coloneqq \E\left[XX^\top\right]$ is symmetric and thus $H^{-1}$ is also symmetric.
+
+Substituting $\hat{H}$ and $\hat{G}$ into $\Var\left(-\,\widehat{H}g\;+\;\widehat{G}\right)$, we obtain 
+\begin{align*}
+    \Var\left(-\,\widehat{H}g\;+\;\widehat{G}\right)&
+    =\Var\left(-\frac{1}{N}\sum^N_{j=1}\wt  X_j \wt X_j^\top g
+    +\frac{1}{N}\sum^N_{j=1}\wt X_j\wt f_j+\frac{1}{n}\sum^n_{i=1}X_i\left(Y_i-f_i\right)
+    \right)\\
+    &=\Var\left(\frac{1}{N}\sum^N_{j=1}\left(\wt X_j\wt f_j-\wt X_j\wt X_j^\top g\right)+
+    \frac{1}{n}\sum^n_{i=1}X_i\left(Y_i-f_i\right)
+    \right)\\
+    &=\Var\left(\frac{1}{N}\sum^N_{j=1}\left(\wt X_j\wt f_j-\wt X_j\wt X_j^\top g\right)\right)+
+    \Var\left(\frac{1}{n}\sum^n_{i=1}X_i\left(Y_i-f_i\right)
+    \right)
+\end{align*}where the last equality follows from the independence between $\{(X_i, Y_i)\}_{i=1}^n$ and $\{\wt{X}j\}_{j=1}^N$, and hence between $\{(X_i, Y_i, f_i)\}_{i=1}^n$ and $\{(\wt{X}_j, \widetilde{f}_j)\}_{j=1}^N$ under a fixed predictor $f$.
+
+\noindent
+In addition, since $\{(X_i, Y_i, f_i)\}_{i=1}^n$ and $\{(\wt{X}_j, \wt{f}_j)\}_{j=1}^N$ are each i.i.d., and both $\{X_i\}_{i=1}^n$ and $\{\wt{X}_j\}_{j=1}^N$ are drawn from the same distribution $P_X$, it follows that 
+\begin{align*}
+\Var\left(-\,\widehat{H}g\;+\;\widehat{G}\right)&=\Var\left(\frac{1}{N}\sum^N_{j=1}\left(\wt X_j\wt f_j-\wt X_j\wt X_j^\top g\right)\right)+
+\Var\left(\frac{1}{n}\sum^n_{i=1}X_i\left(Y_i-f_i\right)
+\right)\\
+&=\frac{1}{N}\Var\left(Xf(X)-XX^\top g \right)+\frac{1}{n}\Var\left(X(Y-f(X)) \right).
+\end{align*}
+Therefore, \begin{align*}
+    \Var\left(a^\top\hat{\beta}_{\mathrm{PPI}}\right)
+    &=a^\top\Var\left(\hat{\beta}_{\mathrm{PPI}}\right)a\\
+    &\approx a^\top\left(H^{-1}\Var\left(-\,\widehat{H}g\;+\;\widehat{G}\right)H^{-1}\right)a\\
+    &=a^\top H^{-1} \left(\frac{1}{N}\Var\left(Xf(X)-XX^\top g \right)+\frac{1}{n}\Var\left(X(Y-f(X)) \right) \right)H^{-1}a\\
+    &= a^\top H^{-1} \left(\frac{1}{N}\Var\left(Xf(X)-XX^\top \beta^\star \right)+\frac{1}{n}\Var\left(X(Y-f(X)) \right) \right)H^{-1}a
+\end{align*}as in~\eqref{eq:ppi-ols-var-full}.
+
+\noindent
+In particular, when $N$ is large, we can treat $\wh H\approx H$. Then, similarly, we have, \begin{align*}
+    \Var\left(\hat{\beta}_{\mathrm{PPI}}\right)
+    =\Var\left(\hat{\beta}_{\mathrm{PPI}}-\beta^\star\right)
+    =\Var\left(\hat{g}-g\right)
+    &\approx\Var\left(-\,H^{-1}(\widehat{H} - H)g\;+\;H^{-1}(\widehat{G} - G)\right)\\
+    &\approx \Var\left(H^{-1}(\widehat{G} - G)\right)\\
+    &=\Var\left(H^{-1}\widehat{G}\right)\\
+    &=H^{-1}\Var\left(\widehat{G}\right)H^{-1},
+\end{align*}and
+\begin{align*}
+    \Var\left(\widehat{G}\right)&
+    =\Var\left(\frac{1}{N}\sum^N_{j=1}\wt X_j\wt f_j+\frac{1}{n}\sum^n_{i=1}X_i\left(Y_i-f_i\right)
+    \right)\\
+    &=\Var\left(\frac{1}{N}\sum^N_{j=1}\wt X_j\wt f_j\right)+
+    \Var\left(\frac{1}{n}\sum^n_{i=1}X_i\left(Y_i-f_i\right)
+    \right)\\
+    &=\frac{1}{N}\Var\left(Xf(X) \right)+\frac{1}{n}\Var\left(X(Y-f(X))\right)
+\end{align*}
+Therefore,
+\begin{align*}
+    \Var\left(a^\top\hat{\beta}_{\mathrm{PPI}}\right)
+    &=a^\top\Var\left(\hat{\beta}_{\mathrm{PPI}}\right)a\\
+    &\approx a^\top\left(H^{-1}\Var\left(\widehat{G}\right)H^{-1}\right)a\\
+    &=a^\top H^{-1} \left(\frac{1}{N}\Var\left(Xf(X) \right)+\frac{1}{n}\Var\left(X(Y-f(X)) \right) \right)H^{-1}a,
+\end{align*}as in~\eqref{eq:ppi-ols-var-reduc} for large $N$.
+
+\subsection{Proof of Equation~\eqref{eq:ppi++-ols}}
+Given the empirical form of the $\lambda$-rectified normal equations,
+\begin{align*}
+0
+&=
+\frac{1}{n}\sum_{i=1}^n X_i\,(Y_i-X_i^\top\beta)+ \lambda\left(
+\frac{1}{N}\sum_{j=1}^N \wt X_j\,(\wt f_j-\wt X_j^\top\beta)
+-
+\frac{1}{n}\sum_{i=1}^n X_i\,(f_i-X_i^\top\beta)
+\right),
+\end{align*}we next solve for $\wh\beta_\lambda$.
+
+\noindent
+After simplification, we obtain \begin{align*}
+    0&=\left[\frac{1}{n}\sum^n_{i=1}X_iY_i
+    +\frac{\lambda}{N}\sum^N_{j=1}\wt X_j\tilde{f}_j
+    -\frac{\lambda}{n}\sum^n_{i=1}X_if_i\right]-
+    \left[\frac{1}{n}\sum^n_{i=1}X_iX_i^\top
+    +\frac{\lambda}{N}\wt X_j\wt X_j^\top
+    -\frac{\lambda}{n}X_iX_i^\top \right]\beta\\
+    &=\left[\wh G_L+\lambda\left(\wh G_U-\wh W\right) \right]-
+    \left[\wh H_L+\lambda \left(\wh H_U-\wh H_L\right)\right]\beta\\
+    &=\left[\wh G_L+\lambda\left(\wh G_U-\wh W\right) \right]-
+    \left[(1-\lambda)\wh H_L+\lambda \wh H_U\right]\beta
+\end{align*}where $\wh H_L=\frac{1}{n}\sum^n_{i=1} X_iX_i^\top$, 
+$\wh H_U=\frac{1}{N}\sum^N_{j=1} \wt X_j \wt X_j^\top$, 
+$\wh G_L=\frac{1}{n}\sum^n_{i=1} X_iY_i$, 
+$\wh G_U=\frac{1}{N}\sum^N_{j=1} \wt X_j \wt f_j$, and $\wh W = \frac{1}{n}\sum^n_{i=1}X_if_i$.
+
+\noindent
+Assuming that $\left[(1-\lambda)\wh H_L+\lambda \wh H_U\right]$ is nonsingular, \[
+\wh\beta_\lambda = \left[(1-\lambda)\wh H_L+\lambda \wh H_U\right]^{-1}\left[\wh G_L+\lambda\left(\wh G_U-\wh W\right) \right].
+\]
+
+\subsection{Proof of Equation~\eqref{eq:ppi++-ols-var}}
+
+Let $\wh H^\prime = (1-\lambda)\wh H_L+\lambda \wh H_U$ and $\wh G^\prime = \wh G_L+\lambda \left(\wh G_U-\wh W\right)$. 
+
+\noindent
+Then \[
+\hat{g}(H,G)'={\wh{\beta}}_\lambda =\left(\wh{H}^\prime\right)^{-1}\wh{G}^\prime,
+\] which is also an estimator of $g(H,G)=H^{-1}G$.
+
+\noindent
+As noted in Section~\ref{subsec:proof-ols-var}, \[
+\mathrm{d}g=-H^{-1}(\mathrm{d}H)g+H^{-1}\left(\mathrm{d}G\right).
+\]
+
+\noindent
+It follows that
+\[
+\widehat{g}^\prime  - g
+\;\approx\;
+-\,H^{-1}\left(\widehat{H}^\prime - H\right)g
+\;+\;
+H^{-1}\left(\widehat{G}^\prime - G\right).
+\]
+
+\noindent
+Therefore, 
+\begin{align*}
+\Var\left(\hat g^\prime\right)=\Var\left(\hat g^\prime-g\right)&\approx \Var\left(-\,H^{-1}\left(\widehat{H}^\prime - H\right)g
+\;+\;
+H^{-1}\left(\widehat{G}^\prime - G\right)\right)\\
+&=H^{-1}\Var\left(-\widehat{H}^\prime g+\widehat{G}^\prime\right)H^{-1}
+\end{align*}where the last equality follows from the symmetry of $H=\E[XX^\top]$, implying $\left(H^{-1}\right)^\top=H^{-1}$.
+
+\noindent
+Substituting $\wh{H}^\prime$ and $\wh{G}^\prime$ into $\Var\left(-\widehat{H}^\prime g+\widehat{G}^\prime\right)$ gives
+\begin{align*}
+    \Var\left(-\widehat{H}^\prime g+\widehat{G}^\prime\right)&=\Var\left(-\left((1-\lambda)\wh H_L+\lambda \wh H_U\right)g+\left(\wh G_L+\lambda \left(\wh G_U-\wh W\right)\right)\right)\\
+    &=\Var\left((\lambda-1)\wh H_Lg +\wh G_L-\lambda\wh W\right)
+    +\Var\left(\lambda\left( \wh G_U-\wh H_U g\right)\right),
+\end{align*}where the last equality follows from the independence between $\{(X_i, Y_i)\}_{i=1}^n$ and $\{\wt{X}j\}_{j=1}^N$, and hence between $\{(X_i, Y_i, f_i)\}_{i=1}^n$ and $\{(\wt{X}_j, \widetilde{f}_j)\}_{j=1}^N$ under a fixed predictor $f$.
+
+\noindent
+In addition, since $\{(X_i, Y_i, f_i)\}_{i=1}^n$ and $\{(\wt{X}_j, \wt{f}_j)\}_{j=1}^N$ are each i.i.d., and both $\{X_i\}_{i=1}^n$ and $\{\wt{X}_j\}_{j=1}^N$ are drawn from the same distribution $P_X$, it follows that 
+
+\begin{align*}
+    \Var\left((\lambda-1)\wh H_Lg +\wh G_L-\lambda\wh W\right)
+    &=\Var\left((\lambda-1)\cdot\frac{1}{n}\sum^n_{i=1}X_iX_i^\top g+\frac{1}{n}\sum^n_{i=1}X_iY_i-\lambda\cdot \frac{1}{n}\sum^n_{i=1}X_if_i\right)\\
+    &=\Var\left(\frac{\lambda}{n}\left(\sum^n_{i=1} X_iX_i^\top g-\sum^n_{i=1}X_if_i\right)
+    +\frac{1}{n}\left(\sum^n_{i=1}X_iY_i-X_iX_i^\top g\right)\right)\\
+    &=\Var\left(\frac{\lambda}{n}\left(\sum^n_{i=1} X_iX_i^\top g-\sum^n_{i=1}X_if_i\right)\right)
+    +\Var\left(\frac{1}{n}\left(\sum^n_{i=1}X_iY_i-X_iX_i^\top g\right)\right)
+    \\
+    &\quad +2\Cov\left(\frac{\lambda}{n}\left(\sum^n_{i=1} X_iX_i^\top g-\sum^n_{i=1}X_if_i\right),\frac{1}{n}\sum^n_{i=1}X_iY_i\right)\\
+    &=\frac{\lambda^2}{n}\Var\left( XX^\top g-Xf(X)\right)+\frac{1}{n}\Var\left(XY-XX^\top g\right)\\
+    &\quad -\frac{2\lambda}{n}\Cov\left(XX^\top g-Xf(X),XY\right)\\
+    &=\frac{\lambda^2}{n}\Sigma_{ff}+\frac{1}{n}\Sigma_{YY}-\frac{2\lambda}{n}\Sigma_{Yf},
+\end{align*}where $\Sigma_{YY}=\Var\big(X(Y-X^\top\beta^\star)\big)$, $\Sigma_{ff}=\Var\big(X(f(X)-X^\top\beta^\star)\big)$, and $\Sigma_{Yf}=\Cov\big(X(Y-X^\top\beta^\star),\ X(f(X)-X^\top\beta^\star)\big)$.
+
+\noindent
+Similarly,
+\begin{align*}
+    \Var\left(\lambda\left( \wh G_U-\wh H_U g\right)\right)
+    &=\lambda^2\Var\left(\frac{1}{N}\left(\sum^N_{j=1}\wt X_j\wt f_j-\wt X_j \wt X_j^\top g\right)\right)\\
+    &=\frac{\lambda^2}{N}\Var\left(X f- XX^\top g\right)\\
+    &=\frac{\lambda^2}{N}\Sigma_{ff}
+\end{align*}
+Therefore,
+\begin{align*}
+\Var\left(-\widehat{H}^\prime g+\widehat{G}^\prime\right)
+&=\Var\left((\lambda-1)\wh H_Lg +\wh G_L-\lambda\wh W\right)
+    +\Var\left(\lambda\left( \wh G_U-\wh H_U g\right)\right)\\
+    &=\frac{\lambda^2}{n}\Sigma_{ff}+\frac{1}{n}\Sigma_{YY}-\frac{2\lambda}{n}\Sigma_{Yf}+\frac{\lambda^2}{N}\Sigma_{ff}\\
+    &=\frac{\Sigma_{YY}}{n}+\lambda^2\left(\frac{\Sigma_{ff}}{N}+\frac{\Sigma_{ff}}{n}\right)-\frac{2\lambda}{n}\Sigma_{Yf}
+\end{align*}
+Finally,  
+\begin{align*}
+    \Var\left(a^\top\wh{\beta}_{\lambda}\right)
+    =\Var\left(a^\top\hat g^\prime\right)
+    =a^\top\Var\left(\hat g^\prime\right)a
+    &=a^\top H^{-1}\Var\left(-\widehat{H}^\prime g+\widehat{G}^\prime\right)H^{-1}a\\
+    &=a^\top H^{-1}\left(\frac{\Sigma_{YY}}{n}+\lambda^2\left(\frac{\Sigma_{ff}}{N}+\frac{\Sigma_{ff}}{n}\right)-\frac{2\lambda}{n}\Sigma_{Yf}\right)H^{-1}a,
+\end{align*}which matches the expression in~\eqref{eq:ppi++-ols-var}.
+
+\subsection{Proof of Equation~\eqref{eq:lambda-star-ols}}
+Given the approximated variance of $a^\top \hat{\beta}_\lambda$ in~\eqref{eq:ppi++-ols-var}, we define\[
+h(\lambda)\coloneqq a^\top H^{-1}\!\left(
+\frac{\Sigma_{YY}}{n}
++\lambda^2\Big(\frac{\Sigma_{ff}}{N}+\frac{\Sigma_{ff}}{n}\Big)
+-\frac{2\lambda}{n}\Sigma_{Yf}
+\right)H^{-1}a.
+\]
+\noindent
+Since $h(\lambda)$ is quadratic in $\lambda$, it is convex.
+
+\noindent
+Taking the derivative of $h(\lambda)$ with respect to $\lambda$ yields
+\begin{align*}
+    h^\prime(\lambda)&= a^\top H^{-1}\!\left(
+2\lambda\left(\frac{\Sigma_{ff}}{N}+\frac{\Sigma_{ff}}{n}\right)
+-\frac{2}{n}\Sigma_{Yf}
+\right)H^{-1}a.
+\end{align*}
+
+\noindent
+Setting $h^\prime(\lambda)=0$ gives \[
+\lambda(1+r) a^\top H^{-1}\Sigma_{ff}H^{-1}a
+=a^\top H^{-1}\Sigma_{Yf}H^{-1}a
+\iff \lambda^\star(a)
+=\frac{a^\top H^{-1}\Sigma_{Yf}H^{-1}a}{(1+r) a^\top H^{-1}\Sigma_{ff}H^{-1}a},
+\]where $r=\frac{n}{N}$, provided that $a^\top H^{-1}\Sigma_{ff}H^{-1}a\;\neq\;0$, i.e., $H^{-1}a\notin\mathrm{Null}(\Sigma_{ff})$. 
+
+\noindent
+Since $\lambda^\star(a)$ is the unique solution to $h^\prime(\lambda)=0$ and $h(\lambda)$ is convex, it minimizes $\Var\left(a^\top\hat{\beta}_\lambda\right)$ under the condition $a^\top H^{-1}\Sigma_{ff}H^{-1}a\;\neq\;0$.
+
+\noindent
+Since OLS can be viewed as a special case of the GLM with the identity link, we will derive the required labeled sample size for a specified confidence interval width and conduct a power analysis in Section~\ref{subsec:GLM-n}.
+
+\section{Proof of Section~\ref{sec:GLM}}
+
+\subsection{Proof of Equation~\eqref{eq:ppi++-glm-var}}
+\label{subsec:proof-var-glm}
+As PPI estimator is a special case of PPI++ estimator obtained by setting $\lambda = 1$, we prove~\eqref{eq:ppi++-glm-var} in this subsection. The result in~\eqref{eq:ppi-glm-var} then follows directly by substituting $\lambda^\star(a)$ with $1$.
+
+\noindent
+Since $\beta^\star$ and $\wh\beta_\lambda$ are the solutions to $U_\lambda(\beta)=0$ and $\wh{U}_\lambda(\beta)=0$, respectively, a first-order Taylor expansion of $\wh{U}_\lambda(\beta)$ around $\beta^\star$ gives
+\begin{equation*}
+    \wh U_\lambda\left(\beta\right)\approx
+    \wh U_\lambda\left(\beta^\star\right)
+    +\frac{\partial \wh U_\lambda\left(\beta\right)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\left(\beta-\beta^\star\right).
+\end{equation*}
+Substituting $\beta=\wh\beta_\lambda$ yields
+\begin{align*}
+0=\wh U_\lambda\left(\wh\beta_\lambda\right)\approx
+    \wh U_\lambda\left(\beta^\star\right)
+    +\frac{\partial \wh U_\lambda\left(\beta\right)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\left(\wh\beta_\lambda-\beta^\star\right).
+\end{align*}
+
+\noindent
+Given the definition of $\wh U_\lambda(\beta)$ in~\eqref{eq:ppi++-glm-score}, 
+\begin{align*}
+    \frac{\partial \wh U_\lambda\left(\beta\right)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}
+    &=-\frac{1}{n}\sum^n_{i=1}X_i\left(\frac{\partial \mu_{\beta}(X_i)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\right)^\top\\
+    &\quad +\lambda\left(-\frac{1}{N}\sum^N_{j=1}\wt X_j\left(\frac{\partial \mu_{\beta}(\wt X_j)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\right)^\top
+    +\frac{1}{n}\sum^n_{i=1}X_i\left(\frac{\partial \mu_{\beta}(X_i)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\right)^\top\right).
+\end{align*}
+
+\noindent
+Note that the labeled and unlabeled input are both independently drawn from the same distribution $P_X$,  and $\mu_\beta(X)$ is a fixed function given the specified link $g$.
+
+\noindent
+It then follows, by the weak law of large numbers, that,
+\begin{align*}
+    \frac{\partial \wh U_\lambda\left(\beta\right)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}
+    &\overset{p}{\longrightarrow}
+    -\E\left[X\left(\frac{\partial \mu_{\beta}(X)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\right)^\top\right]
+    +\lambda\left(-\E\left[\wt X\left(\frac{\partial \mu_{\beta}(\wt X)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\right)^\top
+    \right]+\E\left[ X\left(\frac{\partial \mu_{\beta}(X)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\right)^\top\right]\right)\\
+    &\quad =-\E\left[X\left(\frac{\partial \mu_{\beta}(X)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\right)^\top\right],
+\end{align*}for large $N$ and $n$.
+
+\noindent
+Given the definition of $U(\beta)$ in~\eqref{eq:canonical-score}, and assuming that differentiation and integration is interchangable, we have \[
+\E\left[X\left(\frac{\partial \mu_{\beta}(X)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\right)^\top\right]
+=\E\left[\frac{\partial U(\beta^\star)}{\partial\beta}\right],
+\]for large $N$ and $n$.
+
+
+\noindent
+Since $J\coloneqq -\E[\partial U(\beta^\star)/\partial\beta]$, it follows that\[
+\frac{\partial \wh U_\lambda\left(\beta\right)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\overset{p}{\longrightarrow}-J.
+\]
+
+\noindent
+Using the chain rule,\[
+\frac{\partial \mu_{\beta}(X)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}
+=\frac{\partial \mu_{\beta}(X)}{\partial \eta}\Bigg\vert_{\beta=\beta^\star}
+\frac{\partial \eta}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}
+=\frac{\partial \mu_{\beta}(X)}{\partial \eta}\Bigg\vert_{\beta=\beta^\star}X,
+\]as $\eta=X^\top\beta=\beta^\top X$.
+
+\noindent
+Hence, \[
+J=-\E\left[X\left(\frac{\partial \mu_{\beta}(X)}{\partial \beta}\Bigg\vert_{\beta=\beta^\star}\right)^\top\right]
+=-\E\left[X\left(\frac{\partial \mu_{\beta}(X)}{\partial \eta}\Bigg\vert_{\beta=\beta^\star}X\right)^\top\right]
+=-\E\left[\frac{\partial \mu_{\beta}(X)}{\partial \eta}\Bigg\vert_{\beta=\beta^\star}XX^\top\right],
+\]as $\frac{\partial \mu_{\beta}(X)}{\partial \eta}\Bigg\vert_{\beta=\beta^\star}$ is a scalar. Therefore, $J$ is symmetric as $XX^\top$ is a symmetric matrix.
+
+\noindent
+We then have
+\begin{align*}
+    0\approx \wh U_\lambda\left(\beta^\star\right)+J\left(\wh\beta_\lambda-\beta^\star\right),
+\end{align*} which implies 
+\begin{align*}
+    \wh\beta_\lambda-\beta^\star
+    \approx-J^{-1}\wh U_\lambda\left(\beta^\star\right),
+\end{align*}assuming that $J$ is non-singular.
+
+\noindent
+Since $\beta^\star$ is a fixed vector and $J^{-1}$ is a symmetric matrix as $J$ is symmetric, it follows that\[
+\Var\left(\wh\beta_\lambda\right)
+=\Var\left(\wh\beta_\lambda-\beta^\star\right)
+\approx\Var\left(-J^{-1}\wh U_\lambda\left(\beta^\star\right)\right)
+=J^{-1}\Var\left(\wh U_\lambda\left(\beta^\star\right)\right)\left(J^{-1}\right)^\top
+=J^{-1}\Var\left(\wh U_\lambda\left(\beta^\star\right)\right)J^{-1}
+\]
+
+\noindent
+Because $\beta^\star$ satisfies the canonical score equation in~\eqref{eq:ppi++-glm-score}, $\mu_{\beta^\star}(X)=g^{-1}(X^\top\beta^\star)$ is a fixed function of $X$ determined by the specified link $g$. 
+
+\noindent
+Moreover, since the labeled samples $\{X_i,Y_i\}_{i=1}^n$ and the unlabeled samples $\{\wt X_j\}_{j=1}^N$ are both independent, and $\mu_f(\cdot)$ is an external predictor of the conditional mean, samples in each collection
+$\{X_i, Y_i, \mu_{\beta^\star}(X_i), \mu_f(X_i)\}_{i=1}^n$
+and 
+$\{\wt{X}_j, \mu_{\beta^\star}(\wt{X}_j), \mu_f(\widetilde{X}_j)\}_{j=1}^N$
+are independent. Independence between the labeled and unlabeled splits further implies the independence between these two collections. 
+
+\noindent
+Since $\{X_i\}_{i=1}^n$ and $\{\wt X_j\}_{j=1}^N$ are both drawn from $P_X$, any fixed function of $X$ and $\wt X$ have the same distribution.
+
+\noindent
+Therefore, from the definition of $\wh U_{\lambda}(\beta)$ in~\eqref{eq:ppi++-glm-score}, we have
+\begin{align*}
+    \hspace{-3em}\Var\left(\wh U_\lambda\left(\beta^\star\right)\right)
+    &=\Var\left(\frac{1}{n}\sum_{i=1}^n X_i\big(Y_i-\mu_{\beta^\star}(X_i)\big)
+    +\lambda\left(\frac{1}{N}\sum_{j=1}^N \wt X_j\big(\mu_f(\wt X_j)-\mu_{\beta^\star}(\wt X_j)\big)
+    -\frac{1}{n}\sum_{i=1}^n X_i\big(\mu_f(X_i)-\mu_{\beta^\star}(X_i)\big)\right)\right)\\
+    &=\Var\left(\frac{1}{n}\sum_{i=1}^n X_i\big(Y_i-\mu_{\beta^\star}(X_i))-\frac{\lambda}{n}\sum_{i=1}^n X_i\big(\mu_f(X_i)-\mu_{\beta^\star}(X_i)\big)\right)\\
+    &\quad+\Var\left(\frac{\lambda}{N}\sum_{j=1}^N \wt X_j\big(\mu_f(\wt X_j)-\mu_{\beta^\star}(\wt X_j)\big)\right)
+\end{align*} by the independence between the labeled and unlabeled terms.
+
+\noindent
+For the first term, we expand it as \begin{align*}
+    &\frac{1}{n^2}\Var\left(\sum_{i=1}^n X_i\big(Y_i-\mu_{\beta^\star}(X_i))\right)+
+    \frac{\lambda^2}{n}\Var\left(\sum_{i=1}^n X_i\big(\mu_f(X_i)-\mu_{\beta^\star}(X_i)\big)\right)\\
+    &-\frac{2\lambda}{n^2}\Cov\left(\sum^n_{i=1}X_i(Y_i-\mu_{\beta^\star}(X_i)),\sum^n_{i=1}X_i(\mu_f(X_i)-\mu_{\beta^\star}(X_i))\right)\\
+    =&\frac{1}{n}\Var\left(X\left(Y-\mu_{\beta^\star}(X)\right)\right)
+    +\frac{\lambda^2}{n}\Var\left(X(\mu_f(X)-\mu_{\beta^\star}(X))\right)
+    -\frac{2\lambda}{n}\Cov\left(X(Y-\mu_{\beta^\star}(X)),X(\mu_f(X)-\mu_{\beta^\star}(X))\right)\\
+    =&\frac{\Sigma_{YY}}{n}+\lambda^2\frac{\Sigma_{ff}}{n}-\frac{2\lambda}{n}\Sigma_{Yf}
+\end{align*}since the labeled samples are i.i.d., where \begin{align*}
+\Sigma_{YY} &= \Var\big(X\{Y - \mu_{\beta^\star}(X)\}\big), \\
+\Sigma_{ff} &= \Var\big(X\{\mu_f(X) - \mu_{\beta^\star}(X)\}\big), \\
+\Sigma_{Yf} &= \Cov\big(X\{Y - \mu_{\beta^\star}(X)\},\ 
+                      X\{\mu_f(X) - \mu_{\beta^\star}(X)\}\big).
+\end{align*}
+
+\noindent
+For the second term, we have\begin{align*}
+    \Var\left(\frac{\lambda}{N}\sum_{j=1}^N \wt X_j\big(\mu_f(\wt X_j)-\mu_{\beta^\star}(\wt X_j)\big)\right)
+    &=\frac{\lambda^2}{N}\Var\left(\wt X\big(\mu_f(\wt X)-\mu_{\beta^\star}(\wt X)\big)\right)\\
+    &=\frac{\lambda^2}{N}\Var\left( X\big(\mu_f( X)-\mu_{\beta^\star}(X)\big)\right)\\
+    &=\frac{\lambda^2}{N}\Sigma_{ff},
+\end{align*}which follows from the independence of the unlabeled samples and the identical distribution of any fixed function of the labeled and unlabeled inputs $X$.
+
+\noindent
+Therefore,\begin{align*}
+    \Var\left(\wh U_\lambda\left(\beta^\star\right)\right)
+    &=\left(\frac{\Sigma_{YY}}{n}+\lambda^2\frac{\Sigma_{ff}}{n}-\frac{2\lambda}{n}\Sigma_{Yf}\right)+\frac{\lambda^2}{N}\Sigma_{ff}\\
+    &=\frac{\Sigma_{YY}}{n}+\lambda^2\left(\frac{\Sigma_{ff}}{N}+\frac{\Sigma_{ff}}{n}\right)-\frac{2\lambda}{n}\Sigma_{Yf}
+\end{align*}
+
+\noindent
+Finally, we obtain
+\begin{align*}
+\Var\left(a^\top\hat{\beta}_\lambda\right)
+=a^\top\Var\left(\hat{\beta}_\lambda\right)a
+&\approx a^\top J^{-1}\Var\left(\wh U_\lambda\left(\beta^\star\right)\right)J^{-1} a\\
+&=a^\top J^{-1}\left(\frac{\Sigma_{YY}}{n}+\lambda^2\left(\frac{\Sigma_{ff}}{N}+\frac{\Sigma_{ff}}{n}\right)-\frac{2\lambda}{n}\Sigma_{Yf}\right)J^{-1} a
+\end{align*}as in~\eqref{eq:ppi++-glm-var}.
+
+\subsection{Proof of Equation~\eqref{eq:n-for-glm}}
+\label{subsec:GLM-n}
+As PPI estimator is a special case of PPI++ estimator obtained by setting $\lambda = 1$, we prove~\eqref{eq:n-for-glm} in this subsection. The result in~\eqref{eq:n-for-glm-ppi} then follows directly by substituting $\lambda^\star(a)$ with $1$.
+
+
+\noindent
+As mentioned in Section~\ref{subsec:proof-var-glm}, we have\[
+    \wh\beta_\lambda-\beta^\star
+    \approx-J^{-1}\wh U_\lambda\left(\beta^\star\right),
+\]where $J=-\,\E\!\left[
+\frac{\partial \mu_{\beta}(X)}{\partial \eta}\Bigg\vert_{\beta=\beta^\star}
+\,XX^\top
+\right]$.
+
+\noindent
+Define\[
+A_n=\frac{1}{n}\sum_{i=1}^n X_i\big(Y_i-\mu_{\beta^\star}(X_i)\big),
+\quad B_N=\frac{1}{N}\sum_{j=1}^N \wt X_j\big(\mu_f(\wt X_j)-\mu_{\beta^\star}(\wt X_j)\big), 
+\quad C_n=\frac{1}{n}\sum_{i=1}^n X_i\big(\mu_f(X_i)-\mu_{\beta^\star}(X_i)\big),
+\] so that\[
+\wh U_\lambda\left(\beta^\star\right)
+    =A_n+\lambda\left(B_N-C_n\right).
+\]
+
+\noindent
+Because samples in each collection
+$\{X_i, Y_i, \mu_{\beta^\star}(X_i), \mu_f(X_i)\}_{i=1}^n$
+and 
+$\{\wt{X}_j, \mu_{\beta^\star}(\wt{X}_j), \mu_f(\widetilde{X}_j)\}_{j=1}^N$
+are i.i.d., and any fixed function of $X$ and $\wt X$ share the same distribution, it follows that
+\begin{align*}
+\E[A_n]&=\E[X(Y-\mu_{\beta^\star}(X))]=0, \\
+\E[B_n]&=\E\left[\wt X\big(\mu_f(\wt X)-\mu_{\beta^\star}(\wt X)\big)\right]=\E\left[ X\big(\mu_f( X)-\mu_{\beta^\star}( X)\big)\right],\\
+\E[C_n]&=\E[X(\mu_f(X)-\mu_{\beta^\star}(X))],
+\end{align*}as $\beta^\star$ is the solution to the canonical score in~\eqref{eq:canonical-score}.
+
+\noindent
+Therefore,\[
+\E\left[\wh U_\lambda\left(\beta^\star\right)\right]
+=\E\left[A_n+\lambda\left(B_N-C_n\right)\right]
+=\E[A_n]+\lambda\left(\E[B_N]-\E[C_n]\right)=0
+\]
+By the multivariate Central Limit Theorem, under the finite second-moment conditions $\mathbb{E}\big[\|X(Y-\mu_{\beta^\star}(X))\|^2\big] < \infty$ and $\mathbb{E}\big[\|X(\mu_f(X)-\mu_{\beta^\star}(X))\|^2\big] < \infty$, we have, for large n and N, \[
+A_n\approx\mathcal{N}\left(E[A_n],\Var(A_n)\right),\quad
+B_N\approx\mathcal{N}\left(E[B_N],\Var(B_n)\right),\quad
+C_n\approx\mathcal{N}\left(E[C_n],\Var(C_n)\right).
+\]
+
+\noindent
+Consequently, $\wh U_\lambda(\beta^\star)$ is also approximately normal for large $n$ and $N$, as it is a sum of asymptotically normal terms. That is,\[
+\wh U_\lambda\left(\beta^\star\right)\approx \mathcal{N}\left(0,\Var\left(\wh U_\lambda\left(\beta^\star\right)\right)\right),
+\]where $\Var\left(\wh U_\lambda\left(\beta^\star\right)\right)=\frac{\Sigma_{YY}}{n}+\lambda^2\left(\frac{\Sigma_{ff}}{N}+\frac{\Sigma_{ff}}{n}\right)-\frac{2\lambda}{n}\Sigma_{Yf}$ as derived in Section~\ref{subsec:proof-var-glm}. 
+
+\noindent
+From\begin{align*}
+    \wh\beta_\lambda-\beta^\star
+    \approx-J^{-1}\wh U_\lambda\left(\beta^\star\right),
+\end{align*}we then have\begin{align*}
+    \wh\beta_\lambda\approx
+    \mathcal{N}\left(\beta^\star,J^{-1}\Var\left(\wh U_\lambda\left(\beta^\star\right)\right)J^{-1}\right)
+\end{align*}for large $N$ and $n$, since $\beta^\star$ is a fixed vector and $J^{-1}$ is a fixed symmetric matrix.
+
+\noindent
+It follows that\begin{align*}
+    a^\top \wh\beta_\lambda\approx
+    \mathcal{N}\left(a^\top\beta^\star,
+    a^\top J^{-1}\Var\left(\wh U_\lambda\left(\beta^\star\right)\right)J^{-1}a\right)\equiv \mathcal{N}\left(a^\top\beta^\star,
+    a^\top J^{-1}\left(\frac{\Sigma_{YY}}{n}+\lambda^2\left(\frac{\Sigma_{ff}}{N}+\frac{\Sigma_{ff}}{n}\right)-\frac{2\lambda}{n}\Sigma_{Yf}\right)J^{-1}a\right)
+\end{align*}for large $N$ and $n$. And $a^\top \wh\beta_{\lambda^\star}$ also follows an approximate normal distribution for large $n$ and $N$, obtained by substituting $\lambda$ with its optimal value $\lambda^\star(a)$ as defined in~\eqref{eq:lambda-star-glm}.
+
+
+\noindent
+We then consider testing
+\[
+H_0:\ \beta^\star=\beta_0,\ \text{i.e.,}\ a^\top\beta^\star=a^\top\beta_0
+\quad\text{versus}\quad
+H_0:\ \beta^\star=\beta_0+\Delta_\beta,\ \text{i.e.,}\ a^\top\beta^\star=a^\top(\beta_0+\Delta_\beta)
+\]
+using the standardized test statistic
+\[
+Z=\frac{a^\top\wh\beta_{\lambda^\star}-a^\top\beta_0}{
+\sigma_{\lambda^\star}},\]where $\sigma_{\lambda^\star}$ denotes the standard deviation of $a^\top\wh{\beta}_{\lambda^\star}$.
+
+\noindent
+Using Lemmas~\ref{lem:n-CI} and~\ref{lem:n-power}, to determine the labeled sample size $n$ required to achieve either a target half-width of a $(1-\alpha)$ Wald CI or a desired power $1-\beta$ for the test, we solve
+\[
+\Var\!\left(a^\top \wh{\beta}_{\lambda^\star}\right) \;\le\; S^2
+\]for a specified variance threshold $S^2$.
+
+\noindent
+Let\begin{align*}
+A:=a^\top J^{-1}\Sigma_{YY}J^{-1}a,\qquad
+B:=a^\top J^{-1}\Sigma_{ff}J^{-1}a,\qquad
+C:=a^\top J^{-1}\Sigma_{Yf}J^{-1}a
+\end{align*}which are constants (in particular, $A,B\ge0$ since $\Sigma_{YY}$ and $\Sigma_{ff}$ are covariance matrices, i.e., positive semi-definite).
+
+\noindent
+Then\begin{align*}
+    \Var\!\left(a^\top \wh{\beta}_{\lambda^\star}\right)
+    &=a^\top J^{-1}\left(\frac{\Sigma_{YY}}{n}+\lambda^\star(a)^2\left(\frac{\Sigma_{ff}}{N}+\frac{\Sigma_{ff}}{n}\right)-\frac{2\lambda^\star(a)}{n}\Sigma_{Yf}\right)J^{-1}a\\
+    &=\frac{\lambda^\star(a)^2  B}{N}+\frac{A+\lambda^\star(a)^2  B-2\lambda^\star(a)  C}{n}.
+\end{align*}
+
+\noindent
+To solve $\Var\!\left(a^\top \wh{\beta}_{\lambda^\star}\right) \;\le\; S^2$ for $n$,\begin{align*}
+    \frac{\lambda^\star(a)^2  B}{N}
+    +\frac{A+\lambda^\star(a)^2  B-2\lambda^\star(a)  C}{n}\leq S^2&\implies
+    \frac{A+\lambda^\star(a)^2  B-2\lambda^\star(a)  C}{n}\leq S^2-\frac{\lambda^\star(a)^2  B}{N}\\
+    &\implies n\geq \frac{A+\lambda^\star(a)^2  B-2\lambda^\star(a) C}{S^2-\frac{\lambda^\star(a)^2  B}{N}}
+\end{align*}provided that $S^2-\frac{\lambda^\star(a)^2  B}{N}>0$ and $A+\lambda^\star(a)^2  B-2\lambda^\star(a)  C\ge0$.
+
+\noindent
+Note that \[
+\Sigma =
+\begin{pmatrix}
+\Sigma_{YY} & \Sigma_{Yf} \\
+\Sigma_{fY} & \Sigma_{ff}
+\end{pmatrix}
+\]is a positive semi-definite covariance matrix, which implies that, for any vectors $u$ and $v$,\[
+\big(u^\top \Sigma_{Yf} v\big)^2
+\le
+(u^\top \Sigma_{YY} u)\,(v^\top \Sigma_{ff} v).
+\]
+
+\noindent
+Taking $u=v=J^{-1}a$ yields\[
+\big(a^\top J^{-1} \Sigma_{Yf} J^{-1} a\big)^2
+\le
+(a^\top J^{-1} \Sigma_{YY} J^{-1} a)\,
+(a^\top J^{-1} \Sigma_{ff} J^{-1} a),
+\]that is,\[
+C^2\;\leq\; AB.
+\]
+
+\noindent
+Hence, if $B>0$,\[
+A+\lambda^\star(a)^2  B-2\lambda^\star(a)  C
+= A + B\Big(\lambda^\star(a)-\tfrac{C}{B}\Big)^2 - \frac{C^2}{B}\;\ge\;A-\frac{C^2}{B}\;\ge\;0,
+\]when $B=0$, the inequality $C^2\le AB$ forces $C=0$, so the numerator reduces to the nonnegative $A$, which remains valid.
+
+\noindent
+Therefore, a valid solution exists whenever $S^2 \;-\; \frac{\lambda^\star(a)^2 B}{N} \;>\; 0$.
+

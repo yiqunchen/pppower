@@ -194,49 +194,7 @@ power_curve_mean_dgp <- function(
   do.call(rbind, results)
 }
 
-#' Convenience wrapper for Gaussian DGP power curves
-#'
-#' @inherit power_curve_mean_dgp params return
-#'
-#' @export
-power_curve_gaussian <- function(n_grid,
-                                 N,
-                                 theta0 = 0,
-                                 seed = 1,
-                                 alpha = 0.05,
-                                 R = 2000) {
-  power_curve_mean_dgp(
-    n_grid = n_grid,
-    N = N,
-    theta0 = theta0,
-    family = stats::gaussian(),
-    seed = seed,
-    alpha = alpha,
-    R = R
-  )
-}
-
-#' Convenience wrapper for Binomial DGP power curves
-#'
-#' @inherit power_curve_mean_dgp params return
-#'
-#' @export
-power_curve_binomial <- function(n_grid,
-                                 N,
-                                 theta0 = 0,
-                                 seed = 1,
-                                 alpha = 0.05,
-                                 R = 2000) {
-  power_curve_mean_dgp(
-    n_grid = n_grid,
-    N = N,
-    theta0 = theta0,
-    family = stats::binomial(),
-    seed = seed,
-    alpha = alpha,
-    R = R
-  )
-}
+# Thin wrapper functions removed - use power_curve_mean_dgp() directly with family argument
 
 
 #' Type I error curve for the PP mean estimator

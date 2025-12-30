@@ -2,8 +2,25 @@
 % Please edit documentation in R/pppower-package.R
 \docType{package}
 \name{pppower}
+\alias{pppower-package}
 \alias{pppower}
 \title{pppower: Power & sample size for prediction-powered inference}
 \description{
 Tools to compute power, required n, and simulation checks for PPI.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://yiqunchen.github.io/pppower}
+}
+
+}
+\author{
+\strong{Maintainer}: Yiqun Chen \email{yiqun.t.chen@gmail.com}
+
+Authors:
+\itemize{
+  \item Moran Guo \email{mguo31@jh.edu}
+}
+
 }

@@ -1,0 +1,640 @@
+\appendix
+\setstretch{2} % triple spacing
+\section{Proof of Section~\ref{sec:vanilla_mean}}
+
+\subsection{Proof of Equation~\eqref{eq:ppi-mean-var}}
+Since the unlabeled covariates $\{\widetilde{X}_j\}_{j=1}^N$ are i.i.d. from the same distribution $P$ as the labeled data, and $f$ is fixed with respect to the evaluation data, it follows that $\widetilde{f}_j = f(\widetilde{X}_j)$ are i.i.d. with
+\[\operatorname{Var}\!\left(\widetilde{f}_j\right) = \operatorname{Var}\left(f(X)\right)=\sigma_f^2,
+\quad
+\mathbb{E}\!\left[\widetilde{f}_j\right] =\mathbb{E}[f(X)]= \mu_f.\]
+
+\noindent Moreover, under the mild regularity condition that $\wt{f}_j$ has finite variance $\sigma_f^2$, we have\[\frac{\sqrt{N}\left(\bar f_U-\mu_f\right)}{\sigma_f}\overset{d}{\longrightarrow}\mathcal{N}(0,1),\quad\text{i.e.,}\quad \bar f_U\;\approx\;\mathcal{N}\left(\mu_f,\frac{\sigma_f^2}{N}\right)\;\text{for large $N$},\] by the Central Limit Theorem, where $\bar f_U=\frac{1}{N}\sum^N_{j=1}\wt{f}_j$. 
+
+\shengyi{$\bar f_U\;=\;\mathcal{N}\left(\mu_f,\frac{\sigma_f^2}{N}\right)+o_p\!\left(\frac{1}{\sqrt{N}}\right)$}
+
+\noindent In addition, since the labeled data $\{(X_i, Y_i)\}_{i=1}^n$ are i.i.d. from the distribution $P$, we have
+\[\mathbb{E}\!\left[Y_i - f_i\right]
+= \mathbb{E}[Y_i] - \mathbb{E}[f_i]
+= \mathbb{E}[Y] - \mathbb{E}[f(X)]
+= \theta^\star - \mu_f,
+\quad \text{and} \quad
+\operatorname{Var}\!\left(Y_i - f_i\right)
+= \operatorname{Var}\!\left(Y - f(X)\right)
+= \sigma_\varepsilon^2.\]
+
+\noindent Similarly, under the mild regularity condition that $\sigma^2_\varepsilon$ is finite, we have
+\[
+\frac{\sqrt{n}\Bigg(\left(\overline{Y}_L- \bar f_L\right)-
+\left(\theta^\star-\mu_f\right)\Bigg)}{\sigma_\varepsilon}\overset{d}{\longrightarrow}\mathcal{N}(0,1),
+\quad\text{i.e.,}\quad 
+\left(\overline{Y}_L- \bar f_L\right)\approx\mathcal{N}\left(\theta^\star-\mu_f,\frac{\sigma_\varepsilon^2}{n}\right)\;\text{for large $n$},
+\] by the Central Limit Theorem, where $\overline{Y}_L =\frac{1}{n}\sum_{i=1}^n Y_i,\ \bar f_L=\frac{1}{n}\sum_{i=1}^n f_i$.
+
+\shengyi{$\overline{Y}_L- \bar f_L\;=\;\mathcal{N}\left(\theta^\star-\mu_f,\frac{\sigma_\varepsilon^2}{n}\right)+o_p\!\left(\frac{1}{\sqrt{n}}\right)$}
+
+\noindent Finally, under the independence of the labeled and unlabeled splits, and given~\eqref{eq:ppi-mean-est}, we have \[
+\wh\theta_{\mathrm{PPI}}
+\;=\;
+\frac{1}{N}\sum_{j=1}^N \wt f_j
+\;+\;\frac{1}{n}\sum_{i=1}^n \big(Y_i-f_i\big)=
+\bar f_U+\left(\overline{Y}_L-\bar f_L\right)\approx\mathcal{N}\left(\theta^\star,\frac{\sigma_f^2}{N}+\frac{\sigma_\varepsilon^2}{n}\right)\;\text{for large $N$ and $n$},
+\] as the sum of independent asymptotically normal variables is also asymptotically normal.
+
+\shengyi{$\wh\theta_{\mathrm{PPI}}\;=\;\mathcal{N}\left(\theta^\star,\frac{\sigma_f^2}{N}+\frac{\sigma_\varepsilon^2}{n}\right)+o_p\!\left(\max\!\left\{
+\frac{1}{\sqrt{N}},\,
+\frac{1}{\sqrt{n}}
+\right\}\right)$}
+\subsection{Proof of Equation~\eqref{eq:n-for-ci-vanilla}}
+\label{subsec:n-for-ci-vanilla}
+\begin{equation*}
+n \;\ge\; \frac{\sigma_\varepsilon^2}{(h/z_{1-\alpha/2})^2 - \sigma_f^2/N}
+\quad\text{(feasible iff the denominator is positive).}
+\end{equation*}
+
+\yiqun{We have this conversation in slakc, but I think what you meant is for any N?}
+
+\noindent Given the asymptotic result in~\eqref{eq:ppi-mean-var}, \[
+\wh\theta_{\mathrm{PPI}} \approx \mathcal{N}\!\Bigg(\theta^\star,\ \frac{\sigma_f^2}{N} + \frac{\sigma_\varepsilon^2}{n}\Bigg)\quad\text{for large $N$ and $n$},
+\]the asymptotic Wald $(1-\alpha)$ confidence interval for $\theta^\star$ is \[\widehat\theta_{\mathrm{PPI}}
+\pm z_{1-\alpha/2}
+\sqrt{\frac{\sigma_f^2}{N}+\frac{\sigma_\varepsilon^2}{n}}.\]
+
+\noindent Therefore, for any fixed large $N$, the half-width of a $(1-\alpha)$ Wald confidence interval can be approximated as
+\[
+h\;\approx\;z_{1-\alpha/2}\sqrt{\frac{\sigma_f^2}{N} + \frac{\sigma_\varepsilon^2}{n}}.
+\]
+\yiqun{Why can you approximate that? I think we are skipping a very important step here}
+
+\noindent
+It follows that, to achieve a target half-width $h_t$, we require
+\begin{align*}
+z_{1-\alpha/2}\sqrt{\frac{\sigma_f^2}{N} + \frac{\sigma_\varepsilon^2}{n}} \;\le\; h_t
+&\iff \frac{\sigma_f^2}{N} + \frac{\sigma_\varepsilon^2}{n} \;\le\; \left(\frac{h_t}{z_{1-\alpha/2}}\right)^2,\\[0.3em]
+&\iff \frac{\sigma_\varepsilon^2}{n} \;\le\; \left(\frac{h_t}{z_{1-\alpha/2}}\right)^2 - \frac{\sigma_f^2}{N}.
+\end{align*}
+
+\noindent
+In particular, if
+\[
+\left(\frac{h_t}{z_{1-\alpha/2}}\right)^2 - \frac{\sigma_f^2}{N} > 0,\]
+then\[
+n \;\ge\; \frac{\sigma_\varepsilon^2}{(h_t / z_{1-\alpha/2})^2 - \sigma_f^2 / N}.
+\]
+Otherwise, if
+\[\left(\frac{h_t}{z_{1-\alpha/2}}\right)^2 - \frac{\sigma_f^2}{N} \le 0,\]
+then $n < 0$, which is not feasible since $n$ denotes the labeled sample size and must be positive.
+
+\noindent
+Therefore, only when $\left(\tfrac{h_t}{z_{1-\alpha/2}}\right)^2 - \tfrac{\sigma_f^2}{N} > 0$, that is, when the predictions on the unlabeled data are not too noisy relative to the target precision, do we have a feasible range of $n$ in~\eqref{eq:n-for-ci-vanilla} that attains the target half-width of a $(1-\alpha)$ Wald confidence interval for $\theta^\star$.
+
+\noindent
+We summarize the above analysis in the following Lemma.
+
+\begin{lemma}
+\label{lem:n-CI}
+Let $\hat{\theta}$ denote the estimator of the parameter of interest. If $\hat{\theta}$ is asymptotically normal, then to achieve a target half-width $h_t$ of a $(1-\alpha)$ Wald confidence interval corresponding to a two-sided test at level $\alpha$, the required sample size should satisfy
+\[z_{1-\alpha/2}\sigma_{\hat \theta}\;\le\;h_t,\]
+which is equivalently expressed as
+\[\Var(\hat{\theta}) \;\le\; \left(\frac{h_t}{z_{1-\alpha/2}}\right)^2,\]subject to additional feasibility conditions when applicable.
+\end{lemma}
+
+\subsection{Proof of Equation~\eqref{eq:n-for-power-vanilla}}
+\label{subsec:n-for-power-vanilla}
+\begin{equation}
+n \;\ge\; \frac{\sigma_\varepsilon^2}{\big(\Delta/(z_{1-\alpha/2}+z_{1-\beta})\big)^2 - \sigma_f^2/N}.
+\tag{\ref{eq:n-for-power-vanilla}}
+\end{equation}
+
+\noindent
+Let
+\[
+\sigma_{\mathrm{PPI}} = 
+\sqrt{\frac{\sigma_f^2}{N} + \frac{\sigma_\varepsilon^2}{n}},
+\]
+denote the asymptotic standard deviation of $\widehat{\theta}_{\mathrm{PPI}}$ 
+(as defined in~\eqref{eq:ppi-mean-var}).
+
+\noindent We consider testing
+\[
+H_0:\ \theta^\star=\theta_0
+\quad\text{versus}\quad
+H_1:\ \theta^\star=\theta_0+\Delta,
+\]
+using the standardized test statistic
+\[
+Z_{stat}=\frac{\widehat{\theta}_{\mathrm{PPI}}-\theta_0}{
+\sigma_{\mathrm{PPI}}},
+\]where $\wh{\theta}_{\mathrm{PPI}}$ is an estimator of $\theta^\star$ satisfying the asymptotic normality
+\[\wh{\theta}_{\mathrm{PPI}}
+\approx
+\mathcal{N}\!\Big(
+\theta^\star,\,
+\sigma_{\mathrm{PPI}}^2
+\Big)
+\quad\text{for large $N$ and $n$},\]as in~\eqref{eq:ppi-mean-var}.
+
+\noindent
+To achieve a desired power $1-\beta$ at significance level $\alpha$, we determine the required sample size $n$.
+
+\yiqun{you should specify this test statistic in the proposition, and you should restate the $H_0$ here instead of later}
+
+\noindent
+Under the null hypothesis $ H_0\!:\theta^\star = \theta_0 $, by the asymptotic normality in~\eqref{eq:ppi-mean-var}, we have
+\[
+\widehat{\theta}_{\mathrm{PPI}} 
+\approx 
+\mathcal{N}\!\left(
+  \theta_0,\ 
+  \sigma_{\mathrm{PPI}}^2
+\right),
+\quad \text{i.e.,} \quad 
+Z_{stat} \sim \mathcal{N}(0,1).
+\]
+
+\yiqun{Why is $\hat{\theta}_{PPI}$ approximately normal?}
+
+\noindent
+Therefore, for a two-sided test, the critical region is
+\[
+\left\{
+\widehat{\theta}_{\mathrm{PPI}}:\ 
+|Z_{stat}| \ge z_{1-\alpha/2}
+\right\}.
+\]
+
+\noindent
+Similarly, under the alternative hypothesis $ H_1\!:\theta^\star = \theta_0 + \Delta $, by the asymptotic normality in~\eqref{eq:ppi-mean-var}, we have
+\[
+\widehat{\theta}_{\mathrm{PPI}} 
+\approx 
+\mathcal{N}\!\left(
+  \theta_0 + \Delta,\ 
+  \sigma_{\mathrm{PPI}}^2
+\right),
+\quad \text{i.e.,} \quad 
+Z_{stat} -
+  \frac{\Delta}{\sigma_{\mathrm{PPI}}}
+\sim 
+\mathcal{N}(0,1).
+\]
+
+\yiqun{Why is $\hat{\theta}_{PPI} $approximately normal?}
+
+\noindent
+Hence, the power of the two-sided test is
+\begin{align*}
+    P_{H_1}\!\left(|Z_{stat}| \ge z_{1-\alpha/2}\right)&=
+    P_{H_1}\!\left(Z_{stat} \ge z_{1-\alpha/2}\right) +
+    P_{H_1}\!\left(Z_{stat} \le -z_{1-\alpha/2}\right)\\
+    &=P_{H_1}\!\left(Z_{stat}-\frac{\Delta}{\sigma_{\mathrm{PPI}}} \ge z_{1-\alpha/2}-\frac{\Delta}{\sigma_{\mathrm{PPI}}}\right) +
+    P_{H_1}\!\left(Z_{stat}-\frac{\Delta}{\sigma_{\mathrm{PPI}}} \le -z_{1-\alpha/2}-\frac{\Delta}{\sigma_{\mathrm{PPI}}}\right)\\
+    &=1-\Phi\left(z_{1-\alpha/2}-\frac{\Delta}{\sigma_{\mathrm{PPI}}}\right)+\Phi\left(-z_{1-\alpha/2}-\frac{\Delta}{\sigma_{\mathrm{PPI}}}\right)\\
+    &=\Phi\left(-z_{1-\alpha/2}+\Bigg|\frac{\Delta}{\sigma_{\mathrm{PPI}}}\Bigg|\right)+\Phi\left(-z_{1-\alpha/2}-\Bigg|\frac{\Delta}{\sigma_{\mathrm{PPI}}}\Bigg|\right)
+\end{align*} where $\Phi(\cdot)$ denotes the standard normal cumulative distribution function.
+\yiqun{For the derivations above, we write $P_{H_1}$ or $P_{H_0}$ since we are talking about frequentist probability here, we don't condition on the hypotheses}
+
+
+\yiqun{why is the following claim true?}
+\noindent Since
+\[
+\Phi\!\left(-z_{1-\alpha/2}
+  + \Bigg|\frac{\Delta}{\sigma_{\mathrm{PPI}}}\Bigg|\right)
+\ge
+\Phi\!\left(-z_{1-\alpha/2}
+  - \Bigg|\frac{\Delta}{\sigma_{\mathrm{PPI}}}\Bigg|\right),
+\]
+to achieve a power of $1 - \beta$, it suffices to require
+\yiqun{are you saying that this is not an exact power analysis?}
+\[
+\Phi\!\left(-z_{1-\alpha/2}
+  + \Bigg|\frac{\Delta}{\sigma_{\mathrm{PPI}}}\Bigg|\right)
+\ge 1 - \beta.
+\]
+
+\noindent It follows that \[-z_{1-\alpha/2}+\Bigg|\frac{\Delta}{\sigma_{\mathrm{PPI}}}\Bigg|\;\ge\; z_{1-\beta},\quad\text{i.e.,}\quad z_{1-\alpha/2}+z_{1-\beta}\;\le\; \Bigg|\frac{\Delta}{\sigma_{\mathrm{PPI}}}\Bigg|.\]
+
+
+\noindent There are two possible cases, 
+\begin{enumerate}
+  \item[(1)] $|z_{1-\alpha/2} + z_{1-\beta}|\;\le\; \Big|\frac{\Delta}{\sigma_{\mathrm{PPI}}}\Big|$
+  \item[(2)] $z_{1-\alpha/2} + z_{1-\beta}\;\le\; -\Big|\frac{\Delta}{\sigma_{\mathrm{PPI}}}\Big|$
+\end{enumerate}
+\yiqun{I don' think you case (2) is correct. $a<|b|$ should imply $a<b; (b>0)$ or $a<-b \; (b<0)$? }
+
+\noindent
+In case~$(1)$, we have 
+\begin{align*}
+    \left(z_{1-\alpha/2} + z_{1-\beta}\right)^2 \;\le\; \frac{\Delta^2}{\sigma_{\mathrm{PPI}}^2}\;=\;
+    \frac{\Delta^2}{\frac{\sigma_f^2}{N} + \frac{\sigma_\varepsilon^2}{n}}\;\le\;
+    \frac{\Delta^2}{\frac{\sigma_f^2}{N}},
+    \quad\text{i.e.,}\quad \frac{\Delta^2}{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2}-\frac{\sigma_f^2}{N}\;\ge\;0.
+\end{align*}Moreover,
+\begin{align*}
+     \left(z_{1-\alpha/2} + z_{1-\beta}\right)^2 \;\le\; 
+    \frac{\Delta^2}{\frac{\sigma_f^2}{N}
+    + \frac{\sigma_\varepsilon^2}{n}}\;&\iff\;
+    \frac{\sigma_\varepsilon^2}{n}\;\le\;\frac{\Delta^2}{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2}-\frac{\sigma_f^2}{N}\\
+    &\iff\; n \;\ge\; \frac{\sigma_\varepsilon^2}{\Bigg(\Delta/(z_{1-\alpha/2}+z_{1-\beta})\Bigg)^2 - \sigma_f^2/N}
+\end{align*}
+In case~$(2)$, we have 
+\begin{align*}
+    z_{1-\alpha/2} + z_{1-\beta}
+    \;\le\;
+    -\Bigg|\frac{\Delta}{\sigma_{\mathrm{PPI}}}\Bigg|
+    \;\le\; 0.
+\end{align*}However, this violates the assumption of non-trivial hypothesis testing, as it contradicts the monotonicity of the inverse quantile function of standard normal distribution. Therefore, we only consider case~$(1)$.
+
+\noindent
+Therefore, to achieve the desired power $1-\beta$ at significance level $\alpha$, the labeled sample size $n$ must satisfy the condition in case~(1), as derived in~\eqref{eq:n-for-power-vanilla}.
+
+\noindent
+We summarize the power analysis in the following lemma.
+\begin{lemma}
+\label{lem:n-power}
+Let $\hat{\theta}$ denote the estimator of the parameter of interest. For a two-sided test at level $\alpha$ and target power $1-\beta$, the required sample size must satisfy 
+\[|z_{1-\alpha/2} + z_{1-\beta}| \;\le\; \Bigg|\frac{\Delta}{\sigma_{\hat \theta}}\Bigg|,\]
+which is equivalently expressed as
+\[
+\Var(\hat \theta) \;\le\; \frac{\Delta^2}{\big(z_{1-\alpha/2} + z_{1-\beta}\big)^2}.
+\]\end{lemma}
+
+\yiqun{this section is important -- could you move it to the main text? open a new subsection talking about the estimation}
+\subsection{Estimators of $\sigma^2_f$ and $\sigma^2_\varepsilon$ in Equations~\eqref{eq:n-for-ci-vanilla}--\eqref{eq:n-for-power-vanilla}}
+\label{subsec:estimator_sigma_f}
+
+\yiqun{why are we using unbiased? can we use MLE? Can you add the variance for these estimators? I think for the variance esitmation to be consistent, is the 2nd moment conditon enough}
+Since population quantities under $P$,
+\[
+\sigma_f^2 = \Var(\wt{f}_j),
+\quad\text{and}\quad
+\sigma_\varepsilon^2 = \Var(Y_i - f_i),
+\]
+are unknown in practice, we estimate them using their unbiased sample counterparts.
+
+\noindent
+That is, \[
+\hat\sigma^2_f=\frac{1}{N-1}\sum^N_{j=1}\left(\wt f_j-\bar{f}_U\right)^2,
+\]where $\bar{f}_U=\frac{1}{N}\sum^N_{j=1}\wt f_j$, as $\wt f_j$ are i.i.d. samples from the same distribution of $f(X)$.
+
+\noindent
+Similarly, \[
+\hat\sigma^2_\varepsilon=\frac{1}{n-1}\sum^n_{i=1}\left(\left(Y_i-f_i\right)-\left(\overline{Y}_L-\bar f_L\right)\right)^2,
+\]where $\overline{Y}_L=\frac{1}{n}\sum^n_{i=1} Y_i$ and $\bar{f}_L=\frac{1}{n}\sum^n_{i=1} f_i$, as $Y_i-f_i$ are i.i.d. samples of $Y-f(X)$.
+
+\noindent
+In the analysis of confidence intervals and statistical power, we substitute $\widehat{\sigma}_f^2$ and $\widehat{\sigma}_\varepsilon^2$ into~\eqref{eq:n-for-ci-vanilla}--\eqref{eq:n-for-power-vanilla} when computing the required labeled sample size.
+
+\section{Proof of Section~\ref{sec:PPI++_mean}}
+\subsection{Proof of Equation~\eqref{eq:ppi++-mean-var}}
+\begin{equation}
+\Var(\wh\theta_\lambda)
+=
+\frac{\sigma_Y^2}{n}
++\lambda^2\Big(\frac{\sigma_f^2}{N}+\frac{\sigma_f^2}{n}\Big)
+-\frac{2\lambda}{n}\Cov(Y,f).
+\tag{\ref{eq:ppi++-mean-var}}
+\end{equation}
+Given that $\wh\theta_\lambda \;=\; \overline Y_L \;+\; \lambda\,\big(\bar f_U - \bar f_L\big)$, we can decompose its variance as
+\begin{align*}
+\Var(\wh\theta_\lambda)
+&=\Var\left(\overline{Y}_L\right)
++\Var\left(\lambda\,\big(\bar f_U - \bar f_L\big)\right)
++2\cdot\Cov\left(\overline{Y}_L,\lambda\,\big(\bar f_U - \bar f_L\big)\right)\\
+&=\Var\left(\overline{Y}_L\right)
++\lambda^2\cdot\Var\left(\bar f_U - \bar f_L\right)
++2\lambda\cdot \Cov\left(\overline{Y}_L,\bar f_U\right)
+-2\lambda\cdot \Cov\left(\overline{Y}_L,\bar f_L\right)
+\end{align*}
+
+\noindent
+We now consider each term individually. 
+
+\noindent
+\textbf{(i)} Since $Y_i$ are i.i.d. from $P_Y$, it follows that
+\begin{align*}
+    \Var\left(\overline{Y}_L\right)
+    =\Var\left(\frac{1}{n}\sum^n_{i=1}Y_i\right)
+    =\frac{1}{n^2}\sum^n_{i=1}\Var(Y_i)
+    =\frac{1}{n}\Var(Y)
+    =\frac{\sigma_Y^2}{n}.
+\end{align*}
+
+\noindent
+\textbf{(ii)} Since the labeled data $\{(X_i, Y_i)\}_{i=1}^n$ and the unlabeled data $\{\wt {X}_j\}_{j=1}^N$ are independent, and the predictor $f$ is fixed with respect to the evaluation data, it follows that $f_i = f(X_i)$ and $\wt{f}_j = f(\widetilde{X}_j)$ are independent.
+
+\noindent
+Moreover, since $\{(X_i, Y_i)\}_{i=1}^n$ are i.i.d. with $\Var\left(f( X_i)\right)=\sigma_f^2$ and $\{\wt {X}_j\}_{j=1}^N$ are i.i.d. from the same distribution $P_X$ with $\Var\left(f(\wt X_j)\right)=\sigma_f^2$, we have \begin{align*}
+    \Var\left(\bar f_U-\bar f_L\right)
+    =\Var\left(\bar f_U\right)+\Var\left(\bar f_L\right)
+    =\frac{\sigma^2_f}{N}+\frac{\sigma_f^2}{n}
+\end{align*}
+
+\noindent
+\textbf{(iii)} The cross term 
+$2\lambda\,\Cov\left(\overline{Y}_L,\bar f_U\right)$ vanishes 
+because the labeled and unlabeled splits are independent, i.e.\
+$\Cov\left(\overline{Y}_L,\bar f_U\right)=0$.
+
+\noindent
+\textbf{(iv)} Finally, for the remaining covariance term, we expand
+\begin{align*}
+    \Cov(\overline{Y}_L,\bar f_L)
+    &=\frac{1}{n^2}\Cov\!\left(\sum_{i=1}^n Y_i,\,\sum_{j=1}^n f_j\right)\\
+    &=\frac{1}{n^2}\sum_{i=1}^n\Cov(Y_i,f_i)
+      +\frac{1}{n^2}\sum_{i\neq j}\Cov(Y_i,f_j).
+\end{align*}
+Since the labeled samples $\{(X_i, Y_i)\}_{i=1}^n$ are i.i.d., 
+the pairs $\{(Y_i, f_i)\}_{i=1}^n$ are also i.i.d. for the fixed predictor $f$, 
+implying that $\Cov(Y_i,f_i)=\Cov(Y,f)$. Moreover, because $Y_i$ and $f(X_j)$ are independent for $i \neq j$, 
+the cross-covariance terms vanish. It then follows that\[
+    \Cov(\overline{Y}_L,\bar f_L)
+    = \frac{1}{n^2}\sum_{i=1}^n \Cov(Y_i,f_i)
+    = \frac{1}{n}\Cov(Y,f).
+\]
+
+\noindent
+Substituting all components back into the variance decomposition yields the desired result in~\eqref{eq:ppi++-mean-var}.
+
+\subsection{Proof of Equation~\eqref{eq:lambda-star-mean} and~\eqref{eq:ppi++-mean-var-opt}}
+Given the variance of $\hat{\theta}_\lambda$ in~\eqref{eq:ppi++-mean-var}, we define \[
+g(\lambda)\coloneqq\Var\left(\hat{\theta}_\lambda\right)
+=\frac{\sigma_Y^2}{n}
++\lambda^2\Bigg(\frac{\sigma_f^2}{N}+\frac{\sigma_f^2}{n}\Bigg)
+-\frac{2\lambda}{n}\Cov(Y,f)\]
+Taking the derivative of $g(\lambda)$ with respect to $\lambda$, we obtain
+\begin{align*}
+    g^\prime(\lambda)= 2\lambda\Bigg(\frac{\sigma_f^2}{N}+\frac{\sigma_f^2}{n}\Bigg)-\frac{2}{n}\Cov(Y,f)
+\end{align*}
+Setting $g^\prime(\lambda)=0$ gives \[\lambda^\star=\frac{\Cov(Y,f)}{n\left(\frac{\sigma_f^2}{N}+\frac{\sigma_f^2}{n}\right)}=\frac{\Cov(Y,f)}{\sigma_f^2\left(1+\frac{n}{N}\right)}=\frac{\Cov(Y,f)}{\sigma_f^2(1+r)}\]where $r=\frac{n}{N}$. Since $g(\lambda)$ is quadratic in $\lambda$, it is convex and therefore attains its unique global minimum at $\lambda^\star$, which is the \emph{oracle} choice in~\eqref{eq:lambda-star-mean}.
+
+\noindent
+Substituting $\lambda^\star$ into~\eqref{eq:ppi++-mean-var}, we have\begin{align*}
+    \Var\left(\hat{\theta}_{\lambda^\star}\right)
+    &=\frac{\sigma^2_Y}{n}
+    +\left(\frac{\Cov(Y,f)}{\sigma_f^2\left(1+\frac{n}{N}\right)}\right)^2\cdot\sigma_f^2\cdot\left(\frac{1}{N}+\frac{1}{n}\right)
+    -\frac{2}{n}\cdot\frac{\Cov(Y,f)}{\sigma_f^2\left(1+\frac{n}{N}\right)}\cdot\Cov(Y,f)\\
+    &=\frac{\sigma^2_Y}{n}+\frac{\Cov(Y,f)^2}{\sigma_f^2}\cdot\frac{N}{n(N+n)}-2\cdot \frac{\Cov(Y,f)^2}{\sigma_f^2}\cdot\frac{N}{n(N+n)}\\
+    &=\frac{\sigma^2_Y}{n}-\frac{\Cov(Y,f)^2}{\sigma_f^2}\cdot\frac{N}{n(N+n)}
+\end{align*}
+Therefore, the minimized variance is \[\Var\left(\hat{\theta}_{\lambda^\star}\right)=\frac{\sigma^2_Y}{n}-\frac{\Cov(Y,f)^2}{\sigma_f^2}\cdot\frac{N}{n(N+n)}\]as in~\eqref{eq:ppi++-mean-var-opt}.
+
+\subsection{Proof of Equation~\eqref{eq:n-for-ci-ppi++}}
+Since $\overline{Y}_L$, $\bar f_U$, and $\bar f_L$ are sample means of random variables sharing the same mean and variance, they are asymptotically normal under the regularity condition that the variances are finite, i.e., $\Var(Y)=\sigma_Y^2<\infty$ and $\Var(f(X))=\Var(f(\wt X))=\sigma_f^2<\infty$, for large $N$ and $n$.
+
+\noindent
+Therefore, given the definition of \emph{PPI++} family in~\eqref{eq:ppi++-mean-est}, $\wh{\theta}_{\lambda^\star}$ is asymptotically normal for large $n$ and $N$ under standard regularity conditions, as it is a sum of asymptotically normal random variables.
+
+\noindent
+We first show that $\wt{\theta}_{\lambda^\star}$ is unbiased:\[\E\left(\wh{\theta}_{\lambda^\star}\right)
+=\E\left[\overline Y_L \;+\; \lambda^\star\,\big(\bar f_U - \bar f_L\big)\right]
+=\E\left[\overline Y_L\right] \;+\; \lambda^\star\left(\E\left[\,\bar f_U\right]-\; \E\left[\,\bar f_L\right]\right)
+=\theta^\star+\lambda^\star(\mu_f-\mu_f)=\theta^\star.
+\]
+
+\noindent
+Given $\Var\left(\hat{\theta}_{\lambda^\star}\right)$ in~\eqref{eq:ppi++-mean-var-opt}, we have \[
+\hat{\theta}_{\lambda^\star}\;\approx\;\mathcal{N}\left(\theta^\star,\ \frac{\sigma^2_Y}{n}-\frac{\Cov(Y,f)^2}{\sigma_f^2}\cdot\frac{N}{n(N+n)}\right)\quad\text{for large $N$ and $n$}.
+\]
+
+\noindent
+We then consider testing
+\[
+H_0:\ \theta^\star=\theta_0
+\quad\text{versus}\quad
+H_1:\ \theta^\star=\theta_0+\Delta,
+\]
+using the standardized test statistic
+\[
+Z=\frac{\wh{\theta}_{\lambda^\star}-\theta_0}{
+\sigma_{\lambda^\star}},\]where $\sigma_{\lambda^\star}$ denotes the standard deviation of $\wh{\theta}_{\lambda^\star}$.
+
+\noindent
+Using Lemmas~\ref{lem:n-CI} and~\ref{lem:n-power}, the labeled sample size $n$ required to achieve either a target half-width of a $(1-\alpha)$ Wald confidence interval or a desired power $1-\beta$ can be obtained by solving
+\[
+\Var\!\left(\widehat{\theta}_{\lambda^\star}\right) \;\le\; S^2
+\]for some specified threshold $S^2$.
+
+\noindent
+Substituting $\Var\left(\hat{\theta}_{\lambda^\star}\right)$ in~\eqref{eq:ppi++-mean-var-opt}, we have
+\begin{align*}
+    \frac{\sigma_Y^2}{n}-\frac{\Cov(Y,f)^2}{\sigma_f^2}\cdot\frac{N}{n(n+N)} \;\le\; S^2
+    \iff S^2n^2+\left(S^2N-\sigma^2_Y\right)n+\left(\frac{\Cov(Y,f)^2}{\sigma_f^2}N-N\sigma^2_Y\right)\;\geq\;0
+\end{align*}
+\noindent
+Let
+\[
+a = S^2,\quad
+b = S^2 N - \sigma_Y^2,\quad
+c = \frac{\Cov(Y,f)^2}{\sigma_f^2}N - N\sigma_Y^2.
+\]
+We can then rewrite the inequality as
+\[a n^2 + b n + c \ge 0\]
+\noindent
+Since $a = S^2 > 0$, the inequality holds for $n\ge n_1$ or $n\le n_2$, where \[
+n_{1,2} =\frac{-b\pm\sqrt{b^2-4ac}}{2a},
+\]by the quadratic formula.
+
+\noindent
+Because the labeled sample size $n$ must be positive, the feasible region is $n \ge n_1$, provided that $n_1 > 0$ and $b^2 - 4ac \ge 0$.
+
+\noindent
+That is, \begin{equation*}
+n \;\ge\; 
+\frac{ \sigma_Y^2 - S^2 N + \sqrt{(\sigma_Y^2 - S^2 N)^2 + 4 S^2\left(\sigma_Y^2 N - \frac{\Cov(Y,f)^2}{\sigma_f^2}\,N\right)} }{2 S^2},
+\end{equation*} as in~\eqref{eq:n-for-ci-ppi++}.
+
+\noindent
+And this result holds when both\begin{align*}
+    \frac{ \sigma_Y^2 - S^2 N + \sqrt{(\sigma_Y^2 - S^2 N)^2 + 4 S^2\left(\sigma_Y^2 N - \frac{\Cov(Y,f)^2}{\sigma_f^2}\,N\right)} }{2 S^2}\;&>\;0,\\
+    (\sigma_Y^2 - S^2 N)^2 + 4 S^2\left(\sigma_Y^2 N - \frac{\Cov(Y,f)^2}{\sigma_f^2}\,N\right)\;&\geq\;0.
+\end{align*}
+
+\subsection{Estimators of $\sigma_Y^2$ and $\Cov(Y,f)$ in Equation~\eqref{eq:ppi++-mean-var}}
+
+The quantities $\sigma_Y^2$, $\sigma_f^2$, and $\Cov(Y,f)$ are unknown population parameters appearing in the variance of $\widehat{\theta}_\lambda$, as well as in its minimized variance and the subsequent analyses of confidence intervals and statistical power.
+
+\noindent
+We have already introduced the unbiased estimator of $\sigma_f^2$ in Section~\ref{subsec:estimator_sigma_f}.
+In this section, we focus on the estimation of $\sigma_Y^2$ and $\Cov(Y,f)$.
+
+\noindent
+In practice, we replace $\sigma_Y^2$ with its unbiased sample estimator,\[
+\wh{\sigma}_Y^2
+= \frac{1}{n - 1}
+\sum_{i = 1}^n
+\left(Y_i - \overline{Y}_L\right)^2,\]
+where
+$\overline{Y}_L = \frac{1}{n}\sum_{i = 1}^n Y_i$, since the $\{Y_i\}_{i=1}^n$ are i.i.d. draws from the population distribution of $P_Y$.
+
+\noindent
+Next, since the pairs $\{\left(Y_i,f_i\right)\}^n_{i=1}$ are i.i.d. for the fixed predictor $f$, we estimate $\Cov(Y,f)$ using the sample covariance,\[
+\wh \Cov(Y,f) = \frac{1}{n-1}\sum^n_{i=1}\left(Y_i-\overline{Y}_L\right)\left(f_i-\bar f_L\right),
+\]where $\overline{Y}_L=\frac{1}{n}\sum^n_{i=1} Y_i$ and $\bar{f}_L=\frac{1}{n}\sum^n_{i=1} f_i$.
+
+\section{Proof of Section~\ref{sec:t-test}}
+\subsection{Proof of Equation~\eqref{eq:ppi++-delta-mean-var}}
+
+Given the definition of $\wh\Delta_{\mathrm{PPI}}$ in~\eqref{eq:ppi++-dealta-mean}, we have
+\[\wh\Delta_{\mathrm{PPI}}={\wh{\theta}_{A,\mathrm{PPI}}}-{\wh{\theta}_{B,\mathrm{PPI}}},\]where ${\wh{\theta}_{A,\mathrm{PPI}}}=\overline{\wt f}_A - \overline{ f}_A + \overline{Y}_A$, and ${\wh{\theta}_{B,\mathrm{PPI}}}=\overline{\wt f}_B - \overline{ f}_B + \overline{Y}_B$.
+
+\noindent
+Analogously to the \emph{vanilla PPI} mean estimator for a single group in~\eqref{eq:ppi-mean-est}, under independence of labeled and unlabeled splits within each group and under mild regularity,
+\begin{equation*}
+\wh\theta_{A,\mathrm{PPI}} \approx \mathcal{N}\!\left(\theta_A^\star,\ \frac{\sigma_{f,A}^2}{N_A} + \frac{\sigma_{\varepsilon,A}^2}{n_A}\right),\quad
+\wh\theta_{B,\mathrm{PPI}} \approx \mathcal{N}\!\left(\theta_B^\star,\ \frac{\sigma_{f,B}^2}{N_B} + \frac{\sigma_{\varepsilon,B}^2}{n_B}\right),
+\end{equation*}for large $N_A$, $n_A$, $N_B$, and $n_B$.
+
+\noindent
+Furthermore, since groups $A$ and $B$ are independent, it follows that\[
+\wh\theta_{A,\mathrm{PPI}}-\wh\theta_{B,\mathrm{PPI}} \approx \mathcal{N}\!\left(\theta_A^\star-\theta_B^\star,\ \frac{\sigma_{f,A}^2}{N_A} + \frac{\sigma_{\varepsilon,A}^2}{n_A}+\ \frac{\sigma_{f,B}^2}{N_B} + \frac{\sigma_{\varepsilon,B}^2}{n_B}\right)
+\]and hence,\[
+\Var\left(\wh\theta_{A,\mathrm{PPI}}-\wh\theta_{B,\mathrm{PPI}}\right)\approx
+\frac{\sigma_{f,A}^2}{N_A} + \frac{\sigma_{\varepsilon,A}^2}{n_A}+\ \frac{\sigma_{f,B}^2}{N_B} + \frac{\sigma_{\varepsilon,B}^2}{n_B},
+\]for large $N_A$, $n_A$, $N_B$, and $n_B$.
+
+\section{Proof of Section~\ref{sec:cross-fitting}}
+\subsection{Proof of Equation~\eqref{eq:cross-ppi++-distrn}}
+The proof follows a similar template as the proof of Theorem~$2$ in~\citep{zrnic2024cross} and combines the two lemmas used therein.
+
+\begin{lemma}\label{lem:asy-fU} (Lem.~3 in the proof of Thm.~2 in~\citep{zrnic2024cross})
+
+\noindent
+Suppose that the predictions are stable (Ass.~\ref{ass:M-stable-f}). Denote
+\[\tilde{L}_j= \frac{1}{\sqrt{N}} \sum_{i=1}^N\Big(
+\nabla \tilde{\ell}^{f^{(j)}}_{\theta,i}
+- \mathbb{E}[\nabla \ell^{f^{(j)}}_\theta]
+- (\nabla \tilde{\ell}_{\theta,i}^{\bar f}- \mathbb{E}[\nabla \ell_\theta^{\bar f}])\Big).\]
+Then,
+\[\frac{1}{K} \sum_{j=1}^K \tilde{L}_j \;\xrightarrow{p}\;0.\]
+\end{lemma}
+
+\begin{lemma}\label{lem:asy-fL} (Lem.~4 in the proof of Thm.~2 in~\citep{zrnic2024cross})
+
+\noindent
+Suppose that the predictions are stable (Ass.~\ref{ass:M-stable-f}). Denote
+\[L_j= \frac{1}{\sqrt{n}} \sum_{i \in I_j}
+\Big(\nabla \ell^{f^{(j)}}_{\theta,i}
+- \mathbb{E}[\nabla \ell^{f^{(j)}}_\theta]
+- (\nabla \ell_{\theta,i}^{\bar f}- \mathbb{E}[\nabla \ell_\theta^{\bar f}])\Big).\]
+Then,
+\[\sum_{j=1}^K L_j \;\xrightarrow{p}\; 0.\]
+\end{lemma}
+
+\noindent
+Writing \begin{align*}\nabla L(\theta)&=\E[\ell_\theta]\\
+    &=\frac{1}{K}\left(\sum^K_{j=1}\E\left[\lambda \ell_\theta^{f^{(j)}}\right]-\E\left[\lambda \ell_\theta^{f^{(j)}}-l_\theta\right]\right)\\
+    &=\frac{1}{KN}\sum^K_{j=1}\sum^N_{i=1}\E\left[\lambda \ell_\theta^{f^{(j)}}\right]
+    -\frac{1}{n}\sum^K_{j=1}\sum_{i\in I_j}\E\left[\lambda \ell_\theta^{f^{(j)}}-\ell_\theta\right]
+    \end{align*}where $n$ is assumed to be divisible by $K$ for simplicity, that is, $|I_j|=\frac{n}{K}$ for all $j$.
+
+\noindent
+We have\begin{align*}
+&\sqrt{n}\,
+\Big( \tfrac{n}{N}\,\lambda^2\,\bar{\Sigma}_\theta + \bar{\Sigma}_{\Delta_\lambda,\theta} \Big)^{-1/2}
+\big( \nabla L_\lambda^+(\theta) - \nabla L_\lambda(\theta) \big) \\
+=&
+\sqrt{n}\,
+\Big( \tfrac{n}{N}\,\lambda^2\,\bar{\Sigma}_\theta + \bar{\Sigma}_{\Delta_\lambda,\theta} \Big)^{-1/2}
+\left(
+\frac{1}{KN} \sum_{j=1}^K \sum_{i=1}^N
+\nabla \lambda\tilde{\ell}^{f^{(j)}}_{\theta,i}
+\;-\;
+\frac{1}{n} \sum_{j=1}^K \sum_{i \in I_j}
+\big( \nabla \lambda\ell^{f^{(j)}}_{\theta,i} - \nabla \ell_{\theta,i} \big)
+\;-\;
+\nabla L(\theta)
+\right) \\
+=&
+\sqrt{n}\,
+\Big( \tfrac{n}{N}\,\lambda^2\,\bar{\Sigma}_\theta + \bar{\Sigma}_{\Delta_\lambda,\theta} \Big)^{-1/2}\\
+&
+\left(
+\frac{1}{KN} \sum_{j=1}^K \sum_{i=1}^N
+\big(
+\nabla \lambda \tilde{\ell}^{f^{(j)}}_{\theta,i}
+-
+\mathbb{E}[\nabla \lambda \ell^{f^{(j)}}_\theta]
+\big)
+\;-\;
+\frac{1}{n} \sum_{j=1}^K \sum_{i \in I_j}
+\big(
+(\nabla \lambda \ell^{f^{(j)}}_{\theta,i} - \nabla \ell_{\theta,i})
+-
+\mathbb{E}[\nabla \lambda \ell^{f^{(j)}}_\theta - \nabla \ell_\theta]
+\big)
+\right) \\
+=&
+\sqrt{n}\,
+\Big( \tfrac{n}{N}\,\lambda^2\,\bar{\Sigma}_\theta + \bar{\Sigma}_{\Delta_\lambda,\theta} \Big)^{-1/2}
+\big( T_{1,\lambda} - T_{2,\lambda} \big),
+\end{align*}where we define \begin{align*}
+T_{1,\lambda}&=\frac{1}{KN} \sum_{j=1}^K \sum_{i=1}^N
+\big(\nabla \lambda \tilde{\ell}^{f^{(j)}}_{\theta,i}
+-\mathbb{E}[\nabla  \lambda \ell^{f^{(j)}}_\theta]\big),\\
+T_{2,\lambda}&=\frac{1}{n} \sum_{j=1}^K \sum_{i \in I_j}
+\big((\nabla  \lambda \ell^{f^{(j)}}_{\theta,i} - \nabla \ell_{\theta,i})
+-\mathbb{E}[\nabla  \lambda \ell^{f^{(j)}}_\theta - \nabla \ell_\theta]\big).
+\end{align*}
+
+\noindent
+In particular, we can write
+\begin{align*}
+\sqrt{N} T_{1,\lambda}
+&= \frac{1}{\sqrt{N}} \sum_{i=1}^N
+\big( \nabla \lambda \tilde{\ell}_{\theta,i}^{\bar f} - \mathbb{E}[\nabla \lambda \ell^{\bar f}_\theta] \big)
++\frac{\lambda}{K} \sum_{j=1}^K\tilde{L}_j\\
+& =\frac{1}{\sqrt{N}} \sum_{i=1}^N
+\big( \nabla \lambda \tilde{\ell}_{\theta,i}^{\bar f}
+- \mathbb{E}[\nabla \lambda \ell^{\bar f}_\theta] \big)
++ o_P(1),\\
+\sqrt{n} T_{2,\lambda} &= 
+  \frac{1}{\sqrt{n}} \sum_{j=1}^K \sum_{i \in I_j}\Big( \nabla \lambda \ell^{f^{(j)}}_{\theta,i} - \nabla \ell_{\theta,i}
+  - \mathbb{E}[\nabla \lambda \ell^{\bar f}_\theta - \nabla \ell_\theta] \Big)
+  + \lambda \sum_{j=1}^K L_j\\
+  &=\frac{1}{\sqrt{n}} \sum_{j=1}^K \sum_{i \in I_j}\Big( \nabla \lambda \ell^{f^{(j)}}_{\theta,i} - \nabla \ell_{\theta,i}
+  - \mathbb{E}[\nabla \lambda \ell^{\bar f}_\theta - \nabla \ell_\theta] \Big)
+  +o_P(1)
+\end{align*}using Lemma~\ref{lem:asy-fU} and Lemma~\ref{lem:asy-fL}, respectively.
+
+\noindent
+Therefore, \begin{align*}
+    &\sqrt{n}\,
+\Big( \tfrac{n}{N}\,\lambda^2\,\bar{\Sigma}_\theta + \bar{\Sigma}_{\Delta_\lambda,\theta} \Big)^{-1/2}
+\big( \nabla L_\lambda^+(\theta) - \nabla L_\lambda(\theta) \big)\\ 
+=&
+\sqrt{n}\,
+\Big( \tfrac{n}{N}\,\lambda^2\,\bar{\Sigma}_\theta + \bar{\Sigma}_{\Delta_\lambda,\theta} \Big)^{-1/2}
+\big( T_{1,\lambda} - T_{2,\lambda} \big)\\
+=&\Big( \tfrac{n}{N}\,\lambda^2\,\bar{\Sigma}_\theta + \bar{\Sigma}_{\Delta_\lambda,\theta} \Big)^{-1/2}
+\left(\frac{\sqrt{n}}{\sqrt{N}}\ \sqrt{N}\  T_{1,\lambda} - \sqrt{n}T_{2,\lambda} \right)\\
+=&\Big( \tfrac{n}{N}\,\lambda^2\,\bar{\Sigma}_\theta + \bar{\Sigma}_{\Delta_\lambda,\theta} \Big)^{-1/2}\frac{\sqrt{n}}{\sqrt{N}}\frac{1}{\sqrt{N}} \sum_{i=1}^N
+\big( \nabla \lambda \tilde{\ell}_{\theta,i}^{\bar f}
+- \mathbb{E}[\nabla \lambda \ell^{\bar f}_\theta] \big)\\
+&-\Big( \tfrac{n}{N}\,\lambda^2\,\bar{\Sigma}_\theta + \bar{\Sigma}_{\Delta_\lambda,\theta} \Big)^{-1/2}\frac{1}{\sqrt{n}} \sum_{j=1}^K \sum_{i \in I_j}\Big( \nabla \lambda \ell^{f^{(j)}}_{\theta,i} - \nabla \ell_{\theta,i}
+  - \mathbb{E}[\nabla \lambda \ell^{\bar f}_\theta - \nabla \ell_\theta] \Big)
+\end{align*}
+
+Denote the limits of $\frac{n}{N}$, $\bar\Sigma_\theta$, $\bar\Sigma_{\Delta_\lambda,\theta}$ by $r$, $\bar\Sigma_{\theta,\lim}$, $\bar\Sigma_{\Delta_\lambda,\theta,\lim}$, respectively.
+
+By the Lindeberg central limit theorem, the first term converge in distribution to\[
+    \mathcal{N}\left(0,
+    \Big( r\,\lambda^2\,\bar{\Sigma}_{\theta,\lim} + \bar{\Sigma}_{\Delta_\lambda,\theta,\lim} \Big)^{-1/2}
+    \left(r\lambda^2\bar{\Sigma}_{\theta,\lim}\right)
+    \Big( r\,\lambda^2\,\bar{\Sigma}_{\theta,\lim} + \bar{\Sigma}_{\Delta_\lambda,\theta,\lim} \Big)^{-1/2}
+    \right),
+\]and the second term converge in distribution to\[
+    \mathcal{N}\left(0,
+    \Big( r\,\lambda^2\,\bar{\Sigma}_{\theta,\lim} + \bar{\Sigma}_{\Delta_\lambda,\theta,\lim} \Big)^{-1/2}
+    \bar{\Sigma}_{\Delta_\lambda,\theta,\lim} 
+    \Big( r\,\lambda^2\,\bar{\Sigma}_{\theta,\lim} + \bar{\Sigma}_{\Delta_\lambda,\theta,\lim} \Big)^{-1/2}
+    \right),
+\]respectively, as $\Big( \tfrac{n}{N}\,\lambda^2\,\bar{\Sigma}_\theta + \bar{\Sigma}_{\Delta_\lambda,\theta} \Big)^{-1/2}$ is symmetric.
+
+\noindent
+Since the labeled and unlabeled samples are independently drawn, the two terms are independent. Therefore, we can sum their expectations and variances, obtaining\begin{align*}
+    \sqrt{n}\,
+\Big( \tfrac{n}{N}\,\lambda^2\,\bar{\Sigma}_\theta + \bar{\Sigma}_{\Delta_\lambda,\theta} \Big)^{-1/2}
+\big( \nabla L_\lambda^+(\theta) - \nabla L_\lambda(\theta) \big)\overset{d}{\longrightarrow}\mathcal{N}(0,I)
+\end{align*}as in~\eqref{eq:cross-ppi++-distrn}.
+
+
