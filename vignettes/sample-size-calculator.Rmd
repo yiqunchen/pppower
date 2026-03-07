@@ -1,0 +1,1042 @@
+---
+title: "Interactive PPI Sample Size Calculator"
+subtitle: "Prediction-powered one-sample mean/prevalence and difference in prevalence"
+output:
+  rmarkdown::html_document:
+    toc: false
+vignette: >
+  %\VignetteIndexEntry{Interactive PPI Sample Size Calculator}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This calculator uses **prediction-powered inference (PPI/PPI++)** formulas from
+this package for quick study planning examples.
+
+```{=html}
+<style>
+.sscalc {
+  --bg-soft: #f5f5f4;
+  --bg-panel: #ffffff;
+  --ink: #111111;
+  --muted: #666666;
+  --line: #e5e5e3;
+  --brand: #191919;
+  --danger: #b00020;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem;
+  background: #fafaf9;
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+.sscalc-hero {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem;
+  margin-bottom: 0.9rem;
+}
+
+.sscalc-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sscalc-hero h2 {
+  margin: 0.22rem 0 0.3rem;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.sscalc-hero p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.sscalc-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+}
+
+.sscalc-tab {
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: #222222;
+  border-radius: 8px;
+  padding: 0.56rem 0.66rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sscalc-tab.is-active {
+  border-color: #cfcfcc;
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+.sscalc-panel {
+  display: none;
+}
+
+.sscalc-panel.is-active {
+  display: block;
+}
+
+.sscalc-grid {
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 0.8rem;
+}
+
+.sscalc-inputs,
+.sscalc-results {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.sscalc-inputs h3,
+.sscalc-results h3 {
+  margin: 0 0 0.6rem;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.sscalc-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.58rem;
+  margin-bottom: 0.58rem;
+}
+
+.sscalc-field {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.sscalc-field label {
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: #343434;
+}
+
+.sscalc-field input,
+.sscalc-field select {
+  width: 100%;
+  border: 1px solid #dddddb;
+  border-radius: 8px;
+  padding: 0.44rem 0.52rem;
+  font-size: 0.88rem;
+  color: #181818;
+  background: #ffffff;
+  font-family: inherit;
+  font-weight: 300;
+}
+
+.sscalc-field input:focus,
+.sscalc-field select:focus {
+  outline: none;
+  border-color: #bdbdb9;
+  box-shadow: 0 0 0 2px rgba(28, 28, 28, 0.08);
+}
+
+.sscalc-subgroup {
+  margin: 0 0 0.58rem;
+  padding: 0.6rem;
+  border: 1px solid #ebebe9;
+  border-radius: 8px;
+  background: #fcfcfc;
+}
+
+.sscalc-subgroup-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5d5d5d;
+  font-weight: 600;
+}
+
+.sscalc-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.48rem;
+}
+
+.sscalc-stat {
+  border: 1px solid #ececeb;
+  border-radius: 8px;
+  padding: 0.52rem 0.55rem;
+  background: var(--bg-soft);
+}
+
+.sscalc-stat span {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 0.08rem;
+}
+
+.sscalc-stat strong {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.sscalc-msg {
+  min-height: 1.2rem;
+  margin: 0 0 0.45rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.sscalc-msg.error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.sscalc-bars {
+  margin-top: 0.58rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.sscalc-bar-row {
+  display: grid;
+  grid-template-columns: 4.2rem 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.74rem;
+}
+
+.sscalc-bar-shell {
+  height: 0.52rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #ececeb;
+}
+
+.sscalc-bar-fill {
+  height: 100%;
+  width: 0;
+  background: #222222;
+  transition: width 200ms ease;
+}
+
+.sscalc-footnote {
+  margin-top: 0.5rem;
+  padding: 0.52rem 0.58rem;
+  background: #f7f7f6;
+  border: 1px solid #e7e7e5;
+  border-radius: 8px;
+  color: #555555;
+  font-size: 0.76rem;
+}
+
+.sscalc-equations {
+  margin-top: 0.82rem;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 0.75rem 0.78rem;
+}
+
+.sscalc-equations h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.sscalc-equations p {
+  margin: 0.2rem 0;
+  font-size: 0.8rem;
+  color: #3f3f3f;
+}
+
+@media (max-width: 920px) {
+  .sscalc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .sscalc {
+    padding: 0.72rem;
+    border-radius: 12px;
+  }
+
+  .sscalc-form-row,
+  .sscalc-result-grid,
+  .sscalc-tabs {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="sscalc" id="sample-size-calculator">
+  <div class="sscalc-hero">
+    <p class="sscalc-kicker">Interactive PPI Tool</p>
+    <h2>Prediction-powered sample size calculator</h2>
+    <p>
+      Uses pppower-style moments and lambda logic. Outputs are labeled sample sizes.
+    </p>
+  </div>
+
+  <div class="sscalc-tabs" role="tablist" aria-label="Calculator type">
+    <button class="sscalc-tab is-active" id="tab-single" type="button" data-panel="panel-single" role="tab" aria-selected="true">
+      PPI one-sample mean / prevalence
+    </button>
+    <button class="sscalc-tab" id="tab-diff" type="button" data-panel="panel-diff" role="tab" aria-selected="false">
+      PPI difference in prevalence
+    </button>
+  </div>
+
+  <section class="sscalc-panel is-active" id="panel-single" role="tabpanel" aria-labelledby="tab-single">
+    <div class="sscalc-grid">
+      <div class="sscalc-inputs">
+        <h3>Inputs</h3>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="single_outcome">Outcome type</label>
+            <select id="single_outcome">
+              <option value="binary" selected>Prevalence (binary)</option>
+              <option value="continuous">Mean (continuous)</option>
+            </select>
+          </div>
+          <div class="sscalc-field">
+            <label for="single_lambda_mode">Lambda mode</label>
+            <select id="single_lambda_mode">
+              <option value="oracle" selected>Oracle (PPI++)</option>
+              <option value="vanilla">Vanilla (lambda = 1)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="single_delta">Effect size delta</label>
+            <input id="single_delta" type="number" min="0.001" step="0.001" value="0.05">
+          </div>
+          <div class="sscalc-field">
+            <label for="single_unlabeled_N">Unlabeled N</label>
+            <input id="single_unlabeled_N" type="number" min="10" step="1" value="5000">
+          </div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="single_alpha">Alpha (two-sided)</label>
+            <input id="single_alpha" type="number" min="0.001" max="0.2" step="0.001" value="0.05">
+          </div>
+          <div class="sscalc-field">
+            <label for="single_power">Target power (%)</label>
+            <input id="single_power" type="number" min="50" max="99.9" step="0.1" value="80">
+          </div>
+        </div>
+
+        <div class="sscalc-subgroup" id="single_binary_group">
+          <p class="sscalc-subgroup-title">Binary prevalence inputs</p>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="single_prev">Prevalence p = P(Y=1) (%)</label>
+              <input id="single_prev" type="number" min="0.1" max="99.9" step="0.1" value="30">
+            </div>
+            <div class="sscalc-field">
+              <label for="single_sens">Sensitivity</label>
+              <input id="single_sens" type="number" min="0" max="1" step="0.01" value="0.85">
+            </div>
+          </div>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="single_spec">Specificity</label>
+              <input id="single_spec" type="number" min="0" max="1" step="0.01" value="0.90">
+            </div>
+            <div class="sscalc-field">
+              <label for="single_nonresponse">Non-response (%)</label>
+              <input id="single_nonresponse" type="number" min="0" max="80" step="1" value="10">
+            </div>
+          </div>
+        </div>
+
+        <div class="sscalc-subgroup" id="single_cont_group" style="display: none;">
+          <p class="sscalc-subgroup-title">Continuous mean moments</p>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="single_sigma_y2">Var(Y) = sigma_y2</label>
+              <input id="single_sigma_y2" type="number" min="0.0001" step="0.001" value="1">
+            </div>
+            <div class="sscalc-field">
+              <label for="single_sigma_f2">Var(f) = sigma_f2</label>
+              <input id="single_sigma_f2" type="number" min="0.0001" step="0.001" value="0.6">
+            </div>
+          </div>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="single_cov_yf">Cov(Y,f) = cov_y_f</label>
+              <input id="single_cov_yf" type="number" step="0.001" value="0.55">
+            </div>
+            <div class="sscalc-field">
+              <label for="single_nonresponse_cont">Non-response (%)</label>
+              <input id="single_nonresponse_cont" type="number" min="0" max="80" step="1" value="10">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sscalc-results">
+        <h3>Results</h3>
+        <p class="sscalc-msg" id="single_message"></p>
+        <div class="sscalc-result-grid">
+          <div class="sscalc-stat">
+            <span>PPI labeled n (base)</span>
+            <strong id="single_n_ppi">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>PPI labeled n (adjusted)</span>
+            <strong id="single_n_ppi_adj">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Classical n (no prediction)</span>
+            <strong id="single_n_classic">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Labeled saving vs classical</span>
+            <strong id="single_saving">-</strong>
+          </div>
+        </div>
+
+        <div class="sscalc-bars">
+          <div class="sscalc-bar-row">
+            <span>Classic</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="single_bar_classic"></div></div>
+            <span id="single_bar_classic_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="single_bar_ppi"></div></div>
+            <span id="single_bar_ppi_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI adj</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="single_bar_ppi_adj"></div></div>
+            <span id="single_bar_ppi_adj_label">-</span>
+          </div>
+        </div>
+
+        <div class="sscalc-footnote" id="single_formula_note">Formula note will appear here.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sscalc-panel" id="panel-diff" role="tabpanel" aria-labelledby="tab-diff">
+    <div class="sscalc-grid">
+      <div class="sscalc-inputs">
+        <h3>Inputs</h3>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="diff_pA">Group A prevalence pA (%)</label>
+            <input id="diff_pA" type="number" min="0.1" max="99.9" step="0.1" value="30">
+          </div>
+          <div class="sscalc-field">
+            <label for="diff_pB">Group B prevalence pB (%)</label>
+            <input id="diff_pB" type="number" min="0.1" max="99.9" step="0.1" value="40">
+          </div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="diff_N_A">Unlabeled N_A</label>
+            <input id="diff_N_A" type="number" min="10" step="1" value="5000">
+          </div>
+          <div class="sscalc-field">
+            <label for="diff_N_B">Unlabeled N_B</label>
+            <input id="diff_N_B" type="number" min="10" step="1" value="5000">
+          </div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="diff_alpha">Alpha (two-sided)</label>
+            <input id="diff_alpha" type="number" min="0.001" max="0.2" step="0.001" value="0.05">
+          </div>
+          <div class="sscalc-field">
+            <label for="diff_power">Target power (%)</label>
+            <input id="diff_power" type="number" min="50" max="99.9" step="0.1" value="80">
+          </div>
+        </div>
+
+        <div class="sscalc-subgroup">
+          <p class="sscalc-subgroup-title">Prediction quality by group</p>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="diff_sens_A">Sensitivity A</label>
+              <input id="diff_sens_A" type="number" min="0" max="1" step="0.01" value="0.85">
+            </div>
+            <div class="sscalc-field">
+              <label for="diff_spec_A">Specificity A</label>
+              <input id="diff_spec_A" type="number" min="0" max="1" step="0.01" value="0.90">
+            </div>
+          </div>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="diff_sens_B">Sensitivity B</label>
+              <input id="diff_sens_B" type="number" min="0" max="1" step="0.01" value="0.85">
+            </div>
+            <div class="sscalc-field">
+              <label for="diff_spec_B">Specificity B</label>
+              <input id="diff_spec_B" type="number" min="0" max="1" step="0.01" value="0.90">
+            </div>
+          </div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="diff_nonresponse">Non-response (%)</label>
+            <input id="diff_nonresponse" type="number" min="0" max="80" step="1" value="10">
+          </div>
+        </div>
+      </div>
+
+      <div class="sscalc-results">
+        <h3>Results</h3>
+        <p class="sscalc-msg" id="diff_message"></p>
+        <div class="sscalc-result-grid">
+          <div class="sscalc-stat">
+            <span>PPI n per group (base)</span>
+            <strong id="diff_n_ppi_group">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>PPI n per group (adjusted)</span>
+            <strong id="diff_n_ppi_group_adj">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Classical n per group</span>
+            <strong id="diff_n_classic_group">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Labeled saving vs classical</span>
+            <strong id="diff_saving">-</strong>
+          </div>
+        </div>
+
+        <div class="sscalc-bars">
+          <div class="sscalc-bar-row">
+            <span>Classic</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="diff_bar_classic"></div></div>
+            <span id="diff_bar_classic_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="diff_bar_ppi"></div></div>
+            <span id="diff_bar_ppi_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI adj</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="diff_bar_ppi_adj"></div></div>
+            <span id="diff_bar_ppi_adj_label">-</span>
+          </div>
+        </div>
+
+        <div class="sscalc-footnote" id="diff_formula_note">Formula note will appear here.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="sscalc-equations">
+    <h3>PPI formulas used in this page</h3>
+    <p><strong>One-sample oracle variance:</strong> Var = sigma_y2 / n - (cov_yf^2 / sigma_f2) * N / (n * (n + N))</p>
+    <p><strong>One-sample vanilla variance:</strong> Var = sigma_y2 / n + sigma_f2 / N + sigma_f2 / n - 2 * cov_yf / n</p>
+    <p><strong>Binary moments from sens/spec:</strong> cov_yf = p * (1-p) * (sens + spec - 1)</p>
+    <p><strong>Two-group prevalence:</strong> power from the PPI two-sample variance with group-specific oracle lambda, solved for n by search.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  function id(name) {
+    return document.getElementById(name);
+  }
+
+  function readNum(name) {
+    var v = parseFloat(id(name).value);
+    return Number.isFinite(v) ? v : NaN;
+  }
+
+  function fmtInt(x) {
+    if (!Number.isFinite(x)) {
+      return "-";
+    }
+    return Math.ceil(x).toLocaleString();
+  }
+
+  function fmtPct(x) {
+    if (!Number.isFinite(x)) {
+      return "-";
+    }
+    return (x * 100).toFixed(1) + "%";
+  }
+
+  function setText(name, value) {
+    var el = id(name);
+    if (el) {
+      el.textContent = value;
+    }
+  }
+
+  function setError(msgId, msg) {
+    var el = id(msgId);
+    el.textContent = msg;
+    if (msg) {
+      el.classList.add("error");
+    } else {
+      el.classList.remove("error");
+    }
+  }
+
+  function setBar(name, value, maxValue) {
+    var el = id(name);
+    if (!el) {
+      return;
+    }
+    if (!Number.isFinite(value) || !Number.isFinite(maxValue) || maxValue <= 0) {
+      el.style.width = "0%";
+      return;
+    }
+    var pct = Math.max(0, Math.min(100, (value / maxValue) * 100));
+    el.style.width = pct.toFixed(1) + "%";
+  }
+
+  function inverseNormal(p) {
+    if (!(p > 0 && p < 1)) {
+      throw new Error("Probability must be in (0,1).");
+    }
+
+    var a = [-39.6968302866538, 220.946098424521, -275.928510446969, 138.357751867269, -30.6647980661472, 2.50662827745924];
+    var b = [-54.4760987982241, 161.585836858041, -155.698979859887, 66.8013118877197, -13.2806815528857];
+    var c = [-0.00778489400243029, -0.322396458041136, -2.40075827716184, -2.54973253934373, 4.37466414146497, 2.93816398269878];
+    var d = [0.00778469570904146, 0.32246712907004, 2.445134137143, 3.75440866190742];
+
+    var plow = 0.02425;
+    var phigh = 1 - plow;
+    var q, r;
+
+    if (p < plow) {
+      q = Math.sqrt(-2 * Math.log(p));
+      return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+        ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+    if (p > phigh) {
+      q = Math.sqrt(-2 * Math.log(1 - p));
+      return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+        ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+
+    q = p - 0.5;
+    r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q /
+      (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+  }
+
+  function normalCdf(x) {
+    var t = 1 / (1 + 0.2316419 * Math.abs(x));
+    var d = 0.3989423 * Math.exp(-x * x / 2);
+    var prob = 1 - d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+    return x >= 0 ? prob : (1 - prob);
+  }
+
+  function binaryMoments(p, sens, spec) {
+    if (!(p > 0 && p < 1)) {
+      throw new Error("Prevalence p must be in (0,1).");
+    }
+    if (!(sens >= 0 && sens <= 1 && spec >= 0 && spec <= 1)) {
+      throw new Error("Sensitivity/specificity must be in [0,1].");
+    }
+    var pHat = sens * p + (1 - spec) * (1 - p);
+    var sigmaY2 = p * (1 - p);
+    var sigmaF2 = pHat * (1 - pHat);
+    var covYf = p * (1 - p) * (sens + spec - 1);
+    return {
+      sigmaY2: sigmaY2,
+      sigmaF2: sigmaF2,
+      covYf: covYf,
+      pHat: pHat
+    };
+  }
+
+  function varOneSample(n, N, sigmaY2, sigmaF2, covYf, mode) {
+    if (mode === "vanilla") {
+      return sigmaY2 / n + sigmaF2 / N + sigmaF2 / n - 2 * covYf / n;
+    }
+    return sigmaY2 / n - (covYf * covYf / sigmaF2) * (N / (n * (n + N)));
+  }
+
+  function powerFromVariance(delta, alpha, variance) {
+    if (!(variance > 0)) {
+      return delta === 0 ? alpha : 1;
+    }
+    var zAlpha = inverseNormal(1 - alpha / 2);
+    var mu = Math.abs(delta) / Math.sqrt(variance);
+    return 1 - normalCdf(zAlpha - mu) + normalCdf(-zAlpha - mu);
+  }
+
+  function solveNByVariance(varFn, targetVar, lower, upperCap) {
+    var lo = lower || 2;
+    var hi = lo;
+    var maxCap = upperCap || 10000000;
+
+    if (varFn(lo) <= targetVar) {
+      return lo;
+    }
+
+    while (hi < maxCap && varFn(hi) > targetVar) {
+      hi = hi * 2;
+    }
+
+    if (hi >= maxCap && varFn(hi) > targetVar) {
+      return NaN;
+    }
+
+    var left = Math.floor(lo);
+    var right = Math.ceil(hi);
+    while (left + 1 < right) {
+      var mid = Math.floor((left + right) / 2);
+      if (varFn(mid) <= targetVar) {
+        right = mid;
+      } else {
+        left = mid;
+      }
+    }
+    return right;
+  }
+
+  function solveNByPower(powerFn, targetPower, lower, upperCap) {
+    var lo = lower || 2;
+    var hi = lo;
+    var maxCap = upperCap || 10000000;
+
+    if (powerFn(lo) >= targetPower) {
+      return lo;
+    }
+
+    while (hi < maxCap && powerFn(hi) < targetPower) {
+      hi = hi * 2;
+    }
+
+    if (hi >= maxCap && powerFn(hi) < targetPower) {
+      return NaN;
+    }
+
+    var left = Math.floor(lo);
+    var right = Math.ceil(hi);
+    while (left + 1 < right) {
+      var mid = Math.floor((left + right) / 2);
+      if (powerFn(mid) >= targetPower) {
+        right = mid;
+      } else {
+        left = mid;
+      }
+    }
+    return right;
+  }
+
+  function updateSingleModeUI() {
+    var outcome = id("single_outcome").value;
+    id("single_binary_group").style.display = outcome === "binary" ? "block" : "none";
+    id("single_cont_group").style.display = outcome === "continuous" ? "block" : "none";
+  }
+
+  function updateSingle() {
+    try {
+      var outcome = id("single_outcome").value;
+      var lambdaMode = id("single_lambda_mode").value;
+      var delta = readNum("single_delta");
+      var N = readNum("single_unlabeled_N");
+      var alpha = readNum("single_alpha");
+      var targetPower = readNum("single_power") / 100;
+
+      if (!(delta > 0)) {
+        throw new Error("delta must be > 0.");
+      }
+      if (!(N > 0)) {
+        throw new Error("Unlabeled N must be positive.");
+      }
+      if (!(alpha > 0 && alpha < 0.5)) {
+        throw new Error("alpha must be in (0, 0.5).");
+      }
+      if (!(targetPower > 0.5 && targetPower < 0.999)) {
+        throw new Error("Power should be between 50% and 99.9%.");
+      }
+
+      var sigmaY2, sigmaF2, covYf, nonresponse;
+      if (outcome === "binary") {
+        var p = readNum("single_prev") / 100;
+        var sens = readNum("single_sens");
+        var spec = readNum("single_spec");
+        nonresponse = readNum("single_nonresponse") / 100;
+        var moments = binaryMoments(p, sens, spec);
+        sigmaY2 = moments.sigmaY2;
+        sigmaF2 = moments.sigmaF2;
+        covYf = moments.covYf;
+      } else {
+        sigmaY2 = readNum("single_sigma_y2");
+        sigmaF2 = readNum("single_sigma_f2");
+        covYf = readNum("single_cov_yf");
+        nonresponse = readNum("single_nonresponse_cont") / 100;
+      }
+
+      if (!(nonresponse >= 0 && nonresponse < 0.95)) {
+        throw new Error("Non-response must be in [0%, 95%).");
+      }
+      if (!(sigmaY2 >= 0)) {
+        throw new Error("sigma_y2 must be >= 0.");
+      }
+      if (!(sigmaF2 > 0)) {
+        throw new Error("sigma_f2 must be > 0.");
+      }
+      if (!(covYf * covYf <= sigmaY2 * sigmaF2 + 1e-10)) {
+        throw new Error("Infeasible moments: |cov_yf| > sqrt(sigma_y2*sigma_f2).");
+      }
+
+      var zAlpha = inverseNormal(1 - alpha / 2);
+      var zBeta = inverseNormal(targetPower);
+      var targetVar = Math.pow(delta / (zAlpha + zBeta), 2);
+
+      var varFn = function (n) {
+        return varOneSample(n, N, sigmaY2, sigmaF2, covYf, lambdaMode);
+      };
+      var nPpi = solveNByVariance(varFn, targetVar, 2, 10000000);
+      if (!Number.isFinite(nPpi)) {
+        throw new Error("Infeasible under current assumptions: no finite n found.");
+      }
+
+      if (!(targetVar > 0)) {
+        throw new Error("Target variance is not positive.");
+      }
+      var nClassic = Math.ceil(sigmaY2 / targetVar);
+      if (!(nClassic >= 1)) {
+        nClassic = 1;
+      }
+
+      var nPpiAdj = Math.ceil(nPpi / (1 - nonresponse));
+      var saving = 1 - (nPpi / nClassic);
+
+      setError("single_message", "");
+      setText("single_n_ppi", fmtInt(nPpi));
+      setText("single_n_ppi_adj", fmtInt(nPpiAdj));
+      setText("single_n_classic", fmtInt(nClassic));
+      setText("single_saving", fmtPct(saving));
+
+      var maxBar = Math.max(nClassic, nPpi, nPpiAdj);
+      setBar("single_bar_classic", nClassic, maxBar);
+      setBar("single_bar_ppi", nPpi, maxBar);
+      setBar("single_bar_ppi_adj", nPpiAdj, maxBar);
+      setText("single_bar_classic_label", fmtInt(nClassic));
+      setText("single_bar_ppi_label", fmtInt(nPpi));
+      setText("single_bar_ppi_adj_label", fmtInt(nPpiAdj));
+
+      setText(
+        "single_formula_note",
+        "Using power_ppi_mean-style variance with lambda_mode='" + lambdaMode +
+        "' and root search for n. Inputs map to (sigma_y2, sigma_f2, cov_yf)."
+      );
+    } catch (err) {
+      setError("single_message", err.message);
+      setText("single_n_ppi", "-");
+      setText("single_n_ppi_adj", "-");
+      setText("single_n_classic", "-");
+      setText("single_saving", "-");
+      setText("single_bar_classic_label", "-");
+      setText("single_bar_ppi_label", "-");
+      setText("single_bar_ppi_adj_label", "-");
+      setBar("single_bar_classic", NaN, NaN);
+      setBar("single_bar_ppi", NaN, NaN);
+      setBar("single_bar_ppi_adj", NaN, NaN);
+      setText("single_formula_note", "Please adjust inputs and try again.");
+    }
+  }
+
+  function updateDiff() {
+    try {
+      var pA = readNum("diff_pA") / 100;
+      var pB = readNum("diff_pB") / 100;
+      var NA = readNum("diff_N_A");
+      var NB = readNum("diff_N_B");
+      var alpha = readNum("diff_alpha");
+      var targetPower = readNum("diff_power") / 100;
+      var sensA = readNum("diff_sens_A");
+      var specA = readNum("diff_spec_A");
+      var sensB = readNum("diff_sens_B");
+      var specB = readNum("diff_spec_B");
+      var nonresponse = readNum("diff_nonresponse") / 100;
+
+      if (!(pA > 0 && pA < 1 && pB > 0 && pB < 1)) {
+        throw new Error("pA and pB must be in (0,1).");
+      }
+      if (Math.abs(pA - pB) < 1e-8) {
+        throw new Error("pA and pB must differ to define an effect.");
+      }
+      if (!(NA > 0 && NB > 0)) {
+        throw new Error("N_A and N_B must be positive.");
+      }
+      if (!(alpha > 0 && alpha < 0.5)) {
+        throw new Error("alpha must be in (0,0.5).");
+      }
+      if (!(targetPower > 0.5 && targetPower < 0.999)) {
+        throw new Error("Power should be between 50% and 99.9%.");
+      }
+      if (!(nonresponse >= 0 && nonresponse < 0.95)) {
+        throw new Error("Non-response must be in [0%, 95%).");
+      }
+
+      var mA = binaryMoments(pA, sensA, specA);
+      var mB = binaryMoments(pB, sensB, specB);
+      var delta = pA - pB;
+
+      var zAlpha = inverseNormal(1 - alpha / 2);
+      var zBeta = inverseNormal(targetPower);
+      var pbar = (pA + pB) / 2;
+      var nClassic = Math.ceil(Math.pow(
+        zAlpha * Math.sqrt(2 * pbar * (1 - pbar)) +
+        zBeta * Math.sqrt(pA * (1 - pA) + pB * (1 - pB)),
+        2
+      ) / Math.pow(Math.abs(delta), 2));
+
+      var powerFn = function (n) {
+        var lambdaA = mA.covYf / ((1 + n / NA) * mA.sigmaF2);
+        var lambdaB = mB.covYf / ((1 + n / NB) * mB.sigmaF2);
+
+        var varA = mA.sigmaY2 / n +
+          lambdaA * lambdaA * mA.sigmaF2 * (1 / NA + 1 / n) -
+          2 * lambdaA * mA.covYf / n;
+
+        var varB = mB.sigmaY2 / n +
+          lambdaB * lambdaB * mB.sigmaF2 * (1 / NB + 1 / n) -
+          2 * lambdaB * mB.covYf / n;
+
+        var varTotal = Math.max(varA, 0) + Math.max(varB, 0);
+        return powerFromVariance(delta, alpha, varTotal);
+      };
+
+      var nPpi = solveNByPower(powerFn, targetPower, 2, 10000000);
+      if (!Number.isFinite(nPpi)) {
+        throw new Error("Infeasible under current assumptions: no finite n found.");
+      }
+
+      var nPpiAdj = Math.ceil(nPpi / (1 - nonresponse));
+      var saving = 1 - (nPpi / nClassic);
+
+      setError("diff_message", "");
+      setText("diff_n_ppi_group", fmtInt(nPpi));
+      setText("diff_n_ppi_group_adj", fmtInt(nPpiAdj));
+      setText("diff_n_classic_group", fmtInt(nClassic));
+      setText("diff_saving", fmtPct(saving));
+
+      var maxBar = Math.max(nClassic, nPpi, nPpiAdj);
+      setBar("diff_bar_classic", nClassic, maxBar);
+      setBar("diff_bar_ppi", nPpi, maxBar);
+      setBar("diff_bar_ppi_adj", nPpiAdj, maxBar);
+      setText("diff_bar_classic_label", fmtInt(nClassic));
+      setText("diff_bar_ppi_label", fmtInt(nPpi));
+      setText("diff_bar_ppi_adj_label", fmtInt(nPpiAdj));
+
+      setText(
+        "diff_formula_note",
+        "Using power_ppi_ttest_binary-style moments and two-group PPI variance with group-specific oracle lambda. Solved for equal n per group."
+      );
+    } catch (err) {
+      setError("diff_message", err.message);
+      setText("diff_n_ppi_group", "-");
+      setText("diff_n_ppi_group_adj", "-");
+      setText("diff_n_classic_group", "-");
+      setText("diff_saving", "-");
+      setText("diff_bar_classic_label", "-");
+      setText("diff_bar_ppi_label", "-");
+      setText("diff_bar_ppi_adj_label", "-");
+      setBar("diff_bar_classic", NaN, NaN);
+      setBar("diff_bar_ppi", NaN, NaN);
+      setBar("diff_bar_ppi_adj", NaN, NaN);
+      setText("diff_formula_note", "Please adjust inputs and try again.");
+    }
+  }
+
+  function setActivePanel(targetPanelId) {
+    var tabs = document.querySelectorAll(".sscalc-tab");
+    var panels = document.querySelectorAll(".sscalc-panel");
+    tabs.forEach(function (tab) {
+      var active = tab.getAttribute("data-panel") === targetPanelId;
+      tab.classList.toggle("is-active", active);
+      tab.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    panels.forEach(function (panel) {
+      panel.classList.toggle("is-active", panel.id === targetPanelId);
+    });
+  }
+
+  function init() {
+    document.querySelectorAll(".sscalc-tab").forEach(function (button) {
+      button.addEventListener("click", function () {
+        setActivePanel(button.getAttribute("data-panel"));
+      });
+    });
+
+    [
+      "single_outcome", "single_lambda_mode", "single_delta", "single_unlabeled_N",
+      "single_alpha", "single_power", "single_prev", "single_sens", "single_spec",
+      "single_nonresponse", "single_sigma_y2", "single_sigma_f2", "single_cov_yf",
+      "single_nonresponse_cont"
+    ].forEach(function (field) {
+      id(field).addEventListener("input", function () {
+        if (field === "single_outcome") {
+          updateSingleModeUI();
+        }
+        updateSingle();
+      });
+      id(field).addEventListener("change", function () {
+        if (field === "single_outcome") {
+          updateSingleModeUI();
+        }
+        updateSingle();
+      });
+    });
+
+    [
+      "diff_pA", "diff_pB", "diff_N_A", "diff_N_B", "diff_alpha", "diff_power",
+      "diff_sens_A", "diff_spec_A", "diff_sens_B", "diff_spec_B", "diff_nonresponse"
+    ].forEach(function (field) {
+      id(field).addEventListener("input", updateDiff);
+      id(field).addEventListener("change", updateDiff);
+    });
+
+    updateSingleModeUI();
+    updateSingle();
+    updateDiff();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+```
+
+### Notes
+
+- This page is now **PPI-specific** (not a generic textbook calculator).
+- It is designed for planning and intuition; for final protocol numbers, confirm assumptions with your statistician.

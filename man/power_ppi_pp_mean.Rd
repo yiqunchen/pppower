@@ -35,7 +35,7 @@ power_ppi_pp_mean(
 
 \item{sigma_f2}{Optional prediction variance; overrides anything implied by \code{metrics}.}
 
-\item{cov_y_f}{Optional covariance \eqn{\Cov(Y, f(X))}. When supplied (directly
+\item{cov_y_f}{Optional covariance \eqn{\mathrm{Cov}(Y, f(X))}. When supplied (directly
 or via \code{metrics$cov_y_f}) the PPI++ power is returned in addition to the PP
 quantities.}
 

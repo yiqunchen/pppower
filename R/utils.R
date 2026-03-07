@@ -1,3 +1,6 @@
+#' @importFrom stats lm sd pnorm cor
+NULL
+
 `%||%` <- function(x, y) {
   if (!is.null(x)) x else y
 }
@@ -246,4 +249,751 @@ resolve_ppi_variances <- function(var_f = NULL,
   }
 
   list(var_f = vars$var_f, var_res = vars$var_res)
+}
+
+compute_hessian_fisher <- function(
+  model_type = c("ols", "glm"),
+  X,
+  Y = NULL,         # optional for OLS, unused for GLM fisher
+  beta = NULL,      # required for GLM
+  family = NULL     # required for GLM
+) {
+  model_type <- match.arg(model_type)
+  n <- nrow(X)
+
+  if (model_type == "ols") {
+
+    # H = (1/n) Xᵀ X
+    H <- crossprod(X) / n
+    return(H)
+  }
+
+  # GLM case (canonical link)
+  if (is.null(beta))
+    stop("GLM requires 'beta' (coefficient vector).")
+
+  if (is.null(family))
+    stop("GLM requires 'family' (e.g., 'binomial','poisson','gaussian').")
+
+  eta <- as.numeric(X %*% beta)
+
+  W <- switch(family,
+              "binomial" = {
+                mu <- 1 / (1 + exp(-eta))
+                mu * (1 - mu)   # canonical logit variance
+              },
+              "poisson" = {
+                mu <- exp(eta)
+                mu               # canonical log variance
+              },
+              "gaussian" = rep(1, n),   # canonical identity
+              stop("Unsupported GLM family: ", family)
+  )
+
+  Wmat <- diag(W, n, n)
+
+  J <- t(X) %*% Wmat %*% X / n
+  return(J)
+}
+
+compute_sigma_blocks <- function(
+  X_l, Y_l, f_l,
+  X_u, f_u,
+  model_type = c("ols","glm"),
+  beta = NULL,
+  family = NULL
+) {
+  model_type <- match.arg(model_type)
+
+  n_l <- nrow(X_l)
+  n_u <- nrow(X_u)
+
+  # Compute means μ_l, μ_u for GLM or OLS fitted value
+  if (model_type == "ols") {
+
+    mu_l <- as.numeric(X_l %*% beta)
+    mu_u <- as.numeric(X_u %*% beta)
+
+  } else {
+
+    eta_l <- as.numeric(X_l %*% beta)
+    eta_u <- as.numeric(X_u %*% beta)
+
+    mu_l <- switch(family,
+                   "binomial" = 1 / (1 + exp(-eta_l)),
+                   "poisson"  = exp(eta_l),
+                   "gaussian" = eta_l,
+                   stop("Unsupported GLM family: ", family)
+    )
+
+    mu_u <- switch(family,
+                   "binomial" = 1 / (1 + exp(-eta_u)),
+                   "poisson"  = exp(eta_u),
+                   "gaussian" = eta_u,
+                   stop("Unsupported GLM family: ", family)
+    )
+  }
+
+  # Score residuals
+  res_Y_l <- Y_l - mu_l
+  res_f_l <- f_l - mu_l
+  res_f_u <- f_u - mu_u
+
+  # Σ blocks
+  Sigma_YY   <- crossprod(X_l * res_Y_l) / n_l
+  Sigma_ff_l <- crossprod(X_l * res_f_l) / n_l
+  Sigma_ff_u <- crossprod(X_u * res_f_u) / n_u
+  Sigma_Yf   <- crossprod(X_l * res_Y_l, X_l * res_f_l) / n_l
+
+  list(
+    Sigma_YY   = Sigma_YY,
+    Sigma_ff_l = Sigma_ff_l,
+    Sigma_ff_u = Sigma_ff_u,
+    Sigma_Yf   = Sigma_Yf
+  )
+}
+
+#' Construct Hessian/Fisher and Covariance Blocks for PPI/PPI++ Regression
+#'
+#' @description
+#' Computes all required Hessian/Fisher information matrices and covariance
+#' blocks used by Prediction-Powered Inference (PPI) and PPI++ for
+#' regression-based estimands (OLS or GLM contrasts).
+#'
+#' This helper wraps:
+#'   * \code{compute_hessian_fisher} — model Hessian or Fisher information  
+#'   * \code{compute_sigma_blocks}   — Σ-block covariance components
+#'
+#' and produces a unified object that can be passed directly to
+#' [n_required_ppi_pp()] for labeled sample size calculations.
+#'
+#' @param model_type Character string: `"ols"` or `"glm"`.
+#'   Determines whether the estimator is linear regression (OLS) or a GLM.
+#'
+#' @param X_l Matrix of labeled covariates (n × p).
+#' @param Y_l Vector of labeled responses (required for OLS and GLM).
+#' @param f_l Vector of model predictions on labeled data.
+#'
+#' @param X_u Matrix of unlabeled covariates (N × p).
+#' @param f_u Vector of model predictions on unlabeled data.
+#'
+#' @param beta Numeric vector of regression coefficients used for Hessian/Fisher
+#'   evaluation. Required for GLM; optional for OLS.
+#'
+#' @param family GLM family (`"binomial"` or `"gaussian"`). Only used for
+#'   `model_type = "glm"`.
+#'
+#' @return
+#' A named list of matrices:
+#'
+#' \describe{
+#'   \item{H_L}{Labeled-data Hessian / Fisher information (p × p)}
+#'   \item{H_U}{Unlabeled-data Hessian / Fisher information (p × p)}
+#'   \item{Sigma_YY}{Covariance of labeled score (`Y − Xβ`) (p × p)}
+#'   \item{Sigma_ff_l}{Covariance of prediction score on labeled data (p × p)}
+#'   \item{Sigma_ff_u}{Covariance of prediction score on unlabeled data (p × p)}
+#'   \item{Sigma_Yf}{Cross-covariance between labeled scores and prediction scores (p × p)}
+#' }
+#'
+#' These matrices are exactly the inputs needed for
+#' [n_required_ppi_pp()] in `type = "regression"` mode.
+#'
+#' @examples
+#' set.seed(1)
+#' p <- 3
+#' n_l <- 400
+#' n_u <- 2000
+#'
+#' X_l <- matrix(rnorm(n_l * p), n_l, p)
+#' X_u <- matrix(rnorm(n_u * p), n_u, p)
+#' beta <- c(1, -0.5, 0.3)
+#'
+#' # Labeled response and predictions
+#' Y_l <- drop(X_l %*% beta + rnorm(n_l))
+#' f_l <- drop(X_l %*% beta + rnorm(n_l, sd = 0.3))
+#' f_u <- drop(X_u %*% beta + rnorm(n_u, sd = 0.3))
+#'
+#' blocks <- compute_ppi_blocks(
+#'   model_type = "ols",
+#'   X_l = X_l, Y_l = Y_l, f_l = f_l,
+#'   X_u = X_u, f_u = f_u,
+#'   beta = beta
+#' )
+#'
+#' # Use in sample size solver:
+#' c_vec <- c(1, 0, 0)
+#' delta <- as.numeric(t(c_vec) %*% beta)
+#'
+#' n_required_ppi_pp(
+#'   delta = delta, N = n_u,
+#'   type = "regression", lambda_mode = "oracle",
+#'   c = c_vec,
+#'   H_L = blocks$H_L, H_U = blocks$H_U,
+#'   Sigma_YY = blocks$Sigma_YY,
+#'   Sigma_ff_l = blocks$Sigma_ff_l,
+#'   Sigma_ff_u = blocks$Sigma_ff_u,
+#'   Sigma_Yf = blocks$Sigma_Yf
+#' )
+#'
+#' @seealso \link{n_required_ppi_pp}
+#'
+#' @export
+compute_ppi_blocks <- function(
+  model_type = c("ols","glm"),
+  X_l, Y_l, f_l,
+  X_u, f_u,
+  beta = NULL,
+  family = NULL
+) {
+  model_type <- match.arg(model_type)
+
+  # Hessians / Fisher information
+  H_L <- compute_hessian_fisher(
+    model_type = model_type,
+    X = X_l,
+    Y = Y_l,
+    beta = beta,
+    family = family
+  )
+
+  H_U <- compute_hessian_fisher(
+    model_type = model_type,
+    X = X_u,
+    Y = NULL,
+    beta = beta,
+    family = family
+  )
+
+  # Covariance Σ-blocks
+  sig <- compute_sigma_blocks(
+    X_l = X_l, Y_l = Y_l, f_l = f_l,
+    X_u = X_u, f_u = f_u,
+    model_type = model_type,
+    beta = beta,
+    family = family
+  )
+
+  # Output list
+  list(
+    H_L         = H_L,
+    H_U         = H_U,
+    Sigma_YY    = sig$Sigma_YY,
+    Sigma_ff_l  = sig$Sigma_ff_l,
+    Sigma_ff_u  = sig$Sigma_ff_u,
+    Sigma_Yf    = sig$Sigma_Yf
+  )
+}
+
+#' Generate One Labeled + Unlabeled Sample
+#'
+#' @keywords internal
+#' 
+#' @param n_labeled Number of labeled samples
+#' @param n_unlabeled Number of unlabeled samples
+#' @param X_sampler_L Function sampling labeled covariates
+#' @param X_sampler_U Function sampling unlabeled covariates (defaults to X_sampler_L)
+#' @param f_generator Function generating f(X)
+#' @param eps_sampler Error sampler, default N(0,1)
+#' @param delta Mean shift applied to f
+#'
+#' @return A list with labeled and unlabeled data and true mean.
+#'
+#' @importFrom stats rnorm
+simulate_one_draw <- function(n_labeled, 
+                              n_unlabeled,
+                              X_sampler_L, 
+                              X_sampler_U = NULL,
+                              f_generator,
+                              eps_sampler = function(n) rnorm(n, 0, 1),
+                              delta = 0) {
+  if (is.null(X_sampler_U)) X_sampler_U <- X_sampler_L
+ 
+  X_L <- X_sampler_L(n_labeled)
+  X_U <- X_sampler_U(n_unlabeled)
+
+  f_L_base <- f_generator(X_L)
+  f_U_base <- f_generator(X_U)
+
+  # mean shift by delta
+  f_L <- f_L_base + delta
+  f_U <- f_U_base + delta
+
+  y_L <- f_L + eps_sampler(n_labeled)
+
+  list(
+    labeled   = list(X = X_L, y = y_L, f = f_L),
+    unlabeled = list(X = X_U, f = f_U),
+    theta_true = mean(f_L),   # population mean of Y is ~ mean(f) here
+    delta = delta
+  )
+}
+
+#' Internal helper for model prediction
+#'
+#' @keywords internal
+#'
+#' @param fit Fitted model object
+#' @param newdata New data frame to predict on
+#'
+#' @return Numeric vector of predictions.
+#'
+#' @importFrom stats predict
+.predict_any <- function(fit, newdata) {
+  if (inherits(fit, "ranger")) {
+    predict(fit, data = as.data.frame(newdata))$predictions
+  } else {
+    stats::predict(fit, newdata = as.data.frame(newdata))
+  }
+}
+
+#' Fit predictive model and return predictions for Mean Estimation for PPI / PPI++ 
+#'
+#' @description
+#' Internal unified interface for fitting predictive models used in the
+#' PPI and PPI++ estimators.  
+#' Supports correctly specified, misspecified, and incorrectly specified
+#' linear models, as well as random forests.  
+#' Returns fitted model object and predictions on the unlabeled covariates.
+#'
+#' @keywords internal
+#'
+#' @param model_type Type of model ("glm_correct", "glm_mis", "glm_wrong", "rf")
+#' @param X_L Labeled covariates
+#' @param y_L Labeled outcomes
+#' @param X_U Unlabeled covariates
+#' @param mtry RF mtry value
+#' @param rf_engine Random forest engine ("ranger" or "randomForest")
+#' @param rf_trees Number of trees
+#' @param rf_min_node_size Minimum node size for ranger
+#' @param rf_num_threads Threads (ranger)
+#' @param rf_seed Random seed
+#'
+#' @return List containing model fit object and predictions on X_U.
+#'
+#' @importFrom stats glm predict
+#' @importFrom ranger ranger
+#' @importFrom randomForest randomForest
+fit_predict_model <- function(model_type, X_L, y_L, X_U,
+                              mtry = NULL,
+                              rf_engine = c("ranger", "randomForest"),
+                              rf_trees = 200,
+                              rf_min_node_size = 5,
+                              rf_num_threads = NULL,
+                              rf_seed = NULL) {
+  model_type <- match.arg(model_type, c("glm_correct", "glm_mis", "glm_wrong", "rf"))
+  rf_engine  <- match.arg(rf_engine, c("ranger", "randomForest"))
+
+  ## ensure names for formula use
+  if (is.matrix(X_L)) colnames(X_L) <- paste0("x", seq_len(ncol(X_L)))
+  if (is.matrix(X_U)) colnames(X_U) <- paste0("x", seq_len(ncol(X_U)))
+
+  dat_L <- data.frame(y = y_L, X_L)
+
+  if (model_type == "glm_correct") {
+    fit <- stats::glm(y ~ x1 + I(x1 * x2) + I(x2^3), data = dat_L)
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
+
+  } else if (model_type == "glm_mis") {
+    fit <- stats::glm(y ~ x1 + x2, data = dat_L)
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
+
+  } else if (model_type == "glm_wrong") {
+    fit <- stats::glm(y ~ I(x1 * x2), data = dat_L)
+    fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
+
+  } else if (model_type == "rf") {
+    mtry_eff  <- if (is.null(mtry)) floor(sqrt(ncol(X_L))) else mtry
+    use_rgr   <- (rf_engine == "ranger") && requireNamespace("ranger", quietly = TRUE)
+
+    if (use_rgr) {
+      fit <- ranger::ranger(
+        y ~ ., data = dat_L,
+        num.trees     = rf_trees,
+        mtry          = mtry_eff,
+        min.node.size = rf_min_node_size,
+        importance    = "none",
+        num.threads   = rf_num_threads
+      )
+      fhat_U <- predict(fit, data = as.data.frame(X_U))$predictions
+
+    } else {
+      fit <- randomForest::randomForest(y ~ ., data = dat_L, ntree = rf_trees, mtry = mtry_eff)
+      fhat_U <- stats::predict(fit, newdata = as.data.frame(X_U))
+    }
+  }
+
+  list(fit = fit, fhat_U = as.numeric(fhat_U))
+}
+
+#' Fit Predictive Model for OLS PPI / PPI++ (Internal Helper)
+#'
+#' @description
+#' Internal unified interface for fitting predictive models used in the
+#' OLS-based PPI and PPI++ estimators.  
+#' Supports correctly specified, misspecified, and incorrectly specified
+#' linear models, as well as random forests.  
+#' Returns fitted model object and predictions on the unlabeled covariates.
+#'
+#' @keywords internal
+#'
+#' @param model_type Type of model ("glm_correct", "glm_mis", "glm_wrong", "rf")
+#' @param X_L Labeled covariates
+#' @param y_L Labeled outcomes
+#' @param X_U Unlabeled covariates
+#' @param mtry RF mtry value
+#' @param rf_engine Random forest engine ("ranger" or "randomForest")
+#' @param rf_trees Number of trees
+#' @param rf_min_node_size Minimum node size for ranger
+#' @param rf_num_threads Threads (ranger)
+#' @param rf_seed Random seed
+#'
+#' @return List containing model fit object and predictions on X_U.
+#'
+#' @importFrom stats glm predict
+#' @importFrom ranger ranger
+#' @importFrom randomForest randomForest
+fit_predict_model_ols <- function(
+  model_type,
+  X_L, y_L,
+  X_U,
+  crossfit = FALSE,
+  mtry = NULL,
+  rf_engine = c("ranger", "randomForest"),
+  rf_trees = 200,
+  rf_min_node_size = 5,
+  rf_num_threads = NULL,
+  rf_seed = NULL
+) {
+
+  model_type <- match.arg(model_type, c("glm_correct","glm_mis","glm_wrong","rf"))
+  rf_engine  <- match.arg(rf_engine)
+
+  ## Ensure colnames
+  if (is.matrix(X_L)) colnames(X_L) <- paste0("x", seq_len(ncol(X_L)))
+  if (is.matrix(X_U)) colnames(X_U) <- paste0("x", seq_len(ncol(X_U)))
+
+  dat_L <- data.frame(y = y_L, X_L)
+
+  ## Unified train function: returns *fit only*
+  train_model <- function(dat) {
+    if (model_type == "glm_correct") return(glm(y ~ x1 + x2 + x3, data = dat))
+    if (model_type == "glm_mis")     return(glm(y ~ x1 + x2, data = dat))
+    if (model_type == "glm_wrong")   return(glm(y ~ x1, data = dat))
+
+    ## RF case
+    if (!is.null(rf_seed)) set.seed(rf_seed)
+    mtry_eff <- if (is.null(mtry)) floor(sqrt(ncol(dat)-1)) else mtry
+
+    if (rf_engine == "ranger") {
+      return(ranger::ranger(
+        y ~ ., data = dat,
+        num.trees = rf_trees,
+        mtry = mtry_eff,
+        min.node.size = rf_min_node_size,
+        write.forest = TRUE,
+        num.threads = rf_num_threads
+      ))
+    } else {
+      return(randomForest::randomForest(
+        y ~ ., data = dat,
+        ntree = rf_trees,
+        mtry = mtry_eff
+      ))
+    }
+  }
+
+  ## Predict-any helper
+  pred_any <- function(fit, X) {
+    if (model_type == "rf" && rf_engine == "ranger")
+      return(predict(fit, data = as.data.frame(X))$predictions)
+    return(predict(fit, newdata = as.data.frame(X), type = "link"))
+  }
+
+  ## CROSS-FIT
+  if (crossfit) {
+    n <- nrow(dat_L)
+    fold_id <- sample(rep(1:2, length.out=n))
+
+    fhat_L <- numeric(n)
+    fhat_U_all <- list()
+    fit_list <- list()
+
+    for (fold in 1:2) {
+      tr <- which(fold_id != fold)
+      te <- which(fold_id == fold)
+
+      dat_train <- dat_L[tr,]
+
+      fit <- train_model(dat_train)
+      fit_list[[fold]] <- fit
+
+      fhat_L[te] <- pred_any(fit, X_L[te,])
+      fhat_U_all[[fold]] <- pred_any(fit, X_U)
+    }
+
+    fhat_U <- Reduce("+", fhat_U_all) / 2
+
+    return(list(
+      fit_list = fit_list,
+      fhat_L   = fhat_L,
+      fhat_U   = fhat_U
+    ))
+  }
+
+  ## NO CROSS-FIT
+  fit <- train_model(dat_L)
+
+  list(
+    fit    = fit,
+    fhat_L = pred_any(fit, X_L),
+    fhat_U = pred_any(fit, X_U)
+  )
+}
+
+#' Fit predictive model for GLM-based PPI/PPI++
+#'
+#' @param model_type One of `"glm_correct"`, `"glm_mis"`, `"glm_wrong"`, `"rf"`, `"oracle"`.
+#' @param X_L Labeled covariate matrix/data frame.
+#' @param y_L Labeled response vector.
+#' @param X_U Unlabeled covariates.
+#' @param fold_index Optional vector of fold assignments for cross-fitting.
+#' @param mtry Random forest mtry parameter.
+#' @param rf_engine Random forest engine (`"ranger"` or `"randomForest"`).
+#' @param rf_trees Number of trees for RF.
+#' @param rf_min_node_size Minimum node size for RF.
+#' @param rf_num_threads Number of threads for RF.
+#' @param f_generator Required if `model_type = "oracle"`; function returning linear predictor η(x).
+#' 
+#' @keywords internal
+#'
+#' @return A list with:
+#'   \item{fit}{The fitted model object.}
+#'   \item{fhat_L}{Predicted conditional means \eqn{\hat\mu_f(X_L)} on labeled data.}
+#'   \item{fhat_U}{Predicted conditional means \eqn{\hat\mu_f(X_U)} on unlabeled data.}
+#'
+#' @importFrom stats glm predict binomial
+#' @importFrom ranger ranger
+#' @importFrom randomForest randomForest
+fit_predict_model_glm <- function(
+  model_type,
+  X_L, y_L,
+  X_U,
+  fold_index = NULL,     # optional training indices (cross-fitting)
+  mtry = NULL,
+  rf_engine = c("ranger", "randomForest"),
+  rf_trees = 200,
+  rf_min_node_size = 5,
+  rf_num_threads = NULL,
+  f_generator = NULL     # used ONLY for oracle model
+) {
+
+  model_type <- match.arg(
+    model_type,
+    c("glm_correct", "glm_mis", "glm_wrong", "rf", "oracle")
+  )
+  rf_engine <- match.arg(rf_engine)
+
+  if (is.matrix(X_L)) colnames(X_L) <- paste0("x", seq_len(ncol(X_L)))
+  if (is.matrix(X_U)) colnames(X_U) <- paste0("x", seq_len(ncol(X_U)))
+
+  X_L_df <- as.data.frame(X_L)
+  X_U_df <- as.data.frame(X_U)
+
+  dat_L <- data.frame(y = y_L, X_L_df)
+
+  ## If cross-fitting, train only on the subset:
+  dat_train <- if (!is.null(fold_index)) {
+    dat_L[fold_index, , drop = FALSE]
+  } else {
+    dat_L
+  }
+
+  ## ORACLE MODEL: perfect predictions from population f(X)
+  if (model_type == "oracle") {
+
+    if (is.null(f_generator)) {
+      stop("Oracle model requires f_generator.")
+    }
+
+    eta_L <- f_generator(X_L_df)
+    eta_U <- f_generator(X_U_df)
+
+    ## Logistic mean μ(x) = expit(η)
+    mu_L <- plogis(eta_L)
+    mu_U <- plogis(eta_U)
+
+    return(list(
+      fit    = NULL,
+      fhat_L = as.numeric(mu_L),
+      fhat_U = as.numeric(mu_U)
+    ))
+  }
+
+
+  ## TRAINING FUNCTION (returns model fit only)
+  train_model <- function(dat) {
+
+    ## GLM correct
+    if (model_type == "glm_correct") {
+      return(glm(y ~ x1 + x2 + x3, data = dat,
+                 family = binomial(link = "logit")))
+    }
+
+    ## GLM mis
+    if (model_type == "glm_mis") {
+      return(glm(y ~ x1 + x2, data = dat,
+                 family = binomial(link = "logit")))
+    }
+
+    ## GLM wrong
+    if (model_type == "glm_wrong") {
+      return(glm(y ~ x1, data = dat,
+                 family = binomial(link = "logit")))
+    }
+
+    ## RANDOM FOREST
+    if (model_type == "rf") {
+
+      dat_rf <- dat
+      dat_rf$y <- factor(dat_rf$y, levels = c(0,1))
+
+      mtry_eff <- if (is.null(mtry)) floor(sqrt(ncol(dat) - 1)) else mtry
+
+      if (rf_engine == "ranger") {
+        return(
+          ranger::ranger(
+            y ~ ., data = dat_rf,
+            probability = TRUE,
+            num.trees   = rf_trees,
+            mtry        = mtry_eff,
+            min.node.size = rf_min_node_size,
+            num.threads = rf_num_threads
+          )
+        )
+      } else {
+        return(
+          randomForest::randomForest(
+            y ~ ., data = dat_rf,
+            ntree = rf_trees,
+            mtry  = mtry_eff
+          )
+        )
+      }
+    }
+
+    stop("Unsupported model_type.")
+  }
+
+
+  ## PREDICT FUNCTION: unified prediction interface
+  pred_any <- function(fit, newX) {
+    if (model_type == "rf") {
+      if (rf_engine == "ranger") {
+        return(predict(fit, data = newX)$predictions[, 2])
+      } else {
+        return(predict(fit, newdata = newX, type = "prob")[, 2])
+      }
+    }
+    ## GLM cases
+    return(predict(fit, newdata = newX, type = "response"))
+  }
+
+
+  ## TRAIN FINAL MODEL ON dat_train
+  fit <- train_model(dat_train)
+
+  ## PREDICT on FULL LABELED + UNLABELED (no further splitting)
+  fhat_L <- pred_any(fit, dat_L)
+  fhat_U <- pred_any(fit, X_U_df)
+
+  ## RETURN
+  list(
+    fit    = fit,
+    fhat_L = as.numeric(fhat_L),
+    fhat_U = as.numeric(fhat_U)
+  )
+}
+
+simulate_one_draw_contrast <- function(
+  n_labeled,
+  X_sampler_L,
+  f_generator,
+  eps_sampler,
+  a,
+  delta
+) {
+  X <- X_sampler_L(n_labeled)
+  X_mat <- as.matrix(X)
+
+  f_true <- f_generator(X)
+  f_delta <- f_true + delta * as.numeric(X_mat %*% a)
+
+  y <- f_delta + eps_sampler(n_labeled)
+
+  list(
+    X = X,
+    y = y
+  )
+}
+
+simulate_one_draw_contrast_glm <- function(
+  n_labeled,
+  X_sampler_L,
+  f_generator,   # returns linear predictor η(x)
+  a,             # contrast vector
+  delta
+) {
+  X <- X_sampler_L(n_labeled)
+  X_mat <- as.matrix(X)
+
+  eta_true  <- f_generator(X)
+  eta_delta <- eta_true + delta * as.numeric(X_mat %*% a)
+
+  mu <- plogis(eta_delta)
+
+  y <- rbinom(n_labeled, 1, mu)
+
+  list(
+    X = X,
+    y = y
+  )
+}
+
+compute_theta0 <- function(a, X_sampler_L, f_generator, n_ref = 5e5) {
+  Xref <- X_sampler_L(n_ref)
+  Xref_m <- as.matrix(Xref)
+  yref <- f_generator(Xref_m)
+
+  H <- crossprod(Xref_m) / n_ref
+  G <- crossprod(Xref_m, yref) / n_ref
+  beta_star <- solve(H, G)
+
+  as.numeric(sum(a * beta_star))
+}
+
+#' @keywords internal
+#' @importFrom stats quasibinomial
+compute_theta_shift_glm <- function(delta, a, X_sampler, f_generator, M = 50000) {
+
+  # Generate a large synthetic "population"
+  X <- as.matrix(X_sampler(M))
+
+  # Baseline & shifted linear predictors
+  eta0 <- f_generator(X)
+  eta1 <- eta0 + delta * as.numeric(X %*% a)
+
+  # Logistic mean functions
+  mu0 <- plogis(eta0)
+  mu1 <- plogis(eta1)
+
+  # Fit "population" GLMs using fractional responses
+  # quasibinomial allows mu in (0,1) as responses without warnings
+  fit_frac <- function(X, mu) {
+    glm.fit(X, mu, family = quasibinomial(link = "logit"))$coefficients
+  }
+
+  beta0 <- fit_frac(X, mu0)
+  beta1 <- fit_frac(X, mu1)
+
+  as.numeric(sum(a * beta1) - sum(a * beta0))
 }

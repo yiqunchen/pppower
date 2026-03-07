@@ -52,6 +52,9 @@
 <li>
       <a href="../articles/intro-ppi.html">Prediction-Powered Power Planning</a>
     </li>
+    <li>
+      <a href="../articles/ppi-sample-size.html">Prediction-Powered Sample Size Calculation</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -94,31 +97,6 @@ parameter is the population mean <span class="math inline">\(\theta =
 the estimand is a linear contrast <span class="math inline">\(c^\top
 \beta\)</span> from a PPI-adjusted OLS estimator.</li>
 </ul>
-<p>Both workflows rely on a synthetic “superpopulation” that mimics the
-joint distribution of <span class="math inline">\((X, Y)\)</span> and
-their cross-fitted predictions. The helper
-<code><a href="../reference/simulate_crossfit_data.html">simulate_crossfit_data()</a></code> generates such a data set.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://yiqunchen.github.io/pppower">pppower</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">pppower</span><span class="fu">:::</span><span class="fu"><a href="../reference/simulate_crossfit_data.html">simulate_crossfit_data</a></span><span class="op">(</span></span>
-<span>  n <span class="op">=</span> <span class="fl">4000</span>,</span>
-<span>  p <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  K <span class="op">=</span> <span class="fl">5</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 'data.frame':    4000 obs. of  7 variables:</span></span>
-<span><span class="co">#&gt;  $ y      : num  3.77e-05 -1.15 -5.91e-01 -3.92 -4.25 ...</span></span>
-<span><span class="co">#&gt;  $ x1     : num  -0.626 0.184 -0.836 1.595 0.33 ...</span></span>
-<span><span class="co">#&gt;  $ x2     : num  -1.135 0.765 0.571 -1.352 -2.03 ...</span></span>
-<span><span class="co">#&gt;  $ x3     : num  0.264 -0.829 -1.462 1.684 -1.544 ...</span></span>
-<span><span class="co">#&gt;  $ x4     : num  -0.9391 1.3937 1.6258 0.409 -0.0926 ...</span></span>
-<span><span class="co">#&gt;  $ x5     : num  0.858 -1.625 -0.234 -1.033 -1.141 ...</span></span>
-<span><span class="co">#&gt;  $ fhat_cf: num  -0.5424 -1.5751 0.7831 0.0229 -6.387 ...</span></span>
-<span><span class="co">#&gt;  - attr(*, "family")= chr "gaussian"</span></span>
-<span><span class="co">#&gt;  - attr(*, "K")= num 5</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -127,55 +105,66 @@ their cross-fitted predictions. The helper
 <div class="section level3">
 <h3 id="notation">Notation<a class="anchor" aria-label="anchor" href="#notation"></a>
 </h3>
-<p>We test <span class="math inline">\(H_0: \theta = \theta_0\)</span>
-versus a two-sided alternative, with:</p>
-<ul>
-<li>
-<span class="math inline">\(\delta = \theta - \theta_0\)</span> -
-effect size of interest.</li>
-<li>
-<span class="math inline">\(N\)</span> - unlabeled sample size used
-to evaluate predictions <span class="math inline">\(f(X)\)</span>.</li>
-<li>
-<span class="math inline">\(n\)</span> - labeled sample size used to
-correct prediction error.</li>
-<li>
-<span class="math inline">\(\sigma_f^2 = \mathrm{Var}(f(X))\)</span>
-and <span class="math inline">\(\sigma_{\text{res}}^2 = \mathrm{Var}(Y -
-f(X))\)</span>.</li>
-</ul>
-<p>These can be estimated from the superpopulation.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">theta_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
-<span><span class="va">theta0</span> <span class="op">&lt;-</span> <span class="va">theta_true</span> <span class="op">-</span> <span class="fl">0.45</span></span>
-<span><span class="va">delta</span> <span class="op">&lt;-</span> <span class="va">theta_true</span> <span class="op">-</span> <span class="va">theta0</span></span>
-<span><span class="va">var_f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">fhat_cf</span><span class="op">)</span></span>
-<span><span class="va">var_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">var</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">y</span> <span class="op">-</span> <span class="va">df</span><span class="op">$</span><span class="va">fhat_cf</span><span class="op">)</span></span>
-<span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">2000</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
-<span><span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">0.05</span></span>
+<p>Notation</p>
+<p>We test the null hypothesis H_0: = _0 versus a two-sided alternative,
+where: - = - _0: effect size of interest - N: unlabeled sample size
+(used to estimate [f(X)]) - n: labeled sample size (used to correct
+prediction error) - <em>f^2 = (f(X)): variance of the model prediction -
+</em>{}^2 = (Y - f(X)): residual variance after prediction</p>
+<p>These quantities are typically estimated from prior data, pilot
+studies, or external models — but for planning and power analysis, we
+can specify them directly.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://yiqunchen.github.io/pppower">pppower</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="fl">2000</span></span></code></pre></div>
+<span><span class="co"># Study design parameters</span></span>
+<span><span class="va">N</span>     <span class="op">&lt;-</span> <span class="fl">2000</span>     <span class="co"># unlabeled sample size</span></span>
+<span><span class="va">n</span>     <span class="op">&lt;-</span> <span class="fl">200</span>      <span class="co"># labeled sample size</span></span>
+<span><span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">0.05</span>     <span class="co"># two-sided significance level</span></span>
+<span><span class="va">sim</span>   <span class="op">&lt;-</span> <span class="fl">2000</span>     <span class="co"># Monte Carlo replicates</span></span>
+<span></span>
+<span><span class="co"># Population-level quantities (from prior knowledge, pilot data, or assumptions)</span></span>
+<span><span class="va">theta0</span>   <span class="op">&lt;-</span> <span class="fl">0.0</span>   <span class="co"># null value of the mean</span></span>
+<span><span class="va">delta</span>    <span class="op">&lt;-</span> <span class="fl">0.15</span>  <span class="co"># effect size (true mean - theta0)</span></span>
+<span><span class="va">var_f</span>    <span class="op">&lt;-</span> <span class="fl">0.45</span>  <span class="co"># variance of f(X)</span></span>
+<span><span class="va">var_res</span>  <span class="op">&lt;-</span> <span class="fl">0.80</span>  <span class="co"># residual variance</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="analytical-power">Analytical power<a class="anchor" aria-label="anchor" href="#analytical-power"></a>
 </h3>
+<p>With these inputs, we can calculate the analytical power of the PPI
+mean estimator using the closed-form normal approximation:</p>
 <p><code><a href="../reference/power_ppi_mean.html">power_ppi_mean()</a></code> implements the normal-theory power
 formula, using the standard error <span class="math inline">\(\sqrt{\sigma_f^2 / N + \sigma_{\text{res}}^2 /
 n}\)</span>.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span><span class="va">delta</span>, <span class="va">var_f</span>, <span class="va">var_res</span>, <span class="va">N</span>, <span class="va">n</span>, <span class="va">alpha</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.804664</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
+<span>  delta <span class="op">=</span> <span class="va">delta</span>,</span>
+<span>  var_f <span class="op">=</span> <span class="va">var_f</span>,</span>
+<span>  var_res <span class="op">=</span> <span class="va">var_res</span>,</span>
+<span>  N <span class="op">=</span> <span class="va">N</span>,</span>
+<span>  n <span class="op">=</span> <span class="va">n</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="va">alpha</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.6359878</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="monte-carlo-calibration-parametric">Monte Carlo calibration (parametric)<a class="anchor" aria-label="anchor" href="#monte-carlo-calibration-parametric"></a>
 </h3>
 <p><code><a href="../reference/simulate_power.html">simulate_power()</a></code> mimics the null distribution with Monte
 Carlo samples of the test statistic.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/simulate_power.html">simulate_power</a></span><span class="op">(</span><span class="va">delta</span>, <span class="va">var_f</span>, <span class="va">var_res</span>, <span class="va">N</span>, <span class="va">n</span>, <span class="va">alpha</span>, R <span class="op">=</span> <span class="va">sim</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     Exact Empirical </span></span>
-<span><span class="co">#&gt;  0.804664  0.818500</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/simulate_power.html">simulate_power</a></span><span class="op">(</span></span>
+<span>  delta <span class="op">=</span> <span class="va">delta</span>,</span>
+<span>  N <span class="op">=</span> <span class="va">N</span>,</span>
+<span>  n <span class="op">=</span> <span class="va">n</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
+<span>  var_f <span class="op">=</span> <span class="va">var_f</span>,</span>
+<span>  var_res <span class="op">=</span> <span class="va">var_res</span>,</span>
+<span>  R <span class="op">=</span> <span class="va">sim</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;     Exact_PP Empirical_PP </span></span>
+<span><span class="co">#&gt;    0.6359878    0.6360000</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="monte-carlo-calibration-resampling-superpopulation">Monte Carlo calibration (resampling superpopulation)<a class="anchor" aria-label="anchor" href="#monte-carlo-calibration-resampling-superpopulation"></a>
@@ -183,37 +172,221 @@ Carlo samples of the test statistic.</p>
 <p><code>pppower:::simulate_power_ppi_mean()</code> repeatedly resamples
 labeled/unlabeled splits from the synthetic population, recomputing the
 PPI estimator each time.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">mc_pp</span> <span class="op">&lt;-</span> <span class="fu">pppower</span><span class="fu">:::</span><span class="fu">simulate_power_ppi_mean</span><span class="op">(</span></span>
-<span>  df <span class="op">=</span> <span class="va">df</span>,</span>
-<span>  N <span class="op">=</span> <span class="va">N</span>,</span>
-<span>  n <span class="op">=</span> <span class="va">n</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">moments_ppi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  delta   <span class="op">=</span> <span class="va">delta</span>,</span>
+<span>  var_f   <span class="op">=</span> <span class="va">var_f</span>,</span>
+<span>  var_res <span class="op">=</span> <span class="va">var_res</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Run the full Monte Carlo simulation and compare with analytical power</span></span>
+<span><span class="va">mc_pp</span> <span class="op">&lt;-</span> <span class="fu">pppower</span><span class="fu">:::</span><span class="fu"><a href="../reference/simulate_power_ppi_mean.html">simulate_power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  R <span class="op">=</span> <span class="va">sim</span>,</span>
+<span>  n <span class="op">=</span> <span class="va">n</span>,</span>
+<span>  N <span class="op">=</span> <span class="va">N</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
+<span>  family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  moments <span class="op">=</span> <span class="va">moments_ppi</span>,</span>
 <span>  theta0 <span class="op">=</span> <span class="va">theta0</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">2024</span></span>
 <span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Results: empirical rejection rate (Monte Carlo) vs. analytical formula</span></span>
 <span><span class="va">mc_pp</span><span class="op">$</span><span class="va">empirical_power</span></span>
-<span><span class="co">#&gt; [1] 0.823</span></span>
+<span><span class="co">#&gt; [1] 0.6325</span></span>
 <span><span class="va">mc_pp</span><span class="op">$</span><span class="va">analytical_power</span></span>
-<span><span class="co">#&gt; [1] 0.804664</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.6359878</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="sample-size-planning">Sample-size planning<a class="anchor" aria-label="anchor" href="#sample-size-planning"></a>
+<h3 id="ppi-mean-estimation">PPI++ Mean Estimation<a class="anchor" aria-label="anchor" href="#ppi-mean-estimation"></a>
 </h3>
-<p><code><a href="../reference/n_required_PP.html">n_required_PP()</a></code> solves for the labeled sample size that
-meets a power target.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/n_required_PP.html">n_required_PP</a></span><span class="op">(</span></span>
-<span>  delta <span class="op">=</span> <span class="va">delta</span>,</span>
-<span>  N <span class="op">=</span> <span class="va">N</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  power <span class="op">=</span> <span class="fl">0.80</span>,</span>
-<span>  type <span class="op">=</span> <span class="st">"mean"</span>,</span>
-<span>  var_f <span class="op">=</span> <span class="va">var_f</span>,</span>
-<span>  var_res <span class="op">=</span> <span class="va">var_res</span></span>
+</div>
+<div class="section level3">
+<h3 id="ppippi-ols">PPI/PPI++ OLS<a class="anchor" aria-label="anchor" href="#ppippi-ols"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">c_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  c1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,        <span class="co"># intercept</span></span>
+<span>  c2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>,        <span class="co"># slope on x1</span></span>
+<span>  c3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,        <span class="co"># slope on x2</span></span>
+<span>  c4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span>,       <span class="co"># difference x1 - x2</span></span>
+<span>  c5 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>     <span class="co"># average (x1 + x2)/2</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 197</span></span></code></pre></div>
+<span></span>
+<span><span class="va">beta_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>, <span class="fl">0.4</span>, <span class="op">-</span><span class="fl">0.3</span><span class="op">)</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">beta_true</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Choose a null for each contrast</span></span>
+<span><span class="va">theta0_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  c1 <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>  c2 <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  c3 <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>  c4 <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>  c5 <span class="op">=</span> <span class="fl">0.0</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Variance components and matrices</span></span>
+<span><span class="va">sigma_y2_pop</span> <span class="op">&lt;-</span> <span class="fl">1.0</span></span>
+<span><span class="va">sigma_f2_pop</span> <span class="op">&lt;-</span> <span class="fl">0.45</span></span>
+<span></span>
+<span><span class="va">H_pop</span>         <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
+<span><span class="va">Sigma_YY_pop</span>  <span class="op">&lt;-</span> <span class="va">sigma_y2_pop</span> <span class="op">*</span> <span class="va">H_pop</span></span>
+<span><span class="va">Sigma_ff_pop</span>  <span class="op">&lt;-</span> <span class="va">sigma_f2_pop</span> <span class="op">*</span> <span class="va">H_pop</span></span>
+<span><span class="va">Sigma_Yf_pop</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>, nrow <span class="op">=</span> <span class="va">p</span>, ncol <span class="op">=</span> <span class="va">p</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">20240625L</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">run_one_contrast</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">name</span>, <span class="va">c_vec</span>, <span class="va">theta0</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">delta_c</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">c_vec</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta_true</span><span class="op">)</span> <span class="op">-</span> <span class="va">theta0</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">moments_ols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    delta    <span class="op">=</span> <span class="va">delta_c</span>,</span>
+<span>    H        <span class="op">=</span> <span class="va">H_pop</span>,</span>
+<span>    Sigma_YY <span class="op">=</span> <span class="va">Sigma_YY_pop</span>,</span>
+<span>    Sigma_ff <span class="op">=</span> <span class="va">Sigma_ff_pop</span>,</span>
+<span>    Sigma_Yf <span class="op">=</span> <span class="va">Sigma_Yf_pop</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">pppower</span><span class="fu">:::</span><span class="fu">simulate_power_ppi_ols</span><span class="op">(</span></span>
+<span>    R        <span class="op">=</span> <span class="va">sim</span>,</span>
+<span>    n        <span class="op">=</span> <span class="va">n</span>,</span>
+<span>    N        <span class="op">=</span> <span class="va">N</span>,</span>
+<span>    contrast <span class="op">=</span> <span class="va">c_vec</span>,</span>
+<span>    alpha    <span class="op">=</span> <span class="va">alpha</span>,</span>
+<span>    family   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    moments  <span class="op">=</span> <span class="va">moments_ols</span>,</span>
+<span>    seed     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample.int</a></span><span class="op">(</span><span class="va">.Machine</span><span class="op">$</span><span class="va">integer.max</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">mc_se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">analytical_power</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">res</span><span class="op">$</span><span class="va">analytical_power</span><span class="op">)</span> <span class="op">/</span> <span class="va">sim</span><span class="op">)</span></span>
+<span>  <span class="va">tol</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fl">3</span> <span class="op">*</span> <span class="va">mc_se</span>, <span class="fl">0.01</span><span class="op">)</span></span>
+<span>  <span class="va">diff</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">empirical_power</span> <span class="op">-</span> <span class="va">res</span><span class="op">$</span><span class="va">analytical_power</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    contrast   <span class="op">=</span> <span class="va">name</span>,</span>
+<span>    theta0     <span class="op">=</span> <span class="va">theta0</span>,</span>
+<span>    delta      <span class="op">=</span> <span class="va">delta_c</span>,</span>
+<span>    analytical <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">analytical_power</span>,</span>
+<span>    empirical  <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">empirical_power</span>,</span>
+<span>    abs_diff   <span class="op">=</span> <span class="va">diff</span>,</span>
+<span>    tol        <span class="op">=</span> <span class="va">tol</span>,</span>
+<span>    pass       <span class="op">=</span> <span class="va">diff</span> <span class="op">&lt;</span> <span class="va">tol</span>,</span>
+<span>    stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">res_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mapply.html" class="external-link">mapply</a></span><span class="op">(</span></span>
+<span>  <span class="va">run_one_contrast</span>,</span>
+<span>  name  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">c_list</span><span class="op">)</span>,</span>
+<span>  c_vec <span class="op">=</span> <span class="va">c_list</span>,</span>
+<span>  theta0 <span class="op">=</span> <span class="va">theta0_map</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">c_list</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  SIMPLIFY <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ols_multi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">res_list</span><span class="op">)</span></span>
+<span><span class="va">ols_multi</span></span>
+<span><span class="co">#&gt;    contrast theta0 delta analytical empirical     abs_diff        tol pass</span></span>
+<span><span class="co">#&gt; c1       c1   0.00  0.70  1.0000000     1.000 9.992007e-16 0.01000000 TRUE</span></span>
+<span><span class="co">#&gt; c2       c2   0.25  0.15  0.5641160     0.564 1.160254e-04 0.03326411 TRUE</span></span>
+<span><span class="co">#&gt; c3       c3   0.00 -0.30  0.9887753     0.989 2.247093e-04 0.01000000 TRUE</span></span>
+<span><span class="co">#&gt; c4       c4   0.00  0.70  0.9999998     1.000 2.327221e-07 0.01000000 TRUE</span></span>
+<span><span class="co">#&gt; c5       c5   0.00  0.05  0.1700750     0.170 7.504575e-05 0.02520264 TRUE</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">c_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  c1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,        </span>
+<span>  c2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>,        </span>
+<span>  c3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,        </span>
+<span>  c4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span>,       </span>
+<span>  c5 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>     </span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">beta_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>, <span class="fl">0.4</span>, <span class="op">-</span><span class="fl">0.3</span><span class="op">)</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">beta_true</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">theta0_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  c1 <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>  c2 <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  c3 <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>  c4 <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>  c5 <span class="op">=</span> <span class="fl">0.0</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sigma_y2_pop</span> <span class="op">&lt;-</span> <span class="fl">1.0</span></span>
+<span><span class="va">sigma_f2_pop</span> <span class="op">&lt;-</span> <span class="fl">0.45</span></span>
+<span></span>
+<span><span class="va">H_pop</span>         <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
+<span><span class="va">Sigma_YY_pop</span>  <span class="op">&lt;-</span> <span class="va">sigma_y2_pop</span> <span class="op">*</span> <span class="va">H_pop</span></span>
+<span><span class="va">Sigma_ff_L_pop</span> <span class="op">&lt;-</span> <span class="va">sigma_f2_pop</span> <span class="op">*</span> <span class="va">H_pop</span></span>
+<span><span class="va">Sigma_ff_U_pop</span> <span class="op">&lt;-</span> <span class="va">sigma_f2_pop</span> <span class="op">*</span> <span class="va">H_pop</span></span>
+<span><span class="va">Sigma_Yf_pop</span>  <span class="op">&lt;-</span> <span class="va">sigma_f2_pop</span> <span class="op">*</span> <span class="va">H_pop</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">20240626L</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">run_one_contrast_ppiplus</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">name</span>, <span class="va">c_vec</span>, <span class="va">theta0</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">delta_c</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">c_vec</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta_true</span><span class="op">)</span> <span class="op">-</span> <span class="va">theta0</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">moments_ppiplus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    delta      <span class="op">=</span> <span class="va">delta_c</span>,</span>
+<span>    H_L        <span class="op">=</span> <span class="va">H_pop</span>,</span>
+<span>    H_U        <span class="op">=</span> <span class="va">H_pop</span>,</span>
+<span>    Sigma_YY   <span class="op">=</span> <span class="va">Sigma_YY_pop</span>,</span>
+<span>    Sigma_ff_l <span class="op">=</span> <span class="va">Sigma_ff_L_pop</span>,</span>
+<span>    Sigma_ff_u <span class="op">=</span> <span class="va">Sigma_ff_U_pop</span>,</span>
+<span>    Sigma_Yf   <span class="op">=</span> <span class="va">Sigma_Yf_pop</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">pppower</span><span class="fu">:::</span><span class="fu"><a href="../reference/simulate_power_ppi_pp_ols.html">simulate_power_ppi_pp_ols</a></span><span class="op">(</span></span>
+<span>    R        <span class="op">=</span> <span class="va">sim</span>,</span>
+<span>    n        <span class="op">=</span> <span class="va">n</span>,</span>
+<span>    N        <span class="op">=</span> <span class="va">N</span>,</span>
+<span>    contrast <span class="op">=</span> <span class="va">c_vec</span>,</span>
+<span>    alpha    <span class="op">=</span> <span class="va">alpha</span>,</span>
+<span>    family   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    lambda_type <span class="op">=</span> <span class="st">"plugin"</span>,</span>
+<span>    moments  <span class="op">=</span> <span class="va">moments_ppiplus</span>,</span>
+<span>    seed     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample.int</a></span><span class="op">(</span><span class="va">.Machine</span><span class="op">$</span><span class="va">integer.max</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">mc_se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">analytical_power</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">res</span><span class="op">$</span><span class="va">analytical_power</span><span class="op">)</span> <span class="op">/</span> <span class="va">sim</span><span class="op">)</span></span>
+<span>  <span class="va">tol</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fl">3</span> <span class="op">*</span> <span class="va">mc_se</span>, <span class="fl">0.01</span><span class="op">)</span></span>
+<span>  <span class="va">diff</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">empirical_power</span> <span class="op">-</span> <span class="va">res</span><span class="op">$</span><span class="va">analytical_power</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    contrast   <span class="op">=</span> <span class="va">name</span>,</span>
+<span>    theta0     <span class="op">=</span> <span class="va">theta0</span>,</span>
+<span>    delta      <span class="op">=</span> <span class="va">delta_c</span>,</span>
+<span>    analytical <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">analytical_power</span>,</span>
+<span>    empirical  <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">empirical_power</span>,</span>
+<span>    abs_diff   <span class="op">=</span> <span class="va">diff</span>,</span>
+<span>    tol        <span class="op">=</span> <span class="va">tol</span>,</span>
+<span>    pass       <span class="op">=</span> <span class="va">diff</span> <span class="op">&lt;</span> <span class="va">tol</span>,</span>
+<span>    avg_lambda <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">avg_lambda</span>,</span>
+<span>    stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">res_list_ppiplus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mapply.html" class="external-link">mapply</a></span><span class="op">(</span></span>
+<span>  <span class="va">run_one_contrast_ppiplus</span>,</span>
+<span>  name  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">c_list</span><span class="op">)</span>,</span>
+<span>  c_vec <span class="op">=</span> <span class="va">c_list</span>,</span>
+<span>  theta0 <span class="op">=</span> <span class="va">theta0_map</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">c_list</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  SIMPLIFY <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ols_ppiplus_multi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">res_list_ppiplus</span><span class="op">)</span></span>
+<span><span class="va">ols_ppiplus_multi</span></span>
+<span><span class="co">#&gt;    contrast theta0 delta analytical empirical     abs_diff        tol pass</span></span>
+<span><span class="co">#&gt; c1       c1   0.00  0.70  1.0000000    1.0000 0.000000e+00 0.01000000 TRUE</span></span>
+<span><span class="co">#&gt; c2       c2   0.25  0.15  0.7880399    0.7880 3.992846e-05 0.02741621 TRUE</span></span>
+<span><span class="co">#&gt; c3       c3   0.00 -0.30  0.9998140    1.0000 1.859695e-04 0.01000000 TRUE</span></span>
+<span><span class="co">#&gt; c4       c4   0.00  0.70  1.0000000    1.0000 4.458656e-13 0.01000000 TRUE</span></span>
+<span><span class="co">#&gt; c5       c5   0.00  0.05  0.2554786    0.2555 2.135436e-05 0.02925648 TRUE</span></span>
+<span><span class="co">#&gt;    avg_lambda</span></span>
+<span><span class="co">#&gt; c1  0.9090909</span></span>
+<span><span class="co">#&gt; c2  0.9090909</span></span>
+<span><span class="co">#&gt; c3  0.9090909</span></span>
+<span><span class="co">#&gt; c4  0.9090909</span></span>
+<span><span class="co">#&gt; c5  0.9090909</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="power-and-type-i-error-curves">Power and Type I error curves<a class="anchor" aria-label="anchor" href="#power-and-type-i-error-curves"></a>
@@ -233,12 +406,12 @@ vs. analytical rejection probabilities.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">curve_fixed</span></span>
-<span><span class="co">#&gt;     n power_empirical power_exact delta    N alpha    var_f  var_res</span></span>
-<span><span class="co">#&gt; 1  50          0.3440   0.3377963  0.45 2000  0.05 11.12185 3.986545</span></span>
-<span><span class="co">#&gt; 2 100          0.5435   0.5601844  0.45 2000  0.05 11.12185 3.986545</span></span>
-<span><span class="co">#&gt; 3 150          0.6955   0.7089162  0.45 2000  0.05 11.12185 3.986545</span></span>
-<span><span class="co">#&gt; 4 200          0.7990   0.8046640  0.45 2000  0.05 11.12185 3.986545</span></span>
-<span><span class="co">#&gt; 5 250          0.8645   0.8661780  0.45 2000  0.05 11.12185 3.986545</span></span>
+<span><span class="co">#&gt;     n power_empirical power_exact delta    N alpha var_f var_res</span></span>
+<span><span class="co">#&gt; 1  50          0.2180   0.2178530  0.15 2000  0.05  0.45     0.8</span></span>
+<span><span class="co">#&gt; 2 100          0.3800   0.3799491  0.15 2000  0.05  0.45     0.8</span></span>
+<span><span class="co">#&gt; 3 150          0.5205   0.5207690  0.15 2000  0.05  0.45     0.8</span></span>
+<span><span class="co">#&gt; 4 200          0.6360   0.6359878  0.15 2000  0.05  0.45     0.8</span></span>
+<span><span class="co">#&gt; 5 250          0.7270   0.7267850  0.15 2000  0.05  0.45     0.8</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">curve_fixed</span><span class="op">$</span><span class="va">n</span>,</span>
@@ -258,52 +431,21 @@ vs. analytical rejection probabilities.</p>
 <code><a href="../reference/type1_error_curve_mean.html">type1_error_curve_mean()</a></code> or, for a fully simulated DGP,
 <code><a href="../reference/type1_error_curve_mean_dgp.html">type1_error_curve_mean_dgp()</a></code>:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">effect_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.3</span>, <span class="fl">0.3</span>, by <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
-<span><span class="va">curve_dgp</span> <span class="op">&lt;-</span> <span class="fu">pppower</span><span class="fu">:::</span><span class="fu"><a href="../reference/type1_error_curve_mean_dgp.html">type1_error_curve_mean_dgp</a></span><span class="op">(</span></span>
-<span>  effect_grid <span class="op">=</span> <span class="va">effect_grid</span>,</span>
+<code class="sourceCode R"><span><span class="va">curve_parametric</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/type1_error_curve_mean_dgp.html">type1_error_curve_mean_dgp</a></span><span class="op">(</span></span>
+<span>  effect_grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span>, by <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>,</span>
 <span>  N <span class="op">=</span> <span class="va">N</span>,</span>
 <span>  n <span class="op">=</span> <span class="va">n</span>,</span>
-<span>  family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  superpop_n <span class="op">=</span> <span class="fl">20000</span>,</span>
-<span>  p <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  K <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  R <span class="op">=</span> <span class="va">sim</span></span>
+<span>  var_f <span class="op">=</span> <span class="va">var_f</span>,</span>
+<span>  var_res <span class="op">=</span> <span class="va">var_res</span>,</span>
+<span>  theta <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  R <span class="op">=</span> <span class="fl">2000</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">20240627L</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">curve_dgp</span></span>
-<span><span class="co">#&gt;      effect_size type1_empirical type1_exact     theta     theta0    N   n</span></span>
-<span><span class="co">#&gt; 1  -3.000000e-01          0.4885  0.46606231 0.0106956  0.3106956 2000 200</span></span>
-<span><span class="co">#&gt; 2  -2.500000e-01          0.3475  0.34561418 0.0106956  0.2606956 2000 200</span></span>
-<span><span class="co">#&gt; 3  -2.000000e-01          0.2380  0.23945185 0.0106956  0.2106956 2000 200</span></span>
-<span><span class="co">#&gt; 4  -1.500000e-01          0.1530  0.15511942 0.0106956  0.1606956 2000 200</span></span>
-<span><span class="co">#&gt; 5  -1.000000e-01          0.0945  0.09579527 0.0106956  0.1106956 2000 200</span></span>
-<span><span class="co">#&gt; 6  -5.000000e-02          0.0620  0.06125618 0.0106956  0.0606956 2000 200</span></span>
-<span><span class="co">#&gt; 7   5.551115e-17          0.0435  0.05000000 0.0106956  0.0106956 2000 200</span></span>
-<span><span class="co">#&gt; 8   5.000000e-02          0.0620  0.06125618 0.0106956 -0.0393044 2000 200</span></span>
-<span><span class="co">#&gt; 9   1.000000e-01          0.0935  0.09579527 0.0106956 -0.0893044 2000 200</span></span>
-<span><span class="co">#&gt; 10  1.500000e-01          0.1400  0.15511942 0.0106956 -0.1393044 2000 200</span></span>
-<span><span class="co">#&gt; 11  2.000000e-01          0.2240  0.23945185 0.0106956 -0.1893044 2000 200</span></span>
-<span><span class="co">#&gt; 12  2.500000e-01          0.3275  0.34561418 0.0106956 -0.2393044 2000 200</span></span>
-<span><span class="co">#&gt; 13  3.000000e-01          0.4540  0.46606231 0.0106956 -0.2893044 2000 200</span></span>
-<span><span class="co">#&gt;    alpha   var_f var_res   family</span></span>
-<span><span class="co">#&gt; 1   0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 2   0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 3   0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 4   0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 5   0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 6   0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 7   0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 8   0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 9   0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 10  0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 11  0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 12  0.05 11.4367 3.97833 gaussian</span></span>
-<span><span class="co">#&gt; 13  0.05 11.4367 3.97833 gaussian</span></span>
-<span></span>
 <span><span class="fu">pppower</span><span class="fu">:::</span><span class="fu"><a href="../reference/plot_type1_error_curve.html">plot_type1_error_curve</a></span><span class="op">(</span></span>
-<span>  <span class="va">curve_dgp</span>,</span>
-<span>  main <span class="op">=</span> <span class="st">"Type I error / power (DGP)"</span></span>
+<span>  <span class="va">curve_parametric</span>,</span>
+<span>  main <span class="op">=</span> <span class="st">"Type I Error / Power Curve (Parametric, No Superpopulation)"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="figures/intro-ppi-mean-type1-1.png" width="576"></p>
 <hr>
@@ -327,125 +469,105 @@ sandwich covariances for the unlabeled (imputation) and labeled
 </ul>
 </div>
 <div class="section level3">
-<h3 id="fit-the-model">Fit the model<a class="anchor" aria-label="anchor" href="#fit-the-model"></a>
+<h3 id="ols-set-up">OLS set up<a class="anchor" aria-label="anchor" href="#ols-set-up"></a>
 </h3>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_ols</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ppi_ols_fit.html">ppi_ols_fit</a></span><span class="op">(</span></span>
-<span>  y <span class="op">=</span> <span class="st">"y"</span>,</span>
-<span>  f_col <span class="op">=</span> <span class="st">"fhat_cf"</span>,</span>
-<span>  formula <span class="op">=</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">x3</span> <span class="op">+</span> <span class="va">x4</span> <span class="op">+</span> <span class="va">x5</span>,</span>
-<span>  data_l <span class="op">=</span> <span class="va">df</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="va">n</span>, <span class="op">]</span>,</span>
-<span>  data_u <span class="op">=</span> <span class="va">df</span><span class="op">[</span><span class="op">(</span><span class="va">n</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">:</span><span class="op">(</span><span class="va">n</span> <span class="op">+</span> <span class="va">N</span><span class="op">)</span>, <span class="op">]</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Study design</span></span>
+<span><span class="va">N</span>     <span class="op">&lt;-</span> <span class="fl">2000</span>      <span class="co"># unlabeled sample size</span></span>
+<span><span class="va">n</span>     <span class="op">&lt;-</span> <span class="fl">200</span>       <span class="co"># labeled sample size</span></span>
+<span><span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">0.05</span></span>
+<span><span class="va">sim</span>   <span class="op">&lt;-</span> <span class="fl">2000</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_ols</span><span class="op">)</span></span>
-<span><span class="co">#&gt;              Estimate Std.Error         z     Pr...z..</span></span>
-<span><span class="co">#&gt; (Intercept) 0.2465679 0.1320109  1.867785 6.179205e-02</span></span>
-<span><span class="co">#&gt; x1          0.3880673 0.1360690  2.851988 4.344669e-03</span></span>
-<span><span class="co">#&gt; x2          1.0040357 0.1439246  6.976123 3.034381e-12</span></span>
-<span><span class="co">#&gt; x3          1.4069561 0.1528926  9.202254 3.505197e-20</span></span>
-<span><span class="co">#&gt; x4          1.8425736 0.1180420 15.609470 6.275586e-55</span></span>
-<span><span class="co">#&gt; x5          2.4614622 0.1257295 19.577442 2.408146e-85</span></span>
-<span><span class="va">pieces</span> <span class="op">&lt;-</span> <span class="va">fit_ols</span><span class="op">$</span><span class="va">pieces</span></span></code></pre></div>
-<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> reports coefficient, standard error, and
-z-statistic. The <code>pieces</code> list exposes <code>V_u</code>,
-<code>V_l</code>, <code>n</code>, and <code>N</code> for power
-formulas.</p>
+<span><span class="co"># True coefficient vector (assumed or estimated from prior data)</span></span>
+<span><span class="va">beta_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>, <span class="fl">0.4</span>, <span class="op">-</span><span class="fl">0.3</span>, <span class="fl">0.2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Contrast vector for hypothesis test</span></span>
+<span><span class="va">c_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>      <span class="co"># test second coefficient</span></span>
+<span></span>
+<span><span class="co"># Effect size (difference from null)</span></span>
+<span><span class="va">theta0</span>  <span class="op">&lt;-</span> <span class="fl">0.25</span></span>
+<span><span class="va">delta</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">c_vec</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta_true</span> <span class="op">-</span> <span class="va">theta0</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Variance components (assumed known from pilot data or prior studies)</span></span>
+<span><span class="va">sigma_y2</span> <span class="op">&lt;-</span> <span class="fl">1.0</span>       <span class="co"># total variance of Y</span></span>
+<span><span class="va">sigma_f2</span> <span class="op">&lt;-</span> <span class="fl">0.45</span>      <span class="co"># variance explained by predictor model</span></span>
+<span></span>
+<span><span class="co"># Per-observation covariance matrices</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">beta_true</span><span class="op">)</span></span>
+<span><span class="va">H_pop</span>         <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span>                       <span class="co"># design matrix Hessian</span></span>
+<span><span class="va">Sigma_YY_pop</span>  <span class="op">&lt;-</span> <span class="va">sigma_y2</span> <span class="op">*</span> <span class="va">H_pop</span>              <span class="co"># Var(Y)</span></span>
+<span><span class="va">Sigma_ff_pop</span>  <span class="op">&lt;-</span> <span class="va">sigma_f2</span> <span class="op">*</span> <span class="va">H_pop</span>              <span class="co"># Var(f(X))</span></span>
+<span><span class="va">Sigma_Yf_pop</span>  <span class="op">&lt;-</span> <span class="va">sigma_f2</span> <span class="op">*</span> <span class="va">H_pop</span>              <span class="co"># Cov(Y, f(X))</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="construct-a-contrast">Construct a contrast<a class="anchor" aria-label="anchor" href="#construct-a-contrast"></a>
+<h3 id="analytical-power-1">Analytical Power<a class="anchor" aria-label="anchor" href="#analytical-power-1"></a>
 </h3>
-<p>Suppose we focus on <code>x1</code>:</p>
+<p>We can compute the analytical power for the PPI-OLS estimator using
+these components:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">coef_names</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">pieces</span><span class="op">$</span><span class="va">V_u</span><span class="op">)</span></span>
-<span><span class="va">c_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">coef_names</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">c_vec</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">coef_names</span></span>
-<span><span class="va">c_vec</span><span class="op">[</span><span class="st">"x1"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
-<span></span>
-<span><span class="va">delta_ols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">c_vec</span> <span class="op">*</span> <span class="va">fit_ols</span><span class="op">$</span><span class="va">coef</span><span class="op">)</span></span>
-<span><span class="va">delta_ols</span></span>
-<span><span class="co">#&gt; [1] 0.3880673</span></span></code></pre></div>
-<p><code><a href="../reference/ppi_ols_wald.html">ppi_ols_wald()</a></code> provides the Wald test summary:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">wald_x1</span> <span class="op">&lt;-</span> <span class="fu">pppower</span><span class="fu">:::</span><span class="fu"><a href="../reference/ppi_ols_wald.html">ppi_ols_wald</a></span><span class="op">(</span><span class="va">fit_ols</span>, A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">c_vec</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">wald_x1</span></span>
-<span><span class="co">#&gt; $estimate</span></span>
-<span><span class="co">#&gt; [1] 0.3880673</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $se</span></span>
-<span><span class="co">#&gt; [1] 0.136069</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $z</span></span>
-<span><span class="co">#&gt; [1] 2.851988</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $p.value</span></span>
-<span><span class="co">#&gt; [1] 0.004344669</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="analytical-power-1">Analytical power<a class="anchor" aria-label="anchor" href="#analytical-power-1"></a>
-</h3>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/power_ppi_ols.html">power_ppi_ols</a></span><span class="op">(</span></span>
-<span>  delta <span class="op">=</span> <span class="va">delta_ols</span>,</span>
-<span>  V_u <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">V_u</span>,</span>
-<span>  V_l <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">V_l</span>,</span>
-<span>  N <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">N</span>,</span>
-<span>  n <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">n</span>,</span>
-<span>  c <span class="op">=</span> <span class="va">c_vec</span>,</span>
+<span>  delta <span class="op">=</span> <span class="va">delta</span>,</span>
+<span>  V_u   <span class="op">=</span> <span class="va">Sigma_ff_pop</span>,</span>
+<span>  V_l   <span class="op">=</span> <span class="va">Sigma_YY_pop</span>,</span>
+<span>  N     <span class="op">=</span> <span class="va">N</span>,</span>
+<span>  n     <span class="op">=</span> <span class="va">n</span>,</span>
+<span>  c     <span class="op">=</span> <span class="va">c_vec</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="va">alpha</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.8138108</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.5458758</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="monte-carlo-calibration">Monte Carlo calibration<a class="anchor" aria-label="anchor" href="#monte-carlo-calibration"></a>
 </h3>
-<p><code>simulate_power_ppi_ols()</code> resamples from the
-superpopulation and recomputes the PPI-OLS estimator. Align the null
-value so the effect size matches the analytic call.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">theta0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">c_vec</span> <span class="op">*</span> <span class="va">fit_ols</span><span class="op">$</span><span class="va">coef</span><span class="op">)</span> <span class="op">-</span> <span class="va">delta_ols</span></span>
+<p>Suppose we focus on <code>x1</code>:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">moments_ols</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  delta    <span class="op">=</span> <span class="va">delta</span>,</span>
+<span>  H        <span class="op">=</span> <span class="va">H_pop</span>,</span>
+<span>  Sigma_YY <span class="op">=</span> <span class="va">Sigma_YY_pop</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">pppower</span><span class="fu">:::</span><span class="fu">simulate_power_ppi_ols</span><span class="op">(</span></span>
-<span>  df <span class="op">=</span> <span class="va">df</span>,</span>
-<span>  formula <span class="op">=</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">x3</span> <span class="op">+</span> <span class="va">x4</span> <span class="op">+</span> <span class="va">x5</span>,</span>
-<span>  N <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">N</span>,</span>
-<span>  n <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">n</span>,</span>
-<span>  c <span class="op">=</span> <span class="va">c_vec</span>,</span>
-<span>  theta0 <span class="op">=</span> <span class="va">theta0</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  R <span class="op">=</span> <span class="va">sim</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">4321</span></span>
-<span><span class="op">)</span><span class="op">$</span><span class="va">analytical_power</span></span>
-<span><span class="co">#&gt; [1] 0.5677708</span></span>
+<span><span class="va">ols_mc</span> <span class="op">&lt;-</span> <span class="fu">pppower</span><span class="fu">:::</span><span class="fu">simulate_power_ppi_ols</span><span class="op">(</span></span>
+<span>  R        <span class="op">=</span> <span class="va">sim</span>,</span>
+<span>  n        <span class="op">=</span> <span class="va">n</span>,</span>
+<span>  N        <span class="op">=</span> <span class="va">N</span>,</span>
+<span>  contrast <span class="op">=</span> <span class="va">c_vec</span>,</span>
+<span>  alpha    <span class="op">=</span> <span class="va">alpha</span>,</span>
+<span>  family   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  moments  <span class="op">=</span> <span class="va">moments_ols</span>,</span>
+<span>  seed     <span class="op">=</span> <span class="fl">20240625L</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">pppower</span><span class="fu">:::</span><span class="fu">simulate_power_ppi_ols</span><span class="op">(</span></span>
-<span>  df <span class="op">=</span> <span class="va">df</span>,</span>
-<span>  formula <span class="op">=</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">x3</span> <span class="op">+</span> <span class="va">x4</span> <span class="op">+</span> <span class="va">x5</span>,</span>
-<span>  N <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">N</span>,</span>
-<span>  n <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">n</span>,</span>
-<span>  c <span class="op">=</span> <span class="va">c_vec</span>,</span>
-<span>  theta0 <span class="op">=</span> <span class="va">theta0</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  R <span class="op">=</span> <span class="va">sim</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">4321</span></span>
-<span><span class="op">)</span><span class="op">$</span><span class="va">empirical_power</span></span>
-<span><span class="co">#&gt; [1] 0.564</span></span></code></pre></div>
+<span><span class="va">ols_mc</span><span class="op">$</span><span class="va">analytical_power</span></span>
+<span><span class="co">#&gt; [1] 0.564116</span></span>
+<span><span class="va">ols_mc</span><span class="op">$</span><span class="va">empirical_power</span></span>
+<span><span class="co">#&gt; [1] 0.564</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">ols_mc</span><span class="op">$</span><span class="va">empirical_power</span> <span class="op">-</span> <span class="va">ols_mc</span><span class="op">$</span><span class="va">analytical_power</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.0001160254</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="sample-size-solver">Sample-size solver<a class="anchor" aria-label="anchor" href="#sample-size-solver"></a>
 </h3>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/n_required_PP.html">n_required_PP</a></span><span class="op">(</span></span>
-<span>  delta <span class="op">=</span> <span class="va">delta_ols</span>,</span>
-<span>  N <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">N</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span>,</span>
-<span>  power <span class="op">=</span> <span class="fl">0.80</span>,</span>
-<span>  type <span class="op">=</span> <span class="st">"ols"</span>,</span>
-<span>  V_u <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">V_u</span>,</span>
-<span>  V_l <span class="op">=</span> <span class="va">pieces</span><span class="op">$</span><span class="va">V_l</span>,</span>
-<span>  c <span class="op">=</span> <span class="va">c_vec</span></span>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="va">target</span> <span class="op">&lt;-</span> <span class="fl">0.90</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span>  delta       <span class="op">=</span> <span class="va">delta</span>,</span>
+<span>  N           <span class="op">=</span> <span class="va">N</span>,</span>
+<span>  alpha       <span class="op">=</span> <span class="va">alpha</span>,</span>
+<span>  power       <span class="op">=</span> <span class="va">target</span>,</span>
+<span>  type        <span class="op">=</span> <span class="st">"regression"</span>,</span>
+<span>  lambda_mode <span class="op">=</span> <span class="st">"oracle"</span>,</span>
+<span>  c           <span class="op">=</span> <span class="va">c_vec</span>,</span>
+<span>  H_L         <span class="op">=</span> <span class="va">H_pop</span>,</span>
+<span>  H_U         <span class="op">=</span> <span class="va">H_pop</span>,</span>
+<span>  Sigma_YY    <span class="op">=</span> <span class="va">Sigma_YY_pop</span>,</span>
+<span>  Sigma_ff_l  <span class="op">=</span> <span class="va">Sigma_ff_pop</span>,</span>
+<span>  Sigma_ff_u  <span class="op">=</span> <span class="va">Sigma_ff_pop</span>,</span>
+<span>  Sigma_Yf    <span class="op">=</span> <span class="va">Sigma_Yf_pop</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 193</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 283</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -474,10 +596,6 @@ value so the effect size matches the analytic call.</p>
 </td>
 </tr>
 <tr class="odd">
-<td>Mean estimator sample size</td>
-<td><code>n_required_PP(type = "mean", ...)</code></td>
-</tr>
-<tr class="even">
 <td>Mean estimator curves</td>
 <td>
 <code><a href="../reference/power_curve_mean.html">power_curve_mean()</a></code>,
@@ -485,22 +603,22 @@ value so the effect size matches the analytic call.</p>
 <code><a href="../reference/plot_type1_error_curve.html">plot_type1_error_curve()</a></code>
 </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Fit prediction-powered OLS</td>
 <td>
 <code><a href="../reference/ppi_ols_fit.html">ppi_ols_fit()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
 </td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>OLS contrasts and power</td>
 <td>
 <code>pppower:::ppi_ols_wald()</code>, <code><a href="../reference/power_ppi_ols.html">power_ppi_ols()</a></code>,
 <code>pppower:::simulate_power_ppi_ols()</code>
 </td>
 </tr>
-<tr class="odd">
-<td>OLS sample size</td>
-<td><code>n_required_PP(type = "ols", ...)</code></td>
+<tr class="even">
+<td>Sample size</td>
+<td><code><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp()</a></code></td>
 </tr>
 </tbody>
 </table>

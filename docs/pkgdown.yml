@@ -3,7 +3,8 @@ pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   intro-ppi: intro-ppi.html
-last_built: 2025-10-08T20:17Z
+  ppi-sample-size: ppi-sample-size.html
+last_built: 2025-11-30T02:20Z
 urls:
   reference: https://yiqunchen.github.io/pppower/reference
   article: https://yiqunchen.github.io/pppower/articles

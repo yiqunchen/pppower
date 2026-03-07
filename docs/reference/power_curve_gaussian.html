@@ -34,6 +34,9 @@
   <ul class="dropdown-menu" role="menu"><li>
       <a href="../articles/intro-ppi.html">Prediction-Powered Power Planning</a>
     </li>
+    <li>
+      <a href="../articles/ppi-sample-size.html">Prediction-Powered Sample Size Calculation</a>
+    </li>
   </ul></li>
       </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -54,23 +57,13 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">power_curve_gaussian</span><span class="op">(</span></span>
-<span>  <span class="va">n_grid</span>,</span>
-<span>  <span class="va">N</span>,</span>
-<span>  theta0 <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  superpop_n <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>  p <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  K <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  R <span class="op">=</span> <span class="fl">2000</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">power_curve_gaussian</span><span class="op">(</span><span class="va">n_grid</span>, <span class="va">N</span>, theta0 <span class="op">=</span> <span class="fl">0</span>, seed <span class="op">=</span> <span class="fl">1</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>, R <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>n_grid</dt>
-<dd><p>Integer vector of candidate labeled sample sizes.</p></dd>
+<dd><p>Numeric vector of labeled sample sizes to evaluate.</p></dd>
 
 
 <dt>N</dt>
@@ -78,41 +71,39 @@
 
 
 <dt>theta0</dt>
-<dd><p>Null value for the mean estimand.</p></dd>
-
-
-<dt>superpop_n</dt>
-<dd><p>Size of the synthetic superpopulation used to estimate
-variance components.</p></dd>
-
-
-<dt>p</dt>
-<dd><p>Number of covariates in the DGP.</p></dd>
-
-
-<dt>K</dt>
-<dd><p>Number of folds for cross-fitting.</p></dd>
+<dd><p>Null value for the mean estimand \(\theta_0\).</p></dd>
 
 
 <dt>seed</dt>
-<dd><p>Random seed forwarded to <code><a href="simulate_crossfit_data.html">simulate_crossfit_data()</a></code>.</p></dd>
+<dd><p>RNG seed used inside the per-<code>n</code> simulations.</p></dd>
 
 
 <dt>alpha</dt>
-<dd><p>Two-sided significance level.</p></dd>
+<dd><p>Two-sided test level (default 0.05).</p></dd>
 
 
 <dt>R</dt>
-<dd><p>Number of Monte Carlo replicates passed to <code>simulate_power_ppi_mean()</code>.</p></dd>
+<dd><p>Number of Monte Carlo replicates for empirical power (default 1000).</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
     
 
-<p>Data frame with the columns produced by <code><a href="power_curve_mean.html">power_curve_mean()</a></code> plus
-<code>family</code>, <code>theta</code>, and <code>theta0</code> for downstream plotting.</p>
-    </div>
+<p>A data frame with one row per <code>n</code> in <code>n_grid</code>, containing:</p><dl><dt>n</dt>
+<dd><p>Labeled sample size.</p></dd>
+
+<dt>analytical</dt>
+<dd><p>Analytical power from the normal theory formula.</p></dd>
+
+<dt>empirical</dt>
+<dd><p>Monte Carlo power (rejection rate).</p></dd>
+
+<dt>abs_diff</dt>
+<dd><p>Absolute difference |empirical − analytical|.</p></dd>
+
+
+</dl></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

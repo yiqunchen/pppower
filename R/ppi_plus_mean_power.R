@@ -108,7 +108,7 @@ resolve_ppi_pp_moments <- function(sigma_y2 = NULL,
 #' @param alpha Two-sided significance level (default 0.05).
 #' @param sigma_y2 Optional outcome variance; overrides anything implied by `metrics`.
 #' @param sigma_f2 Optional prediction variance; overrides anything implied by `metrics`.
-#' @param cov_y_f Optional covariance \eqn{\Cov(Y, f(X))}. When supplied (directly
+#' @param cov_y_f Optional covariance \eqn{\mathrm{Cov}(Y, f(X))}. When supplied (directly
 #'   or via `metrics$cov_y_f`) the PPI++ power is returned in addition to the PP
 #'   quantities.
 #' @param var_f Optional variance of \eqn{f(X)}.

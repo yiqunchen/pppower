@@ -2,14 +2,16 @@
 % Please edit documentation in R/required_n_ppi.R
 \name{n_required_ppi_pp}
 \alias{n_required_ppi_pp}
-\title{Required labeled sample size for PPI++ (mean or OLS)}
+\title{Required labeled sample size for PPI++ (mean or regression/contrast inference)}
 \usage{
 n_required_ppi_pp(
   delta,
   N,
   alpha = 0.05,
   power = 0.8,
-  type = c("mean", "ols"),
+  type = c("mean", "regression"),
+  lambda_mode = c("vanilla", "oracle", "user"),
+  lambda_user = NULL,
   sigma_y2 = NULL,
   sigma_f2 = NULL,
   cov_y_f = NULL,
@@ -32,86 +34,185 @@ n_required_ppi_pp(
 )
 }
 \arguments{
-\item{delta}{Effect size. For mean estimation, \code{theta - theta0}; for OLS, \code{t(c) \%*\% beta - theta0}.}
+\item{delta}{Numeric scalar. Effect size being tested.
+\itemize{
+\item \strong{Mean case:} difference from the null, \eqn{\theta - \theta_0}.
+\item \strong{Regression case:} \eqn{a^\top \beta - \theta_0}.
+Must be nonzero.
+}}
 
-\item{N}{Unlabeled sample size.}
+\item{N}{Positive scalar. Number of unlabeled observations providing predictions.}
 
-\item{alpha}{Significance level.}
+\item{alpha}{Significance level (two-sided). Default: \code{0.05}.}
 
-\item{power}{Desired power (e.g., 0.8 for 80\%).}
+\item{power}{Desired statistical power. Default: \code{0.80}.}
 
-\item{type}{One of \code{"mean"} (default) or \code{"ols"}.}
+\item{type}{\code{"mean"} or \code{"regression"}.
+\code{"regression"} covers both \strong{OLS} and \strong{canonical GLM} contrasts.}
 
-\item{sigma_y2}{Variance of Y.}
+\item{lambda_mode}{\code{"vanilla"}, \code{"oracle"}, or \code{"user"}.}
 
-\item{sigma_f2}{Variance of predictions f(X).}
+\item{lambda_user}{Scalar specifying \eqn{\lambda} when
+\code{lambda_mode = "user"}.}
 
-\item{cov_y_f}{Covariance between Y and f(X).}
+\item{sigma_y2}{Variance of labeled outcomes \eqn{\mathrm{Var}(Y)}.}
 
-\item{var_f}{Variance of f(X); used interchangeably with \code{sigma_f2}.}
+\item{sigma_f2}{Variance of predictions \eqn{\mathrm{Var}(f(X))}.}
 
-\item{var_res}{Residual variance of Y - f(X).}
+\item{cov_y_f}{Covariance \eqn{\mathrm{Cov}(Y, f(X))}.}
 
-\item{metrics}{Optional list of predictive metrics (e.g., MSE, R2) from model validation.}
+\item{var_f}{Optional alias for \code{sigma_f2}.}
 
-\item{metric_type}{Type of predictive metric: \code{"continuous"} or \code{"binary"}.}
+\item{var_res}{Residual variance \eqn{\mathrm{Var}(Y - f(X))}.}
 
-\item{m_labeled}{Number of labeled samples used to estimate metrics.}
+\item{metrics}{List of predictive metrics such as:
+\itemize{
+\item \code{mse}
+\item \code{r2}
+\item \code{var_y}
+\item \code{p_y} (binary)
+\item \code{bias}
+Required when direct moments are not supplied.
+}}
 
-\item{correction}{Logical; apply small-sample correction if \code{TRUE}.}
+\item{metric_type}{\code{"continuous"} or \code{"binary"}.
+Determines how \code{metrics} is interpreted.}
 
-\item{c}{Contrast vector for OLS contrasts (\code{t(c) \%*\% beta}).}
+\item{m_labeled}{Number of labeled samples used to compute prediction metrics.}
 
-\item{H_L, H_U}{Per-observation Hessians for labeled and unlabeled data (used in sandwich variance for OLS).}
+\item{correction}{Logical; apply finite-sample adjustment when deriving metrics.}
 
-\item{Sigma_YY}{Covariance of X(Y - X'beta*).}
+\item{c}{Contrast vector \eqn{a}.}
 
-\item{Sigma_ff_l, Sigma_ff_u}{Covariances of X(f(X) - X'beta*) for labeled/unlabeled data.}
+\item{H_L}{Labeled Hessian/Fisher block.}
 
-\item{Sigma_Yf}{Cross-covariance between labeled and predicted score vectors.}
+\item{H_U}{Unlabeled Hessian/Fisher block.}
 
-\item{warn_smallN}{Warn if unlabeled N is small enough that finite-sample effects dominate.}
+\item{Sigma_YY}{Labeled covariance block \eqn{\Sigma_{YY}}.}
 
-\item{smallN_threshold}{Threshold for triggering small-N warning (default = 500).}
+\item{Sigma_ff_l}{Labeled covariance block \eqn{\Sigma_{ff}}.}
 
-\item{mode}{Behavior if required n_star exceeds N.
-Either \code{"error"} (default) to throw an error, or \code{"cap"} to cap n_star = N and return achieved power.}
+\item{Sigma_ff_u}{Unlabeled covariance block \eqn{\Sigma_{ff}}.}
+
+\item{Sigma_Yf}{Cross-covariance \eqn{\Sigma_{Yf}}.}
+
+\item{warn_smallN}{Logical. Warn when \code{N < smallN_threshold}.}
+
+\item{smallN_threshold}{Numeric. Default \code{500}.}
+
+\item{mode}{\code{"error"} or \code{"cap"}.
+\code{"cap"} returns \code{n = N} with an \code{"achieved_power"} attribute.}
 }
 \value{
-Integer labeled sample size (\code{n_star}).
+Integer required sample size \code{n_star}.
+If capped, returns \code{N} with attribute \code{"achieved_power"}.
 }
 \description{
-Computes the minimum labeled sample size (\code{n_star}) required to achieve a desired
-statistical power under the Prediction-Powered Plus (PPI++) framework.
-Supports both mean estimation and linear regression (PPI++–OLS).
+Computes the minimum labeled sample size \eqn{n} required to achieve a desired
+statistical power for Prediction-Powered Plus (PPI++) inference.
+
+This function supports:
+
+\strong{1. Mean estimation}
+
+Estimating a scalar parameter \eqn{\theta = \mathbb{E}[Y]} using
+prediction-powered estimators with augmentation weight \eqn{\lambda}.
+
+\strong{2. Regression contrast estimation}
+
+Estimating a linear contrast \eqn{a^\top \beta^\star} in either:
+\itemize{
+\item \strong{OLS} (ordinary least squares)
+\item \strong{GLM} with canonical link (e.g., logistic or Poisson regression)
+}
+
+via sandwich/Fisher blocks computed on labeled and unlabeled samples.
+
+The augmentation weight \eqn{\lambda} may be:
+\itemize{
+\item \code{"vanilla"} — \eqn{\lambda = 1} (standard PPI)
+\item \code{"user"} — user-specified \eqn{\lambda}
+\item \code{"oracle"} — variance-minimizing \eqn{\lambda^\star(n)} that depends on \eqn{r = n/N}
+}
+
+The unlabeled sample size \eqn{N} contributes predictions \eqn{f(X)} that lower
+the estimator variance.
 }
 \examples{
-# PPI++ mean estimator using direct moments
-n_required_ppi_pp(
-  delta = 0.2, N = 4000, alpha = 0.05, power = 0.8,
-  sigma_y2 = 1.0, sigma_f2 = 0.4, cov_y_f = 0.18,
-  var_f = 0.4, var_res = 0.6
+
+## Example 1: Using prediction metrics
+metrics <- list(
+  type   = "continuous",
+  mse    = 0.6,
+  var_y  = 1.0,
+  m_obs  = 300
 )
 
-# Using predictive metrics
-metrics_pp <- list(type = "continuous", mse = 0.6, var_y = 1.0, cov_y_f = 0.18, m_obs = 300)
 n_required_ppi_pp(
-  delta = 0.2, N = 4000, alpha = 0.05, power = 0.8,
-  metrics = metrics_pp, metric_type = "continuous"
+  delta       = 0.25,
+  N           = 5000,
+  alpha       = 0.05,
+  power       = 0.90,
+  type        = "mean",
+  metrics     = metrics,
+  metric_type = "continuous",
+  lambda_mode = "vanilla"
 )
 
-# OLS example
-c_vec <- c(0, 1, 0)
-H_pop <- diag(3)
-Sigma_YY_pop <- diag(3)
-Sigma_ff_pop <- 0.5 * diag(3)
-Sigma_Yf_pop <- 0.3 * diag(3)
+
+## Example 2: Direct-moment supply
 n_required_ppi_pp(
-  delta = 0.15, N = 2000, alpha = 0.05, power = 0.8,
-  type = "ols",
-  c = c_vec, H_L = H_pop, H_U = H_pop,
-  Sigma_YY = Sigma_YY_pop, Sigma_ff_l = Sigma_ff_pop,
-  Sigma_ff_u = Sigma_ff_pop, Sigma_Yf = Sigma_Yf_pop
+  delta      = 0.25,
+  N          = 5000,
+  alpha       = 0.05,
+  power       = 0.90,
+  type       = "mean",
+  sigma_y2   = 1.0,
+  sigma_f2   = 0.4,
+  cov_y_f    = 0.18,
+  lambda_mode = "oracle"
 )
 
+
+## Generate synthetic blocks for a 3-D contrast
+p <- 3
+cvec <- c(1, 0, -1)
+Hpop <- diag(p)
+SYY  <- diag(p)
+Sff  <- 0.5 * diag(p)
+SYf  <- 0.3 * diag(p)
+
+## Vanilla λ = 1
+n_required_ppi_pp(
+  delta       = 0.15,
+  N           = 2000,
+  alpha       = 0.05,
+  power       = 0.90,
+  type        = "regression",
+  c           = cvec,
+  H_L         = Hpop,
+  H_U         = Hpop,
+  Sigma_YY    = SYY,
+  Sigma_ff_l  = Sff,
+  Sigma_ff_u  = Sff,
+  Sigma_Yf    = SYf,
+  lambda_mode = "vanilla"
+)
+
+## Oracle λ*
+n_required_ppi_pp(
+  delta       = 0.15,
+  N           = 2000,
+  alpha       = 0.05,
+  power       = 0.90,
+  type        = "regression",
+  c           = cvec,
+  H_L         = Hpop,
+  H_U         = Hpop,
+  Sigma_YY    = SYY,
+  Sigma_ff_l  = Sff,
+  Sigma_ff_u  = Sff,
+  Sigma_Yf    = SYf,
+  lambda_mode = "oracle"
+)
 }

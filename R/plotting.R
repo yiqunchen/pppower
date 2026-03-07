@@ -469,7 +469,7 @@ plot_type1_error_curve <- function(curve_df,
       x,
       y_emp,
       type = "l",
-      col = "steelblue",
+      col = pppower_colors$empirical,
       lwd = 2,
       xlab = xlab_default,
       ylab = ylab_default,
@@ -480,7 +480,7 @@ plot_type1_error_curve <- function(curve_df,
       x,
       y_exact,
       type = "l",
-      col = "firebrick",
+      col = pppower_colors$analytical,
       lwd = 2,
       lty = 2,
       xlab = xlab_default,
@@ -490,27 +490,27 @@ plot_type1_error_curve <- function(curve_df,
   }
 
   if (empirical && exact && !is.null(y_emp) && !is.null(y_exact)) {
-    graphics::lines(x, y_emp, col = "steelblue", lwd = 2)
-    graphics::lines(x, y_exact, col = "firebrick", lwd = 2, lty = 2)
+    graphics::lines(x, y_emp, col = pppower_colors$empirical, lwd = 2)
+    graphics::lines(x, y_exact, col = pppower_colors$analytical, lwd = 2, lty = 2)
     graphics::legend(
       legend_pos,
       legend = c("Empirical", "Analytical"),
-      col = c("steelblue", "firebrick"),
+      col = c(pppower_colors$empirical, pppower_colors$analytical),
       lty = c(1, 2),
       lwd = 2,
       bty = "n"
     )
   } else {
     if (empirical && !is.null(y_emp)) {
-      graphics::lines(x, y_emp, col = "steelblue", lwd = 2)
+      graphics::lines(x, y_emp, col = pppower_colors$empirical, lwd = 2)
     }
     if (exact && !is.null(y_exact)) {
-      graphics::lines(x, y_exact, col = "firebrick", lwd = 2, lty = 2)
+      graphics::lines(x, y_exact, col = pppower_colors$analytical, lwd = 2, lty = 2)
     }
   }
 
   if (add_reference && "alpha" %in% names(curve_df)) {
-    graphics::abline(h = unique(curve_df$alpha), col = "gray60", lty = 3)
+    graphics::abline(h = unique(curve_df$alpha), col = pppower_colors$reference, lty = 3)
   }
 
   invisible(curve_df)
