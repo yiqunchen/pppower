@@ -1,6 +1,6 @@
 Package: pppower
 Title: pppower: Convenient Prediction-Powered Inference Power Calculations
-Version: 0.0.0.9000
+Version: 1.0
 Authors@R: c(
     person("Moran", "Guo", , email = "mguo31@jh.edu", role = c("aut")),
     person("Yiqun", "Chen", , email = "yiqun.t.chen@gmail.com", role = c("aut", "cre"))

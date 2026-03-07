@@ -5,7 +5,7 @@ template:
 
 navbar:
   structure:
-    left: [home, basics, variance, samplesize, calculator, llmjudge, reference]
+    left: [home, calculator, basics, variance, samplesize, llmjudge, reference]
   components:
     basics:
       text: "Basics"

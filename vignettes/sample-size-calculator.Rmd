@@ -12,8 +12,8 @@ vignette: >
 
 This calculator uses **prediction-powered inference (PPI/PPI++)** formulas from
 this package for quick study planning examples.
-Calculations run in-browser with JavaScript that mirrors `pppower` formulas
-(no server-side computation).
+It is designed for planning and intuition; for final protocol numbers, confirm
+assumptions with your statistician.
 
 ```{=html}
 <style>
@@ -358,18 +358,22 @@ Calculations run in-browser with JavaScript that mirrors `pppower` formulas
               <input id="single_prev" type="number" min="0.1" max="99.9" step="0.1" value="30">
             </div>
             <div class="sscalc-field">
+              <label for="single_nonresponse">Expected non-response (%)</label>
+              <input id="single_nonresponse" type="number" min="0" max="80" step="1" value="10">
+            </div>
+          </div>
+        </div>
+
+        <div class="sscalc-subgroup" id="single_binary_pred_group">
+          <p class="sscalc-subgroup-title">Prediction quality</p>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
               <label for="single_sens">Sensitivity</label>
               <input id="single_sens" type="number" min="0" max="1" step="0.01" value="0.85">
             </div>
-          </div>
-          <div class="sscalc-form-row">
             <div class="sscalc-field">
               <label for="single_spec">Specificity</label>
               <input id="single_spec" type="number" min="0" max="1" step="0.01" value="0.90">
-            </div>
-            <div class="sscalc-field">
-              <label for="single_nonresponse">Expected non-response (%)</label>
-              <input id="single_nonresponse" type="number" min="0" max="80" step="1" value="10">
             </div>
           </div>
         </div>
@@ -508,8 +512,12 @@ Calculations run in-browser with JavaScript that mirrors `pppower` formulas
 
         <div class="sscalc-form-row">
           <div class="sscalc-field">
-            <label for="diff_nonresponse">Expected non-response (%)</label>
-            <input id="diff_nonresponse" type="number" min="0" max="80" step="1" value="10">
+            <label for="diff_nonresponse_A">Expected non-response A (%)</label>
+            <input id="diff_nonresponse_A" type="number" min="0" max="80" step="1" value="10">
+          </div>
+          <div class="sscalc-field">
+            <label for="diff_nonresponse_B">Expected non-response B (%)</label>
+            <input id="diff_nonresponse_B" type="number" min="0" max="80" step="1" value="10">
           </div>
         </div>
       </div>
@@ -523,7 +531,7 @@ Calculations run in-browser with JavaScript that mirrors `pppower` formulas
             <strong id="diff_n_ppi_group">-</strong>
           </div>
           <div class="sscalc-stat">
-            <span>PPI n per group (adjusted)</span>
+            <span>PPI recruitment n (adj A / B)</span>
             <strong id="diff_n_ppi_group_adj">-</strong>
           </div>
           <div class="sscalc-stat">
@@ -759,6 +767,7 @@ Calculations run in-browser with JavaScript that mirrors `pppower` formulas
   function updateSingleModeUI() {
     var outcome = id("single_outcome").value;
     id("single_binary_group").style.display = outcome === "binary" ? "block" : "none";
+    id("single_binary_pred_group").style.display = outcome === "binary" ? "block" : "none";
     id("single_cont_group").style.display = outcome === "continuous" ? "block" : "none";
   }
 
@@ -894,7 +903,8 @@ Calculations run in-browser with JavaScript that mirrors `pppower` formulas
       var specA = readNum("diff_spec_A");
       var sensB = readNum("diff_sens_B");
       var specB = readNum("diff_spec_B");
-      var nonresponse = readNum("diff_nonresponse") / 100;
+      var nonresponseA = readNum("diff_nonresponse_A") / 100;
+      var nonresponseB = readNum("diff_nonresponse_B") / 100;
 
       if (!(pA > 0 && pA < 1 && pB > 0 && pB < 1)) {
         throw new Error("pA and pB must be in (0,1).");
@@ -911,8 +921,8 @@ Calculations run in-browser with JavaScript that mirrors `pppower` formulas
       if (!(targetPower > 0.5 && targetPower < 0.999)) {
         throw new Error("Power should be between 50% and 99.9%.");
       }
-      if (!(nonresponse >= 0 && nonresponse < 0.9)) {
-        throw new Error("Expected non-response must be in [0%, 90%).");
+      if (!(nonresponseA >= 0 && nonresponseA < 0.9 && nonresponseB >= 0 && nonresponseB < 0.9)) {
+        throw new Error("Expected non-response for groups A and B must be in [0%, 90%).");
       }
 
       var mA = binaryMoments(pA, sensA, specA);
@@ -949,25 +959,27 @@ Calculations run in-browser with JavaScript that mirrors `pppower` formulas
         throw new Error("Infeasible under current assumptions: no finite n found.");
       }
 
-      var nPpiAdj = Math.ceil(nPpi / (1 - nonresponse));
+      var nPpiAdjA = Math.ceil(nPpi / (1 - nonresponseA));
+      var nPpiAdjB = Math.ceil(nPpi / (1 - nonresponseB));
+      var nPpiAdjMax = Math.max(nPpiAdjA, nPpiAdjB);
       var saving = 1 - (nPpi / nClassic);
 
       setError("diff_message", "");
       setText("diff_n_ppi_group", fmtInt(nPpi));
-      setText("diff_n_ppi_group_adj", fmtInt(nPpiAdj));
+      setText("diff_n_ppi_group_adj", "A: " + fmtInt(nPpiAdjA) + " | B: " + fmtInt(nPpiAdjB));
       setText("diff_n_classic_group", fmtInt(nClassic));
       setText("diff_saving", fmtPct(saving));
 
-      var maxBar = Math.max(nClassic, nPpi, nPpiAdj);
+      var maxBar = Math.max(nClassic, nPpi, nPpiAdjMax);
       setBar("diff_bar_classic", nClassic, maxBar);
       setBar("diff_bar_ppi", nPpi, maxBar);
-      setBar("diff_bar_ppi_adj", nPpiAdj, maxBar);
+      setBar("diff_bar_ppi_adj", nPpiAdjMax, maxBar);
       setText("diff_bar_classic_label", fmtInt(nClassic));
       setText("diff_bar_ppi_label", fmtInt(nPpi));
-      setText("diff_bar_ppi_adj_label", fmtInt(nPpiAdj));
+      setText("diff_bar_ppi_adj_label", "max " + fmtInt(nPpiAdjMax));
 
       var diffNote = "Base n is per-group completed labeled outcomes for analysis. " +
-        "Adjusted n inflates for non-response: n_adj = n_base / (1 - non-response).";
+        "Adjusted n is computed separately by group using its own non-response rate.";
       if (saving < 0) {
         diffNote += " Under these assumptions, prediction quality is too weak and PPI needs more labels than classical.";
         setText("diff_message", "PPI is not improving label efficiency under the current assumptions.");
@@ -1036,7 +1048,7 @@ Calculations run in-browser with JavaScript that mirrors `pppower` formulas
 
     [
       "diff_pA", "diff_pB", "diff_N_A", "diff_N_B", "diff_alpha", "diff_power",
-      "diff_sens_A", "diff_spec_A", "diff_sens_B", "diff_spec_B", "diff_nonresponse"
+      "diff_sens_A", "diff_spec_A", "diff_sens_B", "diff_spec_B", "diff_nonresponse_A", "diff_nonresponse_B"
     ].forEach(function (field) {
       id(field).addEventListener("input", updateDiff);
       id(field).addEventListener("change", updateDiff);
@@ -1055,8 +1067,3 @@ Calculations run in-browser with JavaScript that mirrors `pppower` formulas
 })();
 </script>
 ```
-
-### Notes
-
-- This page is now **PPI-specific** (not a generic textbook calculator).
-- It is designed for planning and intuition; for final protocol numbers, confirm assumptions with your statistician.
