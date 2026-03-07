@@ -45,7 +45,7 @@ power_ppi_ttest(
 \item{cov_yf_B}{Covariance between Y and f in group B.}
 }
 \value{
-Scalar power in \link{0, 1}.
+Scalar power in \eqn{[0, 1]}.
 }
 \description{
 Computes power for a two-sample t-test using PPI++ where we estimate

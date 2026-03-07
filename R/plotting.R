@@ -308,7 +308,7 @@ type1_error_curve_mean <- function(effect_grid,
 #' Analytical power is computed from the normal theory formula
 #' \eqn{\sqrt{\sigma_f^2/N + \sigma_{\mathrm{res}}^2/n}}, while empirical power is
 #' estimated via repeated Monte Carlo simulations using
-#' [`simulate_ppi_vanilla_mean()`].
+#' `simulate_ppi_vanilla_mean()`.
 #'
 #' @param effect_grid Numeric vector of effect sizes \eqn{\delta = \theta - \theta_0}
 #'   over which to evaluate Type I error / power.
@@ -515,4 +515,3 @@ plot_type1_error_curve <- function(curve_df,
 
   invisible(curve_df)
 }
-

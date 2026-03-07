@@ -6,7 +6,7 @@ Authors@R: c(
     person("Yiqun", "Chen", , email = "yiqun.t.chen@gmail.com", role = c("aut", "cre"))
     )
 Description: Provides unified tools for power analysis and sample-size calculation under Prediction-Powered Inference (PPI and PPI++), supporting mean estimation and two-sample t-tests.
-License: MIT
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -14,10 +14,14 @@ Config/testthat/edition: 3
 Imports:
     stats
 Suggests:
+    dplyr,
     ggplot2,
     knitr,
+    randomForest,
+    ranger,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    tidyr
 URL: https://yiqunchen.github.io/pppower
 Config/Needs/website: rmarkdown
 VignetteBuilder: knitr

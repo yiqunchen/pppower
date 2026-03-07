@@ -35,7 +35,7 @@ Set to a value in (0, 1) to solve for \code{n} instead.}
 assumed equal to \code{sigma_D2}.}
 }
 \value{
-When \code{power = NULL}: scalar power in \link{0, 1}.
+When \code{power = NULL}: scalar power in \eqn{[0, 1]}.
 When \code{n = NULL}: required number of labeled pairs (integer).
 }
 \description{

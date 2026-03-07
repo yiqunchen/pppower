@@ -37,8 +37,8 @@ n_required_ppi_pp_mean_internal <- function(
     warning("N is small; finite-N effects may dominate.")
 
   ## z-values and target variance S^2
-  z_alpha <- qnorm(1 - alpha/2)
-  z_beta  <- qnorm(power)
+  z_alpha <- stats::qnorm(1 - alpha/2)
+  z_beta  <- stats::qnorm(power)
   S2      <- (delta / (z_alpha + z_beta))^2
 
   ## Binary metric helpers
@@ -351,8 +351,8 @@ power_ppi_regression <- function(
   }
 
   # ---- Solve for n given target power ----
-  z_alpha <- qnorm(1 - alpha/2)
-  z_beta  <- qnorm(power)
+  z_alpha <- stats::qnorm(1 - alpha/2)
+  z_beta  <- stats::qnorm(power)
   S2      <- (delta / (z_alpha + z_beta))^2
 
   obj  <- function(n) var_fun(n) - S2

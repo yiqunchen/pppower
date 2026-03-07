@@ -415,7 +415,11 @@ df <- bind_rows(results) |>
 ggplot(df, aes(delta, n, color = mode)) +
   geom_line(linewidth = 1.8) +
   scale_color_manual(
-    values = pppower_lambda_colors,
+    values = c(
+      vanilla = "#1B9E77",
+      oracle  = "#D95F02",
+      user    = "#7570B3"
+    ),
     labels = c(
       vanilla = "PPI (vanilla λ = 1)",
       oracle  = "PPI++ (oracle λ*)",

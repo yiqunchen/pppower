@@ -37,7 +37,7 @@ power_ppi_paired_binary(
 \item{spec}{Classifier specificity.}
 }
 \value{
-Scalar power in \link{0, 1}.
+Scalar power in \eqn{[0, 1]}.
 }
 \description{
 Computes power for a paired test when outcomes are binary and predictions are

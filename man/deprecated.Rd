@@ -104,7 +104,7 @@ power or sample size is left \code{NULL}).
 \item{\code{simulate_power_ppiplus_mean}}{Use \code{\link[=simulate_ppi_mean]{simulate_ppi_mean()}} instead.}
 \item{\code{simulate_power_ppi_pp_ttest_binary}}{Use \code{\link[=simulate_ppi_ttest_binary]{simulate_ppi_ttest_binary()}} instead.}
 \item{\code{simulate_power_eif_binary}}{Use \code{\link[=simulate_eif_binary]{simulate_eif_binary()}} instead.}
-\item{\code{simulate_power_ppi_mean}}{Use \code{\link[=simulate_ppi_vanilla_mean]{simulate_ppi_vanilla_mean()}} or \code{\link[=simulate_ppi_mean]{simulate_ppi_mean()}}.}
+\item{\code{simulate_power_ppi_mean}}{Use \code{simulate_ppi_vanilla_mean()} or \code{\link[=simulate_ppi_mean]{simulate_ppi_mean()}}.}
 }
 }
 \keyword{internal}

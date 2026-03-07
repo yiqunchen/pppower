@@ -36,7 +36,6 @@ reference:
   - title: "Simulation helpers"
     contents:
       - simulate_ppi_mean
-      - simulate_ppi_vanilla_mean
       - simulate_ppi_ttest_binary
       - simulate_eif_binary
       - simulate_crossfit_data
@@ -53,6 +52,8 @@ reference:
       - resolve_eif_binary_inputs
       - resolve_ppi_variances
       - compute_ppi_blocks
+      - theme_pppower
+      - save_pppower_figure
       - ppi_mean_test
       - ppi_paired_test
       - ppi_ttest

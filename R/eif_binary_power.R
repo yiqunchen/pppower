@@ -152,6 +152,7 @@ power_eif_binary <- function(delta,
 #' @param m_cal Calibration sample size.
 #' @param N Unlabeled/test sample size with surrogate predictions.
 #' @param alpha Two-sided significance level.
+#' @param seed RNG seed for reproducibility.
 #' @inheritParams power_eif_binary
 #' @return List with empirical and analytical power plus simulation details.
 #' @export

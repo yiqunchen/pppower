@@ -38,6 +38,8 @@ simulate_eif_binary(
 \item{p}{True prevalence \eqn{P(Y = 1)}.}
 
 \item{sens, spec}{Sensitivity and specificity of the surrogate classifier.}
+
+\item{seed}{RNG seed for reproducibility.}
 }
 \value{
 List with empirical and analytical power plus simulation details.

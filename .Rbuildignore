@@ -10,3 +10,8 @@
 ^Meta$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\.claude$
+^simulation_studies$
+^write-up$
+^pppower\.Rcheck$
+^pppower_.*\.tar\.gz$

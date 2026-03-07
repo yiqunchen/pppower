@@ -62,7 +62,7 @@ quantities directly:
 Analytical power is computed from the normal theory formula
 \eqn{\sqrt{\sigma_f^2/N + \sigma_{\mathrm{res}}^2/n}}, while empirical power is
 estimated via repeated Monte Carlo simulations using
-\code{\link[=simulate_ppi_vanilla_mean]{simulate_ppi_vanilla_mean()}}.
+\code{simulate_ppi_vanilla_mean()}.
 }
 \examples{
 type1_error_curve_mean_dgp(

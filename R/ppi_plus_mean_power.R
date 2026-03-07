@@ -448,7 +448,7 @@ simulate_ppi_mean <- function(R,
 #' @param sigma_fD2 Optional variance of predicted differences. If NULL,
 #'   assumed equal to \code{sigma_D2}.
 #'
-#' @return When `power = NULL`: scalar power in [0, 1].
+#' @return When `power = NULL`: scalar power in \eqn{[0, 1]}.
 #'   When `n = NULL`: required number of labeled pairs (integer).
 #'
 #' @details
@@ -526,7 +526,7 @@ power_ppi_paired <- function(delta,
 #' @param sens Classifier sensitivity.
 #' @param spec Classifier specificity.
 #'
-#' @return Scalar power in [0, 1].
+#' @return Scalar power in \eqn{[0, 1]}.
 #'
 #' @details
 #' The joint probability \eqn{P(Y^A=1, Y^B=1)} is set to
@@ -639,7 +639,7 @@ power_ppi_paired_binary <- function(delta,
 #' @param sigma_f2_B Variance of predictions in group B.
 #' @param cov_yf_B Covariance between Y and f in group B.
 #'
-#' @return Scalar power in [0, 1].
+#' @return Scalar power in \eqn{[0, 1]}.
 #'
 #' @details
 #' The variance of the difference estimator is the sum of the PPI++ variances

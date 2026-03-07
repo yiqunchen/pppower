@@ -216,66 +216,10 @@ simulate_ppi_ols_rep <- function(n_l, n_u, contrast, family = stats::gaussian(),
                                  lambda_user = NULL,
                                  alpha = 0.05,
                                  seed = NULL) {
-  method <- match.arg(method)
-  lambda_type <- match.arg(lambda_type)
-
-  p_dim <- length(contrast) - 1L  # intercept + p regressors
-  if (p_dim < 1) stop("contrast must include at least one regressor.")
-
-  # draw data
-  samples <- draw_labeled_unlabeled(
-    n_l, n_u,
-    p = p_dim,
-    family = family,
-    seed = seed
-  )
-  labeled <- samples$labeled
-  unlabeled <- samples$unlabeled
-
-  # cross-fit on labeled sample
-  rect <- crossfit_rectifier(labeled$X, labeled$y, family = family, seed = seed)
-  f_l <- rect$pred
-
-  # impute unlabeled predictions
-  if (method == "ppi") {
-    # single pass: use labeled models to score unlabeled covariates
-    f_u <- numeric(nrow(unlabeled$X))
-    for (k in seq_along(rect$folds)) {
-      fit_k <- rect$models[[k]]
-      f_u <- f_u + stats::predict(fit_k, newdata = data.frame(unlabeled$X),
-                                   type = if (identical(family$family, "binomial")) "response" else "response") / length(rect$folds)
-    }
-  } else {
-    # PPI++: build pseudo-labels first using labeled models
-    pseudo <- numeric(nrow(unlabeled$X))
-    for (k in seq_along(rect$folds)) {
-      fit_k <- rect$models[[k]]
-      pseudo <- pseudo + stats::predict(fit_k, newdata = data.frame(unlabeled$X),
-                                         type = if (identical(family$family, "binomial")) "response" else "response") / length(rect$folds)
-    }
-    f_u <- crossfit_unlabeled(unlabeled$X, pseudo, family = family,
-                              folds = rect$folds, models_labeled = rect$models)
-  }
-
-  # Run estimator and test
-  X_l <- stats::model.matrix(~ ., data.frame(labeled$X))
-  X_u <- stats::model.matrix(~ ., data.frame(unlabeled$X))
-
-  if (method == "ppi") {
-    fit <- ppi_ols(X_l, labeled$y, f_l, X_u, f_u)
-  } else {
-    fit <- ppi_plus_ols(X_l, labeled$y, f_l, X_u, f_u,
-                        lambda = lambda_user, lambda_type = lambda_type,
-                        contrast = contrast)
-  }
-
-  list(
-    theta_hat = fit$theta_hat,
-    V_theta = fit$V_theta,
-    lambda = fit$lambda,
-    reject = abs(drop(contrast %*% fit$theta_hat)) /
-      sqrt(drop(contrast %*% fit$V_theta %*% contrast)) >
-      stats::qnorm(1 - alpha / 2)
+  stop(
+    "simulate_ppi_ols_rep() is no longer supported after the regression refactor. ",
+    "Use compute_ppi_blocks() with power_ppi_regression() for regression power analyses.",
+    call. = FALSE
   )
 }
 

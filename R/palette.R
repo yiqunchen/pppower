@@ -158,7 +158,7 @@ save_pppower_figure <- function(plot, path, width = 10, height = 5, dpi = 400) {
     stop("ggplot2 is required for save_pppower_figure().", call. = FALSE)
   }
   # Try cairo_pdf for TrueType embedding; fall back to default pdf device
-  pdf_ok <- tryCatch({ grDevices::cairo_pdf(tempfile()); dev.off(); TRUE },
+  pdf_ok <- tryCatch({ grDevices::cairo_pdf(tempfile()); grDevices::dev.off(); TRUE },
                      error = function(e) FALSE, warning = function(w) FALSE)
   if (pdf_ok) {
     ggplot2::ggsave(
