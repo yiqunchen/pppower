@@ -4,158 +4,97 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prediction-Powered Sample Size Calculation • pppower</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
-<script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Prediction-Powered Sample Size Calculation">
-<meta property="og:description" content="pppower">
-<!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
-<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>Detailed Dive: Sample Size &amp; Metrics Interface • pppower</title>
+<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Detailed Dive: Sample Size &amp; Metrics Interface">
 </head>
-<body data-spy="scroll" data-target="#toc">
-    
+<body>
+    <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
-    <div class="container template-article">
-      <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
-  <div class="container">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">pppower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
-      </span>
-    </div>
 
-    <div id="navbar" class="navbar-collapse collapse">
-      <ul class="nav navbar-nav">
-<li>
-  <a href="../reference/index.html">Reference</a>
-</li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-<li>
-      <a href="../articles/intro-ppi.html">Prediction-Powered Power Planning</a>
-    </li>
-    <li>
-      <a href="../articles/ppi-sample-size.html">Prediction-Powered Sample Size Calculation</a>
-    </li>
-  </ul>
-</li>
+    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
+
+    <a class="navbar-brand me-2" href="../index.html">pppower</a>
+
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0</small>
+
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar" class="collapse navbar-collapse ms-3">
+      <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../articles/sample-size-calculator.html">Calculator</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/intro-ppi.html">Basics</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/deep-dive-math.html">Variance &amp; Metrics</a></li>
+<li class="active nav-item"><a class="nav-link" href="../articles/ppi-sample-size.html">Sample Size</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/llm-judge-binary.html">LLM Judge (Binary)</a></li>
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul>
-<ul class="nav navbar-nav navbar-right"></ul>
+<ul class="navbar-nav">
+<li class="nav-item"><form class="form-inline" role="search">
+ <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
+</form></li>
+      </ul>
 </div>
-<!--/.nav-collapse -->
+
+
   </div>
-<!--/.container -->
-</div>
-<!--/.navbar -->
+</nav><div class="container template-article">
 
-      
 
-      </header><div class="row">
-  <div class="col-md-9 contents">
-    <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Prediction-Powered Sample Size Calculation</h1>
+
+
+<div class="row">
+  <main id="main" class="col-md-9"><div class="page-header">
+
+      <h1>Detailed Dive: Sample Size &amp; Metrics Interface</h1>
             <h3 data-toc-skip class="subtitle">Using
-<code>n_required_ppi_pp()</code> for Mean and Regression PPI/PPI++</h3>
+<code>power_ppi_mean()</code> for mean (continuous/binary)</h3>
             
       
-      
-      <div class="hidden name"><code>ppi-sample-size.Rmd</code></div>
 
+      <div class="d-none name"><code>ppi-sample-size.Rmd</code></div>
     </div>
 
     
     
 <div class="section level2">
-<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+<h2 id="what-this-vignette-covers">What this vignette covers<a class="anchor" aria-label="anchor" href="#what-this-vignette-covers"></a>
 </h2>
-<p>Prediction-Powered Inference (PPI) and PPI++ reduce labeled sample
-size needs by using a prediction model trained on large unlabeled
-datasets.</p>
-<p>This vignette demonstrates how to compute required <strong>required
-labeled sample size</strong> under:</p>
+<p>This is the <strong>detailed dive</strong> behind the quickstart:</p>
 <ul>
-<li>Mean Estimation</li>
-<li>OLS and GLM recression contrasts</li>
-<li>Direct moments inputs or prediction metrics (confusion matrix, brier
-score, MSE, <span class="math inline">\(R^2\)</span>, etc.)</li>
-<li>Vanilla (PPI), Oracle, and user-specified <span class="math inline">\(\lambda\)</span> (PPI++)</li>
+<li>How <code><a href="../reference/power_ppi_mean.html">power_ppi_mean()</a></code> works for mean estimation</li>
+<li>How to feed prediction metrics (MSE,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>,
+sensitivity/specificity) instead of raw moments</li>
+<li>Short, focused code blocks you can copy/paste</li>
 </ul>
-<p>All examples use the main function: <code><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp()</a></code>
-which solves for the smallest labeled sample size <span class="math inline">\((n)\)</span> such that the asymptotic variance
-meets the target power level.</p>
 </div>
 <div class="section level2">
-<h2 id="overview-of-the-sample-size-function">Overview of the Sample Size Function<a class="anchor" aria-label="anchor" href="#overview-of-the-sample-size-function"></a>
+<h2 id="core-call-shape-reference">Core call shape (reference)<a class="anchor" aria-label="anchor" href="#core-call-shape-reference"></a>
 </h2>
-<p>The core function has the following interface:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
-<span>  <span class="va">delta</span>, <span class="va">N</span>,</span>
-<span>  type       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mean"</span>, <span class="st">"regression"</span><span class="op">)</span>,</span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
+<span>  <span class="va">delta</span>, <span class="va">N</span>, n <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power <span class="op">=</span> <span class="fl">0.80</span>, alpha <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"vanilla"</span>, <span class="st">"oracle"</span>, <span class="st">"user"</span><span class="op">)</span>,</span>
-<span>  lambda_user <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  <span class="co"># mean inputs</span></span>
+<span>  <span class="co"># mean inputs (choose one path)</span></span>
 <span>  <span class="va">sigma_y2</span>, <span class="va">sigma_f2</span>, <span class="va">cov_y_f</span>,</span>
 <span>  <span class="va">var_f</span>, <span class="va">var_res</span>,</span>
-<span>  <span class="va">metrics</span>, <span class="va">metric_type</span>,</span>
-<span>  <span class="co"># regression inputs</span></span>
-<span>  <span class="va">c</span>, <span class="va">H_L</span>, <span class="va">H_U</span>,</span>
-<span>  <span class="va">Sigma_YY</span>, <span class="va">Sigma_ff_l</span>, <span class="va">Sigma_ff_u</span>, <span class="va">Sigma_Yf</span>,</span>
-<span>  mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"error"</span>, <span class="st">"cap"</span><span class="op">)</span></span>
+<span>  <span class="va">metrics</span>, <span class="va">metric_type</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Explanation:</p>
-<ul>
-<li>
-<code>delta</code>: the effect size <span class="math inline">\((c^\top \beta - c^\top\beta_0)\)</span> for
-regression (OLS/GLM), or a shift in the mean.</li>
-<li>
-<code>N</code>: size of the unlabeled dataset, typically very
-large.</li>
-<li>
-<code>lambda_mode</code>: determines whether <span class="math inline">\(\lambda\)</span> is fixed at 1 (Vanilla PPI
-estimator), chosen by the user (<code>"user"</code>), or optimized
-(<code>"oracle"</code>).
-<ul>
-<li>For mean mode, you may provide moments (<code>sigma_y2</code>,
-<code>sigma_f2</code>, <code>cov_y_f</code>) or prediction metrics
-(<code>mse</code>, <code>var_f</code>, accuracy, etc.).</li>
-<li>For regression mode, you pass Hessians and covariance blocks
-computed by <code><a href="../reference/compute_ppi_blocks.html">compute_ppi_blocks()</a></code>.</li>
-</ul>
-</li>
-</ul>
+<p>Only pass what you need for your path (moments <strong>or</strong>
+metrics).</p>
 </div>
 <div class="section level2">
-<h2 id="mean-mode-sample-size-direct-moments">Mean-Mode Sample Size — Direct Moments<a class="anchor" aria-label="anchor" href="#mean-mode-sample-size-direct-moments"></a>
+<h2 id="mean-mode-with-direct-moments">Mean mode with direct moments<a class="anchor" aria-label="anchor" href="#mean-mode-with-direct-moments"></a>
 </h2>
-<p>In the simplest case, you directly supply the population moments:</p>
-<ul>
-<li>
-<span class="math inline">\(\sigma_y^2 =
-\mathrm{Var}(Y)\)</span>,</li>
-<li>
-<span class="math inline">\(\sigma_f^2 =
-\mathrm{Var}(f(X))\)</span>,</li>
-<li><span class="math inline">\(\mathrm{Cov}(Y,f)\)</span></li>
-</ul>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">delta</span>  <span class="op">&lt;-</span> <span class="fl">0.20</span></span>
 <span><span class="va">N</span>      <span class="op">&lt;-</span> <span class="fl">3000</span></span>
@@ -166,10 +105,11 @@ computed by <code><a href="../reference/compute_ppi_blocks.html">compute_ppi_blo
 <span><span class="va">sigma_f2</span> <span class="op">&lt;-</span> <span class="fl">0.40</span></span>
 <span><span class="va">cov_y_f</span>  <span class="op">&lt;-</span> <span class="fl">0.15</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  delta      <span class="op">=</span> <span class="va">delta</span>,</span>
 <span>  N          <span class="op">=</span> <span class="va">N</span>,</span>
-<span>  type       <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>  n          <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power      <span class="op">=</span> <span class="va">power</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="st">"vanilla"</span>,</span>
 <span>  sigma_y2   <span class="op">=</span> <span class="va">sigma_y2</span>,</span>
 <span>  sigma_f2   <span class="op">=</span> <span class="va">sigma_f2</span>,</span>
@@ -177,24 +117,21 @@ computed by <code><a href="../reference/compute_ppi_blocks.html">compute_ppi_blo
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 222</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  delta      <span class="op">=</span> <span class="va">delta</span>,</span>
 <span>  N          <span class="op">=</span> <span class="va">N</span>,</span>
-<span>  type       <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>  n          <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power      <span class="op">=</span> <span class="va">power</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="st">"oracle"</span>,</span>
 <span>  sigma_y2   <span class="op">=</span> <span class="va">sigma_y2</span>,</span>
 <span>  sigma_f2   <span class="op">=</span> <span class="va">sigma_f2</span>,</span>
 <span>  cov_y_f    <span class="op">=</span> <span class="va">cov_y_f</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 186</span></span></code></pre></div>
-<p>The stronger the correlation between outcome (<span class="math inline">\(Y\)</span>) and the model prediction (<span class="math inline">\(f(X)\)</span>), the more sample size reduction
-PPI++ yields relative to vanilla PPI.</p>
 </div>
 <div class="section level2">
-<h2 id="mean-mode-sample-size-using-prediction-metrics">Mean-Mode Sample Size — Using Prediction Metrics<a class="anchor" aria-label="anchor" href="#mean-mode-sample-size-using-prediction-metrics"></a>
+<h2 id="mean-mode-with-prediction-metrics">Mean mode with prediction metrics<a class="anchor" aria-label="anchor" href="#mean-mode-with-prediction-metrics"></a>
 </h2>
-<p>Instead of providing moments, you can supply <strong>predictive
-performance metrics</strong>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  type    <span class="op">=</span> <span class="st">"continuous"</span>,</span>
@@ -205,34 +142,33 @@ performance metrics</strong>.</p>
 <span>  m_obs   <span class="op">=</span> <span class="fl">500</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  delta       <span class="op">=</span> <span class="fl">0.15</span>,</span>
 <span>  N           <span class="op">=</span> <span class="fl">520</span>,</span>
-<span>  type        <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>  n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power       <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="st">"vanilla"</span>,</span>
 <span>  metrics     <span class="op">=</span> <span class="va">metrics</span>,</span>
 <span>  metric_type <span class="op">=</span> <span class="st">"continuous"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 151</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  delta       <span class="op">=</span> <span class="fl">0.15</span>,</span>
 <span>  N           <span class="op">=</span> <span class="fl">520</span>,</span>
-<span>  type        <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>  n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power       <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="st">"oracle"</span>,</span>
 <span>  metrics     <span class="op">=</span> <span class="va">metrics</span>,</span>
 <span>  metric_type <span class="op">=</span> <span class="st">"continuous"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 124</span></span></code></pre></div>
-<p><code>m_obs</code> is the number of labeled samples used to estimate
-the prediction metrics (MSE, variance, accuracy, etc.). Finite-sample
-corrections ensure the derived moments remain unbiased / feasible.</p>
+<p><code>m_obs</code> is the labeled size used to estimate the metrics;
+finite-sample corrections keep the derived moments feasible.</p>
 </div>
 <div class="section level2">
-<h2 id="mean-mode-sample-size-using-confusion-matrix">Mean-Mode Sample Size — Using Confusion matrix<a class="anchor" aria-label="anchor" href="#mean-mode-sample-size-using-confusion-matrix"></a>
+<h2 id="binary-metrics-confusion-matrix-or-sensspec">Binary metrics (confusion matrix or sens/spec)<a class="anchor" aria-label="anchor" href="#binary-metrics-confusion-matrix-or-sensspec"></a>
 </h2>
-<p>You can also supply classifier performance through a confusion
-matrix:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  type <span class="op">=</span> <span class="st">"classification"</span>,</span>
@@ -251,10 +187,11 @@ matrix:</p>
 <span><span class="co"># accuracy = (tp + tn)/500 = 450/500 = 0.90</span></span>
 <span></span>
 <span><span class="co"># PPI sample-size calculation, λ=1</span></span>
-<span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  delta       <span class="op">=</span> <span class="fl">0.15</span>,</span>
 <span>  N           <span class="op">=</span> <span class="fl">520</span>,</span>
-<span>  type        <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>  n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power       <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="st">"vanilla"</span>,</span>
 <span>  metrics     <span class="op">=</span> <span class="va">metrics</span>,</span>
 <span>  metric_type <span class="op">=</span> <span class="st">"classification"</span></span>
@@ -262,23 +199,25 @@ matrix:</p>
 <span><span class="co">#&gt; [1] 43</span></span>
 <span></span>
 <span><span class="co"># PPI++ oracle-λ</span></span>
-<span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  delta       <span class="op">=</span> <span class="fl">0.15</span>,</span>
 <span>  N           <span class="op">=</span> <span class="fl">520</span>,</span>
-<span>  type        <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>  n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power       <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="st">"oracle"</span>,</span>
 <span>  metrics     <span class="op">=</span> <span class="va">metrics</span>,</span>
 <span>  metric_type <span class="op">=</span> <span class="st">"classification"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 35</span></span></code></pre></div>
-<p>For binary outcomes, the function internally computes:</p>
-<ul>
-<li>prevalence (<span class="math inline">\(p_y\)</span>)</li>
-<li>prediction prevalence (<span class="math inline">\(p_f\)</span>)</li>
-<li>variance of residuals</li>
-<li>covariance ( <span class="math inline">\(\mathrm{Cov}(Y,f)\)</span>
-)</li>
-</ul>
+<p>For binary outcomes, the helper computes prevalence and prediction
+prevalence from the confusion matrix and maps them to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">V</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">r</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>f</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathrm{Var}(f)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">v</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathrm{Cov}(Y,f)</annotation></semantics></math>.</p>
+<p>For LLM-as-a-judge binary surrogates and EIF-based power, see the
+“LLM Judge” article. - variance of residuals - covariance (
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">v</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathrm{Cov}(Y,f)</annotation></semantics></math>
+)</p>
 <p>using identities derived from the confusion matrix.</p>
 </div>
 <div class="section level2">
@@ -306,17 +245,17 @@ matrix:</p>
 <span>  X_u <span class="op">=</span> <span class="va">X_u</span>, f_u <span class="op">=</span> <span class="va">f_u</span>,</span>
 <span>  beta <span class="op">=</span> <span class="va">beta</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Solve sample size for contrast <span class="math inline">\(c^\top
-\beta\)</span>:</p>
+<p>Solve sample size for contrast
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>c</mi><mi>⊤</mi></msup><mi>β</mi></mrow><annotation encoding="application/x-tex">c^\top \beta</annotation></semantics></math>:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">c_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="va">delta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">c_vec</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/power_ppi_regression.html">power_ppi_regression</a></span><span class="op">(</span></span>
 <span>  delta       <span class="op">=</span> <span class="va">delta</span>,</span>
 <span>  N           <span class="op">=</span> <span class="va">n_u</span>,</span>
+<span>  n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  power       <span class="op">=</span> <span class="fl">0.90</span>,</span>
-<span>  type        <span class="op">=</span> <span class="st">"regression"</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="st">"vanilla"</span>,</span>
 <span>  c           <span class="op">=</span> <span class="va">c_vec</span>,</span>
 <span>  H_L         <span class="op">=</span> <span class="va">blocks</span><span class="op">$</span><span class="va">H_L</span>,</span>
@@ -328,11 +267,11 @@ matrix:</p>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 35</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/power_ppi_regression.html">power_ppi_regression</a></span><span class="op">(</span></span>
 <span>  delta       <span class="op">=</span> <span class="va">delta</span>,</span>
 <span>  N           <span class="op">=</span> <span class="va">n_u</span>,</span>
+<span>  n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  power       <span class="op">=</span> <span class="fl">0.90</span>,</span>
-<span>  type        <span class="op">=</span> <span class="st">"regression"</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="st">"oracle"</span>,</span>
 <span>  c           <span class="op">=</span> <span class="va">c_vec</span>,</span>
 <span>  H_L         <span class="op">=</span> <span class="va">blocks</span><span class="op">$</span><span class="va">H_L</span>,</span>
@@ -382,10 +321,11 @@ previous OLS case:</p>
 <code class="sourceCode R"><span><span class="va">c_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="va">delta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">c_vec</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/power_ppi_regression.html">power_ppi_regression</a></span><span class="op">(</span></span>
 <span>  delta       <span class="op">=</span> <span class="va">delta</span>,</span>
 <span>  N           <span class="op">=</span> <span class="va">n_u</span>,</span>
-<span>  type        <span class="op">=</span> <span class="st">"regression"</span>,</span>
+<span>  n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power       <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="st">"vanilla"</span>,</span>
 <span>  c           <span class="op">=</span> <span class="va">c_vec</span>,</span>
 <span>  H_L         <span class="op">=</span> <span class="va">blocks_glm</span><span class="op">$</span><span class="va">H_L</span>,</span>
@@ -397,10 +337,11 @@ previous OLS case:</p>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 60</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="../reference/power_ppi_regression.html">power_ppi_regression</a></span><span class="op">(</span></span>
 <span>  delta       <span class="op">=</span> <span class="va">delta</span>,</span>
 <span>  N           <span class="op">=</span> <span class="va">n_u</span>,</span>
-<span>  type        <span class="op">=</span> <span class="st">"regression"</span>,</span>
+<span>  n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power       <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>  lambda_mode <span class="op">=</span> <span class="st">"oracle"</span>,</span>
 <span>  c           <span class="op">=</span> <span class="va">c_vec</span>,</span>
 <span>  H_L         <span class="op">=</span> <span class="va">blocks_glm</span><span class="op">$</span><span class="va">H_L</span>,</span>
@@ -415,49 +356,55 @@ previous OLS case:</p>
 <div class="section level2">
 <h2 id="handling-infeasible-cases">Handling infeasible cases<a class="anchor" aria-label="anchor" href="#handling-infeasible-cases"></a>
 </h2>
-<p>If the required labeled (<span class="math inline">\(n\)</span>)
-exceeds the unlabeled (<span class="math inline">\(N\)</span>), the
-function throws an error by default (<code>mode = "error"</code>):</p>
+<p>If the required labeled
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>)
+exceeds the unlabeled
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>),
+the function throws an error by default
+(<code>mode = "error"</code>):</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  delta <span class="op">=</span> <span class="fl">0.03</span>,</span>
 <span>  N     <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>  type  <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>  n     <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>  sigma_y2 <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  sigma_f2 <span class="op">=</span> <span class="fl">0.2</span>,</span>
 <span>  cov_y_f  <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"error"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error: Infeasible: cannot find n satisfying required power.</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;">:</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Required n = 8710 exceeds N = 1000.</span></span></code></pre></div>
 <p>Switch to <code>mode = "cap"</code> to get an estimate of power at
-<span class="math inline">\(n = N\)</span>:</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mi>N</mi></mrow><annotation encoding="application/x-tex">n = N</annotation></semantics></math>:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  delta <span class="op">=</span> <span class="fl">0.03</span>,</span>
 <span>  N     <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>  type  <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>  n     <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>  sigma_y2 <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  sigma_f2 <span class="op">=</span> <span class="fl">0.2</span>,</span>
 <span>  cov_y_f  <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"cap"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Required n exceeds search range; capping to n = N = 1000. Achieved</span></span>
-<span><span class="co">#&gt; power = 0.1297.</span></span>
 <span></span>
 <span><span class="va">out</span></span>
 <span><span class="co">#&gt; [1] 1000</span></span>
 <span><span class="co">#&gt; attr(,"achieved_power")</span></span>
-<span><span class="co">#&gt; [1] 0.1296782</span></span>
+<span><span class="co">#&gt; [1] 0.1566547</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">out</span>, <span class="st">"achieved_power"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.1296782</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.1566547</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="power-curve-visualization">Power Curve Visualization<a class="anchor" aria-label="anchor" href="#power-curve-visualization"></a>
 </h2>
-<p>This chunk visualizes how required (<span class="math inline">\(n\)</span>) decreases as effect size grows, and
-how oracle <span class="math inline">\(\lambda\)</span> for PPI++
-estimator provides a clear reduction in sample size estimations over
-vanilla PPI:</p>
+<p>This chunk visualizes how required
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>)
+decreases as effect size grows, and how oracle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+for PPI++ estimator provides a clear reduction in sample size
+estimations over vanilla PPI:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">delta_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.10</span>, <span class="fl">0.40</span>, length.out <span class="op">=</span> <span class="fl">40</span><span class="op">)</span></span>
 <span></span>
@@ -472,28 +419,31 @@ vanilla PPI:</p>
 <span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">delta_grid</span>, <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    delta <span class="op">=</span> <span class="va">d</span>,</span>
-<span>    vanilla <span class="op">=</span> <span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span>    vanilla <span class="op">=</span> <span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>      delta       <span class="op">=</span> <span class="va">d</span>,</span>
 <span>      N           <span class="op">=</span> <span class="va">N</span>,</span>
-<span>      type        <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>      n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>      power       <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>      lambda_mode <span class="op">=</span> <span class="st">"vanilla"</span>,</span>
 <span>      sigma_y2    <span class="op">=</span> <span class="va">sy2</span>,</span>
 <span>      sigma_f2    <span class="op">=</span> <span class="va">sf2</span>,</span>
 <span>      cov_y_f     <span class="op">=</span> <span class="va">cyf</span></span>
 <span>    <span class="op">)</span>,</span>
-<span>    oracle <span class="op">=</span> <span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span>    oracle <span class="op">=</span> <span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>      delta       <span class="op">=</span> <span class="va">d</span>,</span>
 <span>      N           <span class="op">=</span> <span class="va">N</span>,</span>
-<span>      type        <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>      n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>      power       <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>      lambda_mode <span class="op">=</span> <span class="st">"oracle"</span>,</span>
 <span>      sigma_y2    <span class="op">=</span> <span class="va">sy2</span>,</span>
 <span>      sigma_f2    <span class="op">=</span> <span class="va">sf2</span>,</span>
 <span>      cov_y_f     <span class="op">=</span> <span class="va">cyf</span></span>
 <span>    <span class="op">)</span>,</span>
-<span>    user <span class="op">=</span> <span class="fu"><a href="../reference/n_required_ppi_pp.html">n_required_ppi_pp</a></span><span class="op">(</span></span>
+<span>    user <span class="op">=</span> <span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>      delta       <span class="op">=</span> <span class="va">d</span>,</span>
 <span>      N           <span class="op">=</span> <span class="va">N</span>,</span>
-<span>      type        <span class="op">=</span> <span class="st">"mean"</span>,</span>
+<span>      n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>      power       <span class="op">=</span> <span class="fl">0.80</span>,</span>
 <span>      lambda_mode <span class="op">=</span> <span class="st">"user"</span>,</span>
 <span>      lambda_user <span class="op">=</span> <span class="va">lambda_user_value</span>,</span>
 <span>      sigma_y2    <span class="op">=</span> <span class="va">sy2</span>,</span>
@@ -509,7 +459,7 @@ vanilla PPI:</p>
 <span>               values_to <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">ggplot</span><span class="op">(</span><span class="va">df</span>, <span class="fu">aes</span><span class="op">(</span><span class="va">delta</span>, <span class="va">n</span>, color <span class="op">=</span> <span class="va">mode</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">geom_line</span><span class="op">(</span>size <span class="op">=</span> <span class="fl">1.2</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_line</span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">1.8</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">scale_color_manual</span><span class="op">(</span></span>
 <span>    values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>      vanilla <span class="op">=</span> <span class="st">"#1B9E77"</span>,</span>
@@ -529,59 +479,50 @@ vanilla PPI:</p>
 <span>    x <span class="op">=</span> <span class="st">"Effect size δ"</span>,</span>
 <span>    color <span class="op">=</span> <span class="st">"λ-mode"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">theme_minimal</span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">theme</span><span class="op">(</span></span>
-<span>    legend.position <span class="op">=</span> <span class="st">"top"</span>,</span>
-<span>    plot.title <span class="op">=</span> <span class="fu">element_text</span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use `linewidth` instead.</span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">generated.</span></span></span></code></pre></div>
-<p><img src="figures/ppi-sample-size-power-curve-sample-size-1.png" width="576"></p>
+<span>  <span class="fu"><a href="../reference/theme_pppower.html">theme_pppower</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></code></pre></div>
+<p><img src="figures/ppi-sample-size-power-curve-sample-size-1.png" class="r-plt" alt="" width="960" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
 </h2>
-<p>This vignette demonstrated: - How to compute PPI / PPI++ sample size
-for mean estimation and regression. - How to use direct moments or
-prediction metrics (continuous or classification). - How to incorporate
-OLS or GLM models into contrast-based inference. - When sample sizes
-become infeasible and how to handle caps. - How <span class="math inline">\(\lambda\)</span> affects the required labeled
-sample size.</p>
+<p>This vignette demonstrated:</p>
+<ul>
+<li>How to compute PPI / PPI++ sample size for mean estimation and
+regression.</li>
+<li>How to use direct moments or prediction metrics (continuous or
+classification).</li>
+<li>How to incorporate OLS or GLM models into contrast-based
+inference.</li>
+<li>When sample sizes become infeasible and how to handle caps.</li>
+<li>How
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+affects the required labeled sample size.</li>
+</ul>
 <p>PPI++ typically yields the smallest labeled sample size, especially
-when the prediction model is strong and the correlation ( <span class="math inline">\(\mathrm{Cov}(Y,f(X))\)</span> ) is high.</p>
+when the prediction model is strong and the correlation (
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">v</mi></mrow><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><mo stretchy="false" form="prefix">(</mo><mi>X</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathrm{Cov}(Y,f(X))</annotation></semantics></math>
+) is high.</p>
 </div>
-  </div>
-
-  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
-
-        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
-    </nav>
-</div>
-
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 
 
-      <footer><div class="copyright">
-  <p></p>
-<p>Developed by Moran Guo, Yiqun Chen.</p>
+    <footer><div class="pkgdown-footer-left">
+  <p>Developed by Moran Guo, Yiqun Chen.</p>
 </div>
 
-<div class="pkgdown">
-  <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<div class="pkgdown-footer-right">
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
-      </footer>
+    </footer>
 </div>
 
-  
 
 
-  
+
 
   </body>
 </html>
