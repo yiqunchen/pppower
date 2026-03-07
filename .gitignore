@@ -25,3 +25,6 @@ data/
 # Local manuscript artifacts
 write-up/PPI_Power_Analysis/
 write-up/PPI_Power_Analysis.zip
+
+# Legacy local plot outputs
+plots/

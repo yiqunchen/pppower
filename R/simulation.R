@@ -210,20 +210,6 @@ crossfit_unlabeled <- function(X_u, pseudo_labels, family, folds, models_labeled
   f_hat
 }
 
-simulate_ppi_ols_rep <- function(n_l, n_u, contrast, family = stats::gaussian(),
-                                 method = c("ppi", "ppi_plus"),
-                                 lambda_type = c("plugin", "user"),
-                                 lambda_user = NULL,
-                                 alpha = 0.05,
-                                 seed = NULL) {
-  stop(
-    "simulate_ppi_ols_rep() is no longer supported after the regression refactor. ",
-    "Use compute_ppi_blocks() with power_ppi_regression() for regression power analyses.",
-    call. = FALSE
-  )
-}
-
-
 # Draw a population sample for mean estimation
 draw_population_mean_sample <- function(n,
                                         theta_true,
