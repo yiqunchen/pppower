@@ -2,13 +2,25 @@
 
 This calculator uses **prediction-powered inference (PPI/PPI++)**
 formulas from this package for quick study planning examples.
+Calculations run in-browser with JavaScript that mirrors `pppower`
+formulas (no server-side computation).
 
 Interactive PPI Tool
 
 ## Prediction-powered sample size calculator
 
-Uses pppower-style moments and lambda logic. Outputs are labeled sample
-sizes.
+Browser-based planner aligned with pppower formulas.
+
+**Assumptions:** labeled outcomes are sampled completely at random from
+the target population, and labeled/unlabeled sets are from the same
+population.
+
+**Non-response:** expected share of sampled units without a usable
+labeled outcome. Recruitment-adjusted n inflates by
+`1 / (1 - non-response)`.
+
+**Methods:** details and derivations are on [Variance &
+Methods](https://yiqunchen.github.io/pppower/articles/deep-dive-math.md).
 
 PPI one-sample mean / prevalence
 
@@ -36,7 +48,7 @@ Sensitivity
 
 Specificity
 
-Non-response (%)
+Expected non-response (%)
 
 Continuous mean moments
 
@@ -46,13 +58,13 @@ Var(f) = sigma_f2
 
 Cov(Y,f) = cov_y_f
 
-Non-response (%)
+Expected non-response (%)
 
 ### Results
 
-PPI labeled n (base) **-**
+PPI analysis n (base) **-**
 
-PPI labeled n (adjusted) **-**
+PPI recruitment n (adjusted) **-**
 
 Classical n (no prediction) **-**
 
@@ -66,7 +78,7 @@ PPI
 
 -
 
-PPI adj
+PPI adj.
 
 -
 
@@ -96,7 +108,7 @@ Sensitivity B
 
 Specificity B
 
-Non-response (%)
+Expected non-response (%)
 
 ### Results
 
@@ -116,25 +128,16 @@ PPI
 
 -
 
-PPI adj
+PPI adj.
 
 -
 
 Formula note will appear here.
 
-### PPI formulas used in this page
-
-**One-sample oracle variance:** Var = sigma_y2 / n - (cov_yf^2 /
-sigma_f2) \* N / (n \* (n + N))
-
-**One-sample vanilla variance:** Var = sigma_y2 / n + sigma_f2 / N +
-sigma_f2 / n - 2 \* cov_yf / n
-
-**Binary moments from sens/spec:** cov_yf = p \* (1-p) \* (sens + spec -
-1)
-
-**Two-group prevalence:** power from the PPI two-sample variance with
-group-specific oracle lambda, solved for n by search.
+Formula details intentionally hidden here for readability. See [Variance
+&
+Methods](https://yiqunchen.github.io/pppower/articles/deep-dive-math.md)
+for full equations.
 
 ### Notes
 

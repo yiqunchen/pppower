@@ -10,10 +10,8 @@ $${\widehat{\theta}}_{\lambda} = {\bar{Y}}_{L} + \lambda\left( {\bar{f}}_{U} - {
 *Variance*
 $$\operatorname{Var}\left( {\widehat{\theta}}_{\lambda} \right) = \frac{\sigma_{Y}^{2}}{n} + \lambda^{2}\sigma_{f}^{2}\left( \frac{1}{N} + \frac{1}{n} \right) - \frac{2\lambda\,\operatorname{Cov}(Y,f)}{n}.$$
 
-Minimizing yields \$\$ \lambda^\\ = \frac{\operatorname{Cov}(Y,f)}{(1 +
-n/N)\sigma_f^2}, \qquad \operatorname{Var}(\hat\theta\_{\lambda^\\}) =
-\frac{\sigma_Y^2}{n} -
-\frac{\operatorname{Cov}(Y,f)^2}{\sigma_f^2}\frac{N}{n(n+N)}. \$\$
+Minimizing yields
+$$\lambda^{*} = \frac{\operatorname{Cov}(Y,f)}{(1 + n/N)\sigma_{f}^{2}},\qquad\operatorname{Var}\left( {\widehat{\theta}}_{\lambda^{*}} \right) = \frac{\sigma_{Y}^{2}}{n} - \frac{\operatorname{Cov}(Y,f)^{2}}{\sigma_{f}^{2}}\frac{N}{n(n + N)}.$$
 
 ``` r
 lambda_opt <- function(n, N, cov_y_f, var_f) cov_y_f / ((1 + n / N) * var_f)
@@ -24,10 +22,8 @@ lambda_opt(n = 200, N = 5000, cov_y_f = 0.6, var_f = 0.6)
 ## Power and required $n$
 
 Given effect size $\Delta$, target power $1 - \beta$, and level
-$\alpha$, \$\$
-\frac{\|\Delta\|}{\sqrt{\operatorname{Var}(\hat\theta\_{\lambda^\\})}}
-\ge z\_{1-\alpha/2} + z\_{1-\beta}. \$\$
-[`power_ppi_mean()`](https://yiqunchen.github.io/pppower/reference/power_ppi_mean.md)
+$\alpha$,
+$$\frac{|\Delta|}{\sqrt{\operatorname{Var}\left( {\widehat{\theta}}_{\lambda^{*}} \right)}} \geq z_{1 - \alpha/2} + z_{1 - \beta}.$$[`power_ppi_mean()`](https://yiqunchen.github.io/pppower/reference/power_ppi_mean.md)
 solves this directly; use it instead of hand algebra:
 
 ``` r

@@ -10,9 +10,9 @@ For binary outcomes (prevalence), you can estimate required **labeled**
 sample size while leveraging model predictions on a large unlabeled set.
 This is exactly what PPI is for:
 
-- Inputs: target effect size (), unlabeled size (N), and model quality
-  (e.g., sensitivity/specificity)
-- Output: required labeled (n) for your target power
+- Inputs: target effect size $\Delta$, unlabeled size $N$, and model
+  quality (e.g., sensitivity/specificity)
+- Output: required labeled $n$ for your target power
 - Benefit: better predictions can reduce labeled annotation burden
 
 Use `power_ppi_mean(..., n = NULL)` for one-sample prevalence and
@@ -21,11 +21,9 @@ for two-group prevalence differences.
 
 ## Interactive Calculator
 
-[Open Interactive PPI Sample Size
-Calculator](https://yiqunchen.github.io/pppower/articles/sample-size-calculator.md)
-
 ``` R
-Includes one-sample PPI mean/prevalence and two-group difference in prevalence examples.
+If the embedded view does not load, open the
+<a href="articles/sample-size-calculator.html">full calculator page</a>.
 ```
 
 ## What is Prediction-Powered Inference?
@@ -71,8 +69,8 @@ explaining 80% of the variance cuts labeled data needs by ~80%.
 |------------------------------|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
 | One-sample mean (continuous) | [`power_ppi_mean()`](https://yiqunchen.github.io/pppower/reference/power_ppi_mean.md)             | [`simulate_ppi_mean()`](https://yiqunchen.github.io/pppower/reference/simulate_ppi_mean.md)                 |
 | One-sample mean (binary)     | [`power_ppi_mean()`](https://yiqunchen.github.io/pppower/reference/power_ppi_mean.md)             | `simulate_ppi_vanilla_mean()`                                                                               |
-| Two-sample t-test            | [`power_ppi_ttest()`](https://yiqunchen.github.io/pppower/reference/power_ppi_ttest.md)           | [`simulate_ppi_ttest_binary()`](https://yiqunchen.github.io/pppower/reference/simulate_ppi_ttest_binary.md) |
-| Paired t-test                | [`power_ppi_paired()`](https://yiqunchen.github.io/pppower/reference/power_ppi_paired.md)         | —                                                                                                           |
+| Two-sample $t$-test          | [`power_ppi_ttest()`](https://yiqunchen.github.io/pppower/reference/power_ppi_ttest.md)           | [`simulate_ppi_ttest_binary()`](https://yiqunchen.github.io/pppower/reference/simulate_ppi_ttest_binary.md) |
+| Paired $t$-test              | [`power_ppi_paired()`](https://yiqunchen.github.io/pppower/reference/power_ppi_paired.md)         | —                                                                                                           |
 | Regression contrast          | [`power_ppi_regression()`](https://yiqunchen.github.io/pppower/reference/power_ppi_regression.md) | —                                                                                                           |
 | EIF binary surrogate         | [`power_eif_binary()`](https://yiqunchen.github.io/pppower/reference/power_eif_binary.md)         | [`simulate_eif_binary()`](https://yiqunchen.github.io/pppower/reference/simulate_eif_binary.md)             |
 
@@ -88,7 +86,7 @@ devtools::install_github("yiqunchen/pppower")
 
 ## Quick Example
 
-A three-step workflow: compute power → solve for required n → verify
+A three-step workflow: compute power → solve for required $n$ → verify
 with Monte Carlo.
 
 ``` r
@@ -133,7 +131,8 @@ simulate_ppi_mean(
 
 `pppower` supports three ways to specify variance components:
 
-**1. Direct moments** — supply σ_Y², σ_f², and Cov(Y, f) directly:
+**1. Direct moments** — supply $\sigma_{Y}^{2}$, $\sigma_{f}^{2}$, and
+$\text{Cov}(Y,f)$ directly:
 
 ``` r
 power_ppi_mean(delta = 0.2, N = 5000, n = 200,
@@ -149,7 +148,7 @@ power_ppi_mean(delta = 0.2, N = 5000, n = 200,
 ```
 
 **3. Metrics interface** — supply sensitivity/specificity (binary) or
-MSE/R² (continuous):
+MSE/$R^{2}$ (continuous):
 
 ``` r
 power_ppi_mean(delta = 0.05, N = 5000, n = 200,
@@ -168,7 +167,7 @@ power_ppi_mean(delta = 0.05, N = 5000, n = 200,
   regression contrasts
   ([`vignette("ppi-sample-size")`](https://yiqunchen.github.io/pppower/articles/ppi-sample-size.md))
 - **Detailed Dive: Variance Formulas and lambda-star** — mathematical
-  derivations behind the PPI++ variance and oracle λ\*
+  derivations behind the PPI++ variance and oracle $\lambda^{*}$
   ([`vignette("deep-dive-math")`](https://yiqunchen.github.io/pppower/articles/deep-dive-math.md))
 - **Real Data: LLM-as-a-Judge (Binary Surrogates)** — EIF-based power
   analysis for binary surrogate evaluators
