@@ -111,7 +111,7 @@ power_curve_mean <- function(n_grid,
 #' and the effect size \eqn{\delta = \theta - \theta_0}. For each `n` in
 #' `n_grid`, analytical power is computed from the normal theory formula using
 #' \eqn{\sqrt{\sigma_f^2/N + \sigma_{\mathrm{res}}^2/n}}, and empirical power is
-#' estimated via Monte Carlo using `simulate_power_ppi_mean()`.
+#' estimated via Monte Carlo using `simulate_ppi_vanilla_mean()`.
 #'
 #' @param n_grid Numeric vector of labeled sample sizes to evaluate.
 #' @param N Unlabeled sample size.
@@ -170,7 +170,7 @@ power_curve_mean_dgp <- function(
         var_res = var_res
       )
 
-      res <- simulate_power_ppi_mean(
+      res <- simulate_ppi_vanilla_mean(
         R       = R,
         n       = n_i,
         N       = N,
@@ -308,7 +308,7 @@ type1_error_curve_mean <- function(effect_grid,
 #' Analytical power is computed from the normal theory formula
 #' \eqn{\sqrt{\sigma_f^2/N + \sigma_{\mathrm{res}}^2/n}}, while empirical power is
 #' estimated via repeated Monte Carlo simulations using
-#' [`simulate_power_ppi_mean()`].
+#' [`simulate_ppi_vanilla_mean()`].
 #'
 #' @param effect_grid Numeric vector of effect sizes \eqn{\delta = \theta - \theta_0}
 #'   over which to evaluate Type I error / power.
@@ -380,7 +380,7 @@ type1_error_curve_mean_dgp <- function(effect_grid,
         var_res = var_res
       )
 
-      simulate_power_ppi_mean(
+      simulate_ppi_vanilla_mean(
         R        = as.integer(R),
         n        = n,
         N        = N,
@@ -470,7 +470,7 @@ plot_type1_error_curve <- function(curve_df,
       y_emp,
       type = "l",
       col = pppower_colors$empirical,
-      lwd = 2,
+      lwd = 2.5,
       xlab = xlab_default,
       ylab = ylab_default,
       ...
@@ -481,7 +481,7 @@ plot_type1_error_curve <- function(curve_df,
       y_exact,
       type = "l",
       col = pppower_colors$analytical,
-      lwd = 2,
+      lwd = 2.5,
       lty = 2,
       xlab = xlab_default,
       ylab = ylab_default,
@@ -490,22 +490,22 @@ plot_type1_error_curve <- function(curve_df,
   }
 
   if (empirical && exact && !is.null(y_emp) && !is.null(y_exact)) {
-    graphics::lines(x, y_emp, col = pppower_colors$empirical, lwd = 2)
-    graphics::lines(x, y_exact, col = pppower_colors$analytical, lwd = 2, lty = 2)
+    graphics::lines(x, y_emp, col = pppower_colors$empirical, lwd = 2.5)
+    graphics::lines(x, y_exact, col = pppower_colors$analytical, lwd = 2.5, lty = 2)
     graphics::legend(
       legend_pos,
       legend = c("Empirical", "Analytical"),
       col = c(pppower_colors$empirical, pppower_colors$analytical),
       lty = c(1, 2),
-      lwd = 2,
+      lwd = 2.5,
       bty = "n"
     )
   } else {
     if (empirical && !is.null(y_emp)) {
-      graphics::lines(x, y_emp, col = pppower_colors$empirical, lwd = 2)
+      graphics::lines(x, y_emp, col = pppower_colors$empirical, lwd = 2.5)
     }
     if (exact && !is.null(y_exact)) {
-      graphics::lines(x, y_exact, col = pppower_colors$analytical, lwd = 2, lty = 2)
+      graphics::lines(x, y_exact, col = pppower_colors$analytical, lwd = 2.5, lty = 2)
     }
   }
 

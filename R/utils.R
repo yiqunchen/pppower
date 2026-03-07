@@ -77,8 +77,9 @@ derive_vars_binary <- function(metric_type = c("classification", "prob"),
   adj <- if (isTRUE(correction)) m_obs / (m_obs - 1) else 1
 
   if (metric_type == "classification") {
-    # Allow either confusion-matrix pieces or precision/recall
+    # Allow: (1) confusion matrix, (2) sensitivity/specificity, or (3) precision/recall
     if (!is.null(stats$tp) && !is.null(stats$fp) && !is.null(stats$fn)) {
+      # Path 1: Confusion matrix counts
       tp <- stats$tp
       fp <- stats$fp
       fn <- stats$fn
@@ -89,7 +90,28 @@ derive_vars_binary <- function(metric_type = c("classification", "prob"),
       p_y   <- (tp + fn) / m_obs
       p_hat <- (tp + fp) / m_obs
       err_rate <- (fp + fn) / m_obs
+
+    } else if (!is.null(stats$sensitivity) && !is.null(stats$specificity)) {
+      # Path 2: Sensitivity/specificity + prevalence
+      sensitivity <- stats$sensitivity
+      specificity <- stats$specificity
+      p_y <- stats$p_y
+      if (any(!is.numeric(c(sensitivity, specificity, p_y))) ||
+          sensitivity < 0 || sensitivity > 1 ||
+          specificity < 0 || specificity > 1 ||
+          p_y < 0 || p_y > 1) {
+        stop("Need sensitivity in [0,1], specificity in [0,1], and p_y (prevalence) in [0,1].")
+      }
+      # Derive confusion matrix from sensitivity/specificity
+      tp <- sensitivity * p_y * m_obs
+      fn <- (1 - sensitivity) * p_y * m_obs
+      tn <- specificity * (1 - p_y) * m_obs
+      fp <- (1 - specificity) * (1 - p_y) * m_obs
+      p_hat <- (tp + fp) / m_obs
+      err_rate <- (fp + fn) / m_obs
+
     } else {
+      # Path 3: Precision/recall + prevalence
       precision <- stats$precision
       recall    <- stats$recall
       p_y       <- stats$p_y
@@ -176,6 +198,38 @@ derive_vars_binary <- function(metric_type = c("classification", "prob"),
 brier_score <- function(y, p) {
   stopifnot(length(y) == length(p))
   mean((y - p)^2)
+}
+
+#' Moments for binary outcome/prediction pairs from sensitivity/specificity
+#'
+#' @param p Prevalence \eqn{P(Y = 1)}.
+#' @param sens Classifier sensitivity \eqn{P(\hat Y = 1 \mid Y = 1)}.
+#' @param spec Classifier specificity \eqn{P(\hat Y = 0 \mid Y = 0)}.
+#'
+#' @return List with `sigma_y2`, `sigma_f2`, `cov_y_f`, and `p_hat`.
+#' @export
+binary_moments_from_sens_spec <- function(p, sens, spec) {
+  if (!is.numeric(p) || length(p) != 1L || p <= 0 || p >= 1) {
+    stop("p must be a scalar prevalence in (0, 1).", call. = FALSE)
+  }
+  if (any(!is.finite(c(sens, spec))) || any(c(sens, spec) < 0) || any(c(sens, spec) > 1)) {
+    stop("sens and spec must lie in [0, 1].", call. = FALSE)
+  }
+
+  p_hat <- sens * p + (1 - spec) * (1 - p)
+
+  sigma_y2 <- p * (1 - p)
+  sigma_f2 <- p_hat * (1 - p_hat)
+
+  # Cov(Y, f) = P(Y=1, f=1) - P(Y=1)P(f=1) = p(1-p)(sens + spec - 1)
+  cov_y_f <- p * (1 - p) * (sens + spec - 1)
+
+  list(
+    sigma_y2 = sigma_y2,
+    sigma_f2 = sigma_f2,
+    cov_y_f = cov_y_f,
+    p_hat = p_hat
+  )
 }
 
 #' Resolve PP variance components from metrics
@@ -365,7 +419,7 @@ compute_sigma_blocks <- function(
 #'   * \code{compute_sigma_blocks}   — Σ-block covariance components
 #'
 #' and produces a unified object that can be passed directly to
-#' [n_required_ppi_pp()] for labeled sample size calculations.
+#' [power_ppi_regression()] for labeled sample size calculations.
 #'
 #' @param model_type Character string: `"ols"` or `"glm"`.
 #'   Determines whether the estimator is linear regression (OLS) or a GLM.
@@ -396,7 +450,7 @@ compute_sigma_blocks <- function(
 #' }
 #'
 #' These matrices are exactly the inputs needed for
-#' [n_required_ppi_pp()] in `type = "regression"` mode.
+#' [power_ppi_regression()] in `type = "regression"` mode.
 #'
 #' @examples
 #' set.seed(1)
@@ -424,9 +478,9 @@ compute_sigma_blocks <- function(
 #' c_vec <- c(1, 0, 0)
 #' delta <- as.numeric(t(c_vec) %*% beta)
 #'
-#' n_required_ppi_pp(
-#'   delta = delta, N = n_u,
-#'   type = "regression", lambda_mode = "oracle",
+#' power_ppi_regression(
+#'   delta = delta, N = n_u, power = 0.80,
+#'   lambda_mode = "oracle",
 #'   c = c_vec,
 #'   H_L = blocks$H_L, H_U = blocks$H_U,
 #'   Sigma_YY = blocks$Sigma_YY,
@@ -435,7 +489,7 @@ compute_sigma_blocks <- function(
 #'   Sigma_Yf = blocks$Sigma_Yf
 #' )
 #'
-#' @seealso \link{n_required_ppi_pp}
+#' @seealso \link{power_ppi_regression}
 #'
 #' @export
 compute_ppi_blocks <- function(
@@ -571,8 +625,6 @@ simulate_one_draw <- function(n_labeled,
 #' @return List containing model fit object and predictions on X_U.
 #'
 #' @importFrom stats glm predict
-#' @importFrom ranger ranger
-#' @importFrom randomForest randomForest
 fit_predict_model <- function(model_type, X_L, y_L, X_U,
                               mtry = NULL,
                               rf_engine = c("ranger", "randomForest"),
@@ -623,377 +675,4 @@ fit_predict_model <- function(model_type, X_L, y_L, X_U,
   }
 
   list(fit = fit, fhat_U = as.numeric(fhat_U))
-}
-
-#' Fit Predictive Model for OLS PPI / PPI++ (Internal Helper)
-#'
-#' @description
-#' Internal unified interface for fitting predictive models used in the
-#' OLS-based PPI and PPI++ estimators.  
-#' Supports correctly specified, misspecified, and incorrectly specified
-#' linear models, as well as random forests.  
-#' Returns fitted model object and predictions on the unlabeled covariates.
-#'
-#' @keywords internal
-#'
-#' @param model_type Type of model ("glm_correct", "glm_mis", "glm_wrong", "rf")
-#' @param X_L Labeled covariates
-#' @param y_L Labeled outcomes
-#' @param X_U Unlabeled covariates
-#' @param mtry RF mtry value
-#' @param rf_engine Random forest engine ("ranger" or "randomForest")
-#' @param rf_trees Number of trees
-#' @param rf_min_node_size Minimum node size for ranger
-#' @param rf_num_threads Threads (ranger)
-#' @param rf_seed Random seed
-#'
-#' @return List containing model fit object and predictions on X_U.
-#'
-#' @importFrom stats glm predict
-#' @importFrom ranger ranger
-#' @importFrom randomForest randomForest
-fit_predict_model_ols <- function(
-  model_type,
-  X_L, y_L,
-  X_U,
-  crossfit = FALSE,
-  mtry = NULL,
-  rf_engine = c("ranger", "randomForest"),
-  rf_trees = 200,
-  rf_min_node_size = 5,
-  rf_num_threads = NULL,
-  rf_seed = NULL
-) {
-
-  model_type <- match.arg(model_type, c("glm_correct","glm_mis","glm_wrong","rf"))
-  rf_engine  <- match.arg(rf_engine)
-
-  ## Ensure colnames
-  if (is.matrix(X_L)) colnames(X_L) <- paste0("x", seq_len(ncol(X_L)))
-  if (is.matrix(X_U)) colnames(X_U) <- paste0("x", seq_len(ncol(X_U)))
-
-  dat_L <- data.frame(y = y_L, X_L)
-
-  ## Unified train function: returns *fit only*
-  train_model <- function(dat) {
-    if (model_type == "glm_correct") return(glm(y ~ x1 + x2 + x3, data = dat))
-    if (model_type == "glm_mis")     return(glm(y ~ x1 + x2, data = dat))
-    if (model_type == "glm_wrong")   return(glm(y ~ x1, data = dat))
-
-    ## RF case
-    if (!is.null(rf_seed)) set.seed(rf_seed)
-    mtry_eff <- if (is.null(mtry)) floor(sqrt(ncol(dat)-1)) else mtry
-
-    if (rf_engine == "ranger") {
-      return(ranger::ranger(
-        y ~ ., data = dat,
-        num.trees = rf_trees,
-        mtry = mtry_eff,
-        min.node.size = rf_min_node_size,
-        write.forest = TRUE,
-        num.threads = rf_num_threads
-      ))
-    } else {
-      return(randomForest::randomForest(
-        y ~ ., data = dat,
-        ntree = rf_trees,
-        mtry = mtry_eff
-      ))
-    }
-  }
-
-  ## Predict-any helper
-  pred_any <- function(fit, X) {
-    if (model_type == "rf" && rf_engine == "ranger")
-      return(predict(fit, data = as.data.frame(X))$predictions)
-    return(predict(fit, newdata = as.data.frame(X), type = "link"))
-  }
-
-  ## CROSS-FIT
-  if (crossfit) {
-    n <- nrow(dat_L)
-    fold_id <- sample(rep(1:2, length.out=n))
-
-    fhat_L <- numeric(n)
-    fhat_U_all <- list()
-    fit_list <- list()
-
-    for (fold in 1:2) {
-      tr <- which(fold_id != fold)
-      te <- which(fold_id == fold)
-
-      dat_train <- dat_L[tr,]
-
-      fit <- train_model(dat_train)
-      fit_list[[fold]] <- fit
-
-      fhat_L[te] <- pred_any(fit, X_L[te,])
-      fhat_U_all[[fold]] <- pred_any(fit, X_U)
-    }
-
-    fhat_U <- Reduce("+", fhat_U_all) / 2
-
-    return(list(
-      fit_list = fit_list,
-      fhat_L   = fhat_L,
-      fhat_U   = fhat_U
-    ))
-  }
-
-  ## NO CROSS-FIT
-  fit <- train_model(dat_L)
-
-  list(
-    fit    = fit,
-    fhat_L = pred_any(fit, X_L),
-    fhat_U = pred_any(fit, X_U)
-  )
-}
-
-#' Fit predictive model for GLM-based PPI/PPI++
-#'
-#' @param model_type One of `"glm_correct"`, `"glm_mis"`, `"glm_wrong"`, `"rf"`, `"oracle"`.
-#' @param X_L Labeled covariate matrix/data frame.
-#' @param y_L Labeled response vector.
-#' @param X_U Unlabeled covariates.
-#' @param fold_index Optional vector of fold assignments for cross-fitting.
-#' @param mtry Random forest mtry parameter.
-#' @param rf_engine Random forest engine (`"ranger"` or `"randomForest"`).
-#' @param rf_trees Number of trees for RF.
-#' @param rf_min_node_size Minimum node size for RF.
-#' @param rf_num_threads Number of threads for RF.
-#' @param f_generator Required if `model_type = "oracle"`; function returning linear predictor η(x).
-#' 
-#' @keywords internal
-#'
-#' @return A list with:
-#'   \item{fit}{The fitted model object.}
-#'   \item{fhat_L}{Predicted conditional means \eqn{\hat\mu_f(X_L)} on labeled data.}
-#'   \item{fhat_U}{Predicted conditional means \eqn{\hat\mu_f(X_U)} on unlabeled data.}
-#'
-#' @importFrom stats glm predict binomial
-#' @importFrom ranger ranger
-#' @importFrom randomForest randomForest
-fit_predict_model_glm <- function(
-  model_type,
-  X_L, y_L,
-  X_U,
-  fold_index = NULL,     # optional training indices (cross-fitting)
-  mtry = NULL,
-  rf_engine = c("ranger", "randomForest"),
-  rf_trees = 200,
-  rf_min_node_size = 5,
-  rf_num_threads = NULL,
-  f_generator = NULL     # used ONLY for oracle model
-) {
-
-  model_type <- match.arg(
-    model_type,
-    c("glm_correct", "glm_mis", "glm_wrong", "rf", "oracle")
-  )
-  rf_engine <- match.arg(rf_engine)
-
-  if (is.matrix(X_L)) colnames(X_L) <- paste0("x", seq_len(ncol(X_L)))
-  if (is.matrix(X_U)) colnames(X_U) <- paste0("x", seq_len(ncol(X_U)))
-
-  X_L_df <- as.data.frame(X_L)
-  X_U_df <- as.data.frame(X_U)
-
-  dat_L <- data.frame(y = y_L, X_L_df)
-
-  ## If cross-fitting, train only on the subset:
-  dat_train <- if (!is.null(fold_index)) {
-    dat_L[fold_index, , drop = FALSE]
-  } else {
-    dat_L
-  }
-
-  ## ORACLE MODEL: perfect predictions from population f(X)
-  if (model_type == "oracle") {
-
-    if (is.null(f_generator)) {
-      stop("Oracle model requires f_generator.")
-    }
-
-    eta_L <- f_generator(X_L_df)
-    eta_U <- f_generator(X_U_df)
-
-    ## Logistic mean μ(x) = expit(η)
-    mu_L <- plogis(eta_L)
-    mu_U <- plogis(eta_U)
-
-    return(list(
-      fit    = NULL,
-      fhat_L = as.numeric(mu_L),
-      fhat_U = as.numeric(mu_U)
-    ))
-  }
-
-
-  ## TRAINING FUNCTION (returns model fit only)
-  train_model <- function(dat) {
-
-    ## GLM correct
-    if (model_type == "glm_correct") {
-      return(glm(y ~ x1 + x2 + x3, data = dat,
-                 family = binomial(link = "logit")))
-    }
-
-    ## GLM mis
-    if (model_type == "glm_mis") {
-      return(glm(y ~ x1 + x2, data = dat,
-                 family = binomial(link = "logit")))
-    }
-
-    ## GLM wrong
-    if (model_type == "glm_wrong") {
-      return(glm(y ~ x1, data = dat,
-                 family = binomial(link = "logit")))
-    }
-
-    ## RANDOM FOREST
-    if (model_type == "rf") {
-
-      dat_rf <- dat
-      dat_rf$y <- factor(dat_rf$y, levels = c(0,1))
-
-      mtry_eff <- if (is.null(mtry)) floor(sqrt(ncol(dat) - 1)) else mtry
-
-      if (rf_engine == "ranger") {
-        return(
-          ranger::ranger(
-            y ~ ., data = dat_rf,
-            probability = TRUE,
-            num.trees   = rf_trees,
-            mtry        = mtry_eff,
-            min.node.size = rf_min_node_size,
-            num.threads = rf_num_threads
-          )
-        )
-      } else {
-        return(
-          randomForest::randomForest(
-            y ~ ., data = dat_rf,
-            ntree = rf_trees,
-            mtry  = mtry_eff
-          )
-        )
-      }
-    }
-
-    stop("Unsupported model_type.")
-  }
-
-
-  ## PREDICT FUNCTION: unified prediction interface
-  pred_any <- function(fit, newX) {
-    if (model_type == "rf") {
-      if (rf_engine == "ranger") {
-        return(predict(fit, data = newX)$predictions[, 2])
-      } else {
-        return(predict(fit, newdata = newX, type = "prob")[, 2])
-      }
-    }
-    ## GLM cases
-    return(predict(fit, newdata = newX, type = "response"))
-  }
-
-
-  ## TRAIN FINAL MODEL ON dat_train
-  fit <- train_model(dat_train)
-
-  ## PREDICT on FULL LABELED + UNLABELED (no further splitting)
-  fhat_L <- pred_any(fit, dat_L)
-  fhat_U <- pred_any(fit, X_U_df)
-
-  ## RETURN
-  list(
-    fit    = fit,
-    fhat_L = as.numeric(fhat_L),
-    fhat_U = as.numeric(fhat_U)
-  )
-}
-
-simulate_one_draw_contrast <- function(
-  n_labeled,
-  X_sampler_L,
-  f_generator,
-  eps_sampler,
-  a,
-  delta
-) {
-  X <- X_sampler_L(n_labeled)
-  X_mat <- as.matrix(X)
-
-  f_true <- f_generator(X)
-  f_delta <- f_true + delta * as.numeric(X_mat %*% a)
-
-  y <- f_delta + eps_sampler(n_labeled)
-
-  list(
-    X = X,
-    y = y
-  )
-}
-
-simulate_one_draw_contrast_glm <- function(
-  n_labeled,
-  X_sampler_L,
-  f_generator,   # returns linear predictor η(x)
-  a,             # contrast vector
-  delta
-) {
-  X <- X_sampler_L(n_labeled)
-  X_mat <- as.matrix(X)
-
-  eta_true  <- f_generator(X)
-  eta_delta <- eta_true + delta * as.numeric(X_mat %*% a)
-
-  mu <- plogis(eta_delta)
-
-  y <- rbinom(n_labeled, 1, mu)
-
-  list(
-    X = X,
-    y = y
-  )
-}
-
-compute_theta0 <- function(a, X_sampler_L, f_generator, n_ref = 5e5) {
-  Xref <- X_sampler_L(n_ref)
-  Xref_m <- as.matrix(Xref)
-  yref <- f_generator(Xref_m)
-
-  H <- crossprod(Xref_m) / n_ref
-  G <- crossprod(Xref_m, yref) / n_ref
-  beta_star <- solve(H, G)
-
-  as.numeric(sum(a * beta_star))
-}
-
-#' @keywords internal
-#' @importFrom stats quasibinomial
-compute_theta_shift_glm <- function(delta, a, X_sampler, f_generator, M = 50000) {
-
-  # Generate a large synthetic "population"
-  X <- as.matrix(X_sampler(M))
-
-  # Baseline & shifted linear predictors
-  eta0 <- f_generator(X)
-  eta1 <- eta0 + delta * as.numeric(X %*% a)
-
-  # Logistic mean functions
-  mu0 <- plogis(eta0)
-  mu1 <- plogis(eta1)
-
-  # Fit "population" GLMs using fractional responses
-  # quasibinomial allows mu in (0,1) as responses without warnings
-  fit_frac <- function(X, mu) {
-    glm.fit(X, mu, family = quasibinomial(link = "logit"))$coefficients
-  }
-
-  beta0 <- fit_frac(X, mu0)
-  beta1 <- fit_frac(X, mu1)
-
-  as.numeric(sum(a * beta1) - sum(a * beta0))
 }

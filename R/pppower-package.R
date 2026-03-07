@@ -1,7 +1,7 @@
-#' pppower: Power & sample size for prediction-powered inference
+#' pppower: Power and Sample Size for Prediction-Powered Inference
 #'
-#' Tools to compute power, required n, and simulation checks for PPI.
+#' Tools to compute power, required sample sizes, and perform simulation
+#' validation for Prediction-Powered Inference (PPI and PPI++).
 #'
-#' @docType package
-#' @name pppower
-NULL
+#' @keywords internal
+"_PACKAGE"

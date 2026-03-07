@@ -1,5 +1,12 @@
 #' Monte Carlo vs. analytical power for PPI / PPI++ mean estimation
 #'
+#' @description
+#' `r lifecycle::badge("soft-deprecated")`
+#'
+#' Prefer [power_ppi_mean()] for PPI++ power calculations. This function is
+#' retained for backward compatibility with `power_curve_mean()` and
+#' `type1_error_curve_mean()`.
+#'
 #' @param delta Effect size \eqn{\theta - \theta_0}.
 #' @param N Unlabeled sample size.
 #' @param n Labeled sample size.

@@ -1,34 +1,18 @@
-#' Power for prediction-powered mean estimator
-#'
-#' @description
-#' Computes two-sided test power for the PP mean estimator under a normal
-#' approximation. Variance components can be supplied directly or recovered from
-#' predictive metrics via `resolve_ppi_variances()`.
-#'
-#' @param delta Effect size \eqn{\theta - \theta_0}.
-#' @param N Unlabeled sample size.
-#' @param n Labeled sample size.
-#' @param alpha Two-sided significance level.
-#' @param var_f Optional variance of \eqn{f(X)}.
-#' @param var_res Optional residual variance of residual \eqn{Y - f(X)}.
-#' @param metrics Optional list of predictive-performance summaries.
-#' @param metric_type Character string describing `metrics` (e.g. `"continuous"`, `"prob"`, `"classification"`).
-#' @param m_labeled Labeled sample size associated with `metrics` (defaults to `n`).
-#' @param correction Logical; apply finite-sample variance corrections when
-#'   recovering moments from metrics.
-#'
-#' @return Numeric scalar power in \[0, 1\].
-#' @export
-power_ppi_mean <- function(delta,
-                           N,
-                           n,
-                           alpha = 0.05,
-                           var_f = NULL,
-                           var_res = NULL,
-                           metrics = NULL,
-                           metric_type = NULL,
-                           m_labeled = n,
-                           correction = TRUE) {
+# Internal: vanilla PPI power (lambda=1, no covariance)
+# Previously exported as power_ppi_mean(); now superseded by the unified
+# power_ppi_mean() in ppi_plus_mean_power.R.
+#
+# @keywords internal
+power_ppi_vanilla_mean <- function(delta,
+                                   N,
+                                   n,
+                                   alpha = 0.05,
+                                   var_f = NULL,
+                                   var_res = NULL,
+                                   metrics = NULL,
+                                   metric_type = NULL,
+                                   m_labeled = n,
+                                   correction = TRUE) {
   comps <- resolve_ppi_variances(
     var_f = var_f,
     var_res = var_res,
@@ -43,33 +27,21 @@ power_ppi_mean <- function(delta,
   1 - stats::pnorm(z_alpha - mu) + stats::pnorm(-z_alpha - mu)
 }
 
-#' Monte Carlo power for the PPI mean estimator
-#'
-#' @param R Integer, number of Monte Carlo draws.
-#' @param n Labeled sample size.
-#' @param N Unlabeled sample size.
-#' @param alpha Two-sided test level.
-#' @param delta Effect size \eqn{\theta - \theta_0}.
-#' @param var_f Variance of the predictor \eqn{f(X)}.
-#' @param var_res Variance of the residual \eqn{Y - f(X)}.
-#' @param moments Optional list with entries `delta`, `var_f`, and `var_res`.
-#' @param seed RNG seed (set to `NULL` to skip seeding).
-#' @param family A `stats::family()` object (`gaussian()` or `binomial()`), default is `gaussian()`.
-#' @param theta0 Null hypothesis value \eqn{\theta_0}.
-#'
-#' @return A list with empirical and analytical power, average standard error, and simulation details.
-#' @export
-simulate_power_ppi_mean <- function(R,
-                                    n,
-                                    N,
-                                    alpha = 0.05,
-                                    delta = NULL,
-                                    var_f = NULL,
-                                    var_res = NULL,
-                                    moments = NULL,
-                                    seed = 1,
-                                    family = stats::gaussian(),
-                                    theta0 = 0) {
+# Internal: vanilla PPI Monte Carlo simulation
+# Previously exported as simulate_power_ppi_mean().
+#
+# @keywords internal
+simulate_ppi_vanilla_mean <- function(R,
+                                      n,
+                                      N,
+                                      alpha = 0.05,
+                                      delta = NULL,
+                                      var_f = NULL,
+                                      var_res = NULL,
+                                      moments = NULL,
+                                      seed = 1,
+                                      family = stats::gaussian(),
+                                      theta0 = 0) {
   if (!is.null(seed)) set.seed(seed)
 
   # Resolve population moments
@@ -80,7 +52,7 @@ simulate_power_ppi_mean <- function(R,
   }
 
   if (is.null(delta) || is.null(var_f)) {
-    stop("simulate_power_ppi_mean requires `delta` and `var_f`.", call. = FALSE)
+    stop("simulate_ppi_vanilla_mean requires `delta` and `var_f`.", call. = FALSE)
   }
 
   theta_true <- theta0 + delta
@@ -137,4 +109,14 @@ simulate_power_ppi_mean <- function(R,
     avg_theta_hat = mean_theta,
     details = reps
   )
+}
+
+# ---- Deprecated shims (old names) ----
+
+#' @rdname deprecated
+#' @export
+simulate_power_ppi_mean <- function(...) {
+  .Deprecated("simulate_ppi_vanilla_mean", package = "pppower",
+              msg = "simulate_power_ppi_mean() is deprecated. Use simulate_ppi_vanilla_mean() for vanilla PPI or simulate_ppi_mean() for PPI++.")
+  simulate_ppi_vanilla_mean(...)
 }

@@ -42,14 +42,17 @@ pppower_colors <- list(
 # Named vectors for convenient scale_*_manual() usage
 pppower_method_colors <- c(
   "PPI++"     = pppower_colors$ppi_pp,
-  "Classical" = pppower_colors$classical
+  "Classical" = pppower_colors$classical,
+  "Vanilla PPI" = pppower_colors$vanilla
 )
 
 pppower_method_colors_full <- c(
  "PPI++ (Theoretical)"     = pppower_colors$ppi_pp,
  "PPI++ (Empirical)"       = pppower_colors$ppi_pp,
  "Classical (Theoretical)" = pppower_colors$classical,
- "Classical (Empirical)"   = pppower_colors$classical
+ "Classical (Empirical)"   = pppower_colors$classical,
+ "Vanilla PPI (Theoretical)" = pppower_colors$vanilla,
+ "Vanilla PPI (Empirical)"   = pppower_colors$vanilla
 )
 
 pppower_quality_colors <- c(
@@ -73,16 +76,17 @@ pppower_outcome_colors <- c(
 # ---------------------------------------------------------------------------
 # Line type and point shape conventions
 # ---------------------------------------------------------------------------
-# Theoretical curves:  solid   (linetype = 1, linewidth = 1)
-# Classical curves:    dashed  (linetype = 2, linewidth = 1)
-# Empirical points:    PPI++ uses circle (shape = 16, size = 2.5)
-#                      Classical uses triangle (shape = 17, size = 2.5)
-# Reference lines:     dotted  (linetype = 3, linewidth = 0.5)
-# Base R:              lwd = 2
+# Theoretical curves:  solid   (linewidth = 1.8)
+# Classical curves:    dashed  (linewidth = 1.8)
+# Empirical points:    PPI++ uses filled circle  (shape = 16, size = 3.5)
+#                      Classical uses triangle    (shape = 17, size = 3.5)
+# Reference lines:     dotted  (linewidth = 0.8)
+# Base R:              lwd = 2.5
 
 pppower_method_linetypes <- c(
-  "PPI++"     = "solid",
-  "Classical" = "dashed"
+  "PPI++"       = "solid",
+  "Classical"   = "dashed",
+  "Vanilla PPI" = "dotdash"
 )
 
 # ---------------------------------------------------------------------------
@@ -91,26 +95,84 @@ pppower_method_linetypes <- c(
 
 #' Publication-ready ggplot2 theme for pppower
 #'
-#' A minimal theme with bold titles, bottom legend, and no minor gridlines.
-#' Merges the conventions of `theme_pub()` and `theme_validation()` used
-#' in earlier simulation scripts.
+#' Clean theme with no top/right panel borders, bold titles, bottom legend,
+#' and no minor gridlines. Designed for figures4papers-style output.
 #'
-#' @param base_size Base font size (default 11).
+#' @param base_size Base font size (default 14).
 #' @return A ggplot2 theme object.
 #' @export
-theme_pppower <- function(base_size = 11) {
+theme_pppower <- function(base_size = 14) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("ggplot2 is required for theme_pppower().", call. = FALSE)
   }
-  ggplot2::theme_minimal(base_size = base_size) +
+  ggplot2::theme_bw(base_size = base_size) +
     ggplot2::theme(
-      plot.title    = ggplot2::element_text(face = "bold", size = base_size + 2),
-      plot.subtitle = ggplot2::element_text(size = base_size, color = "gray40"),
-      axis.title    = ggplot2::element_text(face = "bold"),
-      legend.position  = "bottom",
-      legend.title     = ggplot2::element_text(face = "bold"),
+      # Titles
+      plot.title       = ggplot2::element_text(face = "bold", size = base_size + 2),
+      plot.subtitle    = ggplot2::element_text(size = base_size - 1, color = "gray30"),
+      # Axes
+      axis.title       = ggplot2::element_text(face = "bold", size = base_size),
+      axis.text        = ggplot2::element_text(size = base_size - 2),
+      axis.ticks.length = ggplot2::unit(4, "pt"),
+      axis.line        = ggplot2::element_line(linewidth = 0.8),
+      # Remove top & right panel borders
+      panel.border     = ggplot2::element_blank(),
+      axis.line.x      = ggplot2::element_line(linewidth = 0.8),
+      axis.line.y      = ggplot2::element_line(linewidth = 0.8),
+      # Grid
+      panel.grid.major = ggplot2::element_line(color = "gray90", linewidth = 0.3),
       panel.grid.minor = ggplot2::element_blank(),
-      strip.text       = ggplot2::element_text(face = "bold", size = base_size),
-      plot.margin      = ggplot2::margin(10, 10, 10, 10)
+      # Legend
+      legend.position  = "bottom",
+      legend.title     = ggplot2::element_text(face = "bold", size = base_size - 1),
+      legend.text      = ggplot2::element_text(size = base_size - 2),
+      legend.background = ggplot2::element_blank(),
+      legend.key       = ggplot2::element_blank(),
+      # Facets
+      strip.text       = ggplot2::element_text(face = "bold", size = base_size - 1),
+      strip.background = ggplot2::element_rect(fill = "gray95", color = NA),
+      # Margins
+      plot.margin      = ggplot2::margin(8, 12, 8, 8)
     )
+}
+
+# ---------------------------------------------------------------------------
+# Dual-format figure saver (PDF vector + PNG raster)
+# ---------------------------------------------------------------------------
+
+#' Save a ggplot figure in both PDF and PNG formats
+#'
+#' Follows figures4papers conventions: vector PDF with TrueType font
+#' embedding, plus raster PNG at 400 DPI. White background, tight crop.
+#'
+#' @param plot A ggplot2 object.
+#' @param path Base path without extension (e.g., "figures/power_curve").
+#' @param width Figure width in inches (default 10).
+#' @param height Figure height in inches (default 5).
+#' @param dpi DPI for PNG output (default 400).
+#' @return Invisible NULL. Side effect: writes \code{path.pdf} and
+#'   \code{path.png}.
+#' @export
+save_pppower_figure <- function(plot, path, width = 10, height = 5, dpi = 400) {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("ggplot2 is required for save_pppower_figure().", call. = FALSE)
+  }
+  # Try cairo_pdf for TrueType embedding; fall back to default pdf device
+  pdf_ok <- tryCatch({ grDevices::cairo_pdf(tempfile()); dev.off(); TRUE },
+                     error = function(e) FALSE, warning = function(w) FALSE)
+  if (pdf_ok) {
+    ggplot2::ggsave(
+      paste0(path, ".pdf"), plot, width = width, height = height,
+      device = grDevices::cairo_pdf
+    )
+  } else {
+    ggplot2::ggsave(
+      paste0(path, ".pdf"), plot, width = width, height = height
+    )
+  }
+  ggplot2::ggsave(
+    paste0(path, ".png"), plot, width = width, height = height, dpi = dpi,
+    bg = "white"
+  )
+  invisible(NULL)
 }

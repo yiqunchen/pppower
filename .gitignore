@@ -4,3 +4,11 @@
 .Ruserdata
 /doc/
 /Meta/
+
+# Simulation outputs (generated files)
+simulation_studies/*.pdf
+simulation_studies/*.png
+simulation_studies/*.csv
+
+# Downloaded data
+data/
