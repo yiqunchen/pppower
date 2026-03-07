@@ -37,8 +37,8 @@ $$
 
 Minimizing yields
 $$
-\lambda^\* = \frac{\operatorname{Cov}(Y,f)}{(1 + n/N)\sigma_f^2}, \qquad
-\operatorname{Var}(\hat\theta_{\lambda^\*}) =
+\lambda^* = \frac{\operatorname{Cov}(Y,f)}{(1 + n/N)\sigma_f^2}, \qquad
+\operatorname{Var}(\hat\theta_{\lambda^*}) =
 \frac{\sigma_Y^2}{n} - \frac{\operatorname{Cov}(Y,f)^2}{\sigma_f^2}\frac{N}{n(n+N)}.
 $$
 
@@ -51,7 +51,7 @@ lambda_opt(n = 200, N = 5000, cov_y_f = 0.6, var_f = 0.6)
 
 Given effect size $\Delta$, target power $1-\beta$, and level $\alpha$,
 $$
-\frac{|\Delta|}{\sqrt{\operatorname{Var}(\hat\theta_{\lambda^\*})}}
+\frac{\lvert\Delta\rvert}{\sqrt{\operatorname{Var}(\hat\theta_{\lambda^*})}}
 \ge z_{1-\alpha/2} + z_{1-\beta}.
 $$
 `power_ppi_mean()` solves this directly; use it instead of hand algebra:

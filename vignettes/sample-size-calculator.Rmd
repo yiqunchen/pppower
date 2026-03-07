@@ -12,6 +12,8 @@ vignette: >
 
 This calculator uses **prediction-powered inference (PPI/PPI++)** formulas from
 this package for quick study planning examples.
+Calculations run in-browser with JavaScript that mirrors `pppower` formulas
+(no server-side computation).
 
 ```{=html}
 <style>
@@ -246,24 +248,18 @@ this package for quick study planning examples.
   font-size: 0.76rem;
 }
 
-.sscalc-equations {
-  margin-top: 0.82rem;
+.sscalc-assumptions {
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.68rem;
   border: 1px solid var(--line);
   background: #ffffff;
   border-radius: 10px;
-  padding: 0.75rem 0.78rem;
+  font-size: 0.78rem;
+  color: #444444;
 }
 
-.sscalc-equations h3 {
-  margin: 0 0 0.35rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.sscalc-equations p {
-  margin: 0.2rem 0;
-  font-size: 0.8rem;
-  color: #3f3f3f;
+.sscalc-assumptions p {
+  margin: 0.18rem 0;
 }
 
 @media (max-width: 920px) {
@@ -291,8 +287,14 @@ this package for quick study planning examples.
     <p class="sscalc-kicker">Interactive PPI Tool</p>
     <h2>Prediction-powered sample size calculator</h2>
     <p>
-      Uses pppower-style moments and lambda logic. Outputs are labeled sample sizes.
+      Browser-based planner aligned with pppower formulas.
     </p>
+  </div>
+
+  <div class="sscalc-assumptions">
+    <p><strong>Assumptions:</strong> labeled outcomes are sampled completely at random from the target population, and labeled/unlabeled sets are from the same population.</p>
+    <p><strong>Non-response:</strong> expected share of sampled units without a usable labeled outcome. Recruitment-adjusted n inflates by <code>1 / (1 - non-response)</code>.</p>
+    <p><strong>Methods:</strong> details and derivations are on <a href="deep-dive-math.html">Variance &amp; Methods</a>.</p>
   </div>
 
   <div class="sscalc-tabs" role="tablist" aria-label="Calculator type">
@@ -366,7 +368,7 @@ this package for quick study planning examples.
               <input id="single_spec" type="number" min="0" max="1" step="0.01" value="0.90">
             </div>
             <div class="sscalc-field">
-              <label for="single_nonresponse">Non-response (%)</label>
+              <label for="single_nonresponse">Expected non-response (%)</label>
               <input id="single_nonresponse" type="number" min="0" max="80" step="1" value="10">
             </div>
           </div>
@@ -390,7 +392,7 @@ this package for quick study planning examples.
               <input id="single_cov_yf" type="number" step="0.001" value="0.55">
             </div>
             <div class="sscalc-field">
-              <label for="single_nonresponse_cont">Non-response (%)</label>
+              <label for="single_nonresponse_cont">Expected non-response (%)</label>
               <input id="single_nonresponse_cont" type="number" min="0" max="80" step="1" value="10">
             </div>
           </div>
@@ -402,11 +404,11 @@ this package for quick study planning examples.
         <p class="sscalc-msg" id="single_message"></p>
         <div class="sscalc-result-grid">
           <div class="sscalc-stat">
-            <span>PPI labeled n (base)</span>
+            <span>PPI analysis n (base)</span>
             <strong id="single_n_ppi">-</strong>
           </div>
           <div class="sscalc-stat">
-            <span>PPI labeled n (adjusted)</span>
+            <span>PPI recruitment n (adjusted)</span>
             <strong id="single_n_ppi_adj">-</strong>
           </div>
           <div class="sscalc-stat">
@@ -431,7 +433,7 @@ this package for quick study planning examples.
             <span id="single_bar_ppi_label">-</span>
           </div>
           <div class="sscalc-bar-row">
-            <span>PPI adj</span>
+            <span>PPI adj.</span>
             <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="single_bar_ppi_adj"></div></div>
             <span id="single_bar_ppi_adj_label">-</span>
           </div>
@@ -506,7 +508,7 @@ this package for quick study planning examples.
 
         <div class="sscalc-form-row">
           <div class="sscalc-field">
-            <label for="diff_nonresponse">Non-response (%)</label>
+            <label for="diff_nonresponse">Expected non-response (%)</label>
             <input id="diff_nonresponse" type="number" min="0" max="80" step="1" value="10">
           </div>
         </div>
@@ -546,7 +548,7 @@ this package for quick study planning examples.
             <span id="diff_bar_ppi_label">-</span>
           </div>
           <div class="sscalc-bar-row">
-            <span>PPI adj</span>
+            <span>PPI adj.</span>
             <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="diff_bar_ppi_adj"></div></div>
             <span id="diff_bar_ppi_adj_label">-</span>
           </div>
@@ -557,12 +559,9 @@ this package for quick study planning examples.
     </div>
   </section>
 
-  <div class="sscalc-equations">
-    <h3>PPI formulas used in this page</h3>
-    <p><strong>One-sample oracle variance:</strong> Var = sigma_y2 / n - (cov_yf^2 / sigma_f2) * N / (n * (n + N))</p>
-    <p><strong>One-sample vanilla variance:</strong> Var = sigma_y2 / n + sigma_f2 / N + sigma_f2 / n - 2 * cov_yf / n</p>
-    <p><strong>Binary moments from sens/spec:</strong> cov_yf = p * (1-p) * (sens + spec - 1)</p>
-    <p><strong>Two-group prevalence:</strong> power from the PPI two-sample variance with group-specific oracle lambda, solved for n by search.</p>
+  <div class="sscalc-footnote">
+    Formula details intentionally hidden here for readability. See
+    <a href="deep-dive-math.html">Variance &amp; Methods</a> for full equations.
   </div>
 </div>
 
@@ -670,6 +669,9 @@ this package for quick study planning examples.
     var sigmaY2 = p * (1 - p);
     var sigmaF2 = pHat * (1 - pHat);
     var covYf = p * (1 - p) * (sens + spec - 1);
+    if (!(pHat > 0 && pHat < 1) || !(sigmaF2 > 1e-12)) {
+      throw new Error("Prediction prevalence is degenerate; adjust sens/spec or prevalence.");
+    }
     return {
       sigmaY2: sigmaY2,
       sigmaF2: sigmaF2,
@@ -799,14 +801,17 @@ this package for quick study planning examples.
         nonresponse = readNum("single_nonresponse_cont") / 100;
       }
 
-      if (!(nonresponse >= 0 && nonresponse < 0.95)) {
-        throw new Error("Non-response must be in [0%, 95%).");
+      if (!(nonresponse >= 0 && nonresponse < 0.9)) {
+        throw new Error("Expected non-response must be in [0%, 90%).");
       }
-      if (!(sigmaY2 >= 0)) {
-        throw new Error("sigma_y2 must be >= 0.");
+      if (!(sigmaY2 > 0)) {
+        throw new Error("sigma_y2 must be > 0.");
       }
       if (!(sigmaF2 > 0)) {
         throw new Error("sigma_f2 must be > 0.");
+      }
+      if (!Number.isFinite(covYf)) {
+        throw new Error("cov_yf must be finite.");
       }
       if (!(covYf * covYf <= sigmaY2 * sigmaF2 + 1e-10)) {
         throw new Error("Infeasible moments: |cov_yf| > sqrt(sigma_y2*sigma_f2).");
@@ -849,10 +854,17 @@ this package for quick study planning examples.
       setText("single_bar_ppi_label", fmtInt(nPpi));
       setText("single_bar_ppi_adj_label", fmtInt(nPpiAdj));
 
+      var singleNote = "Base n is the required number of completed labeled outcomes. " +
+        "Adjusted n inflates for non-response: n_adj = n_base / (1 - non-response).";
+      if (saving < 0) {
+        singleNote += " With these inputs, prediction quality is weak and PPI needs more labels than classical.";
+        setText("single_message", "PPI is not improving label efficiency under the current assumptions.");
+      } else {
+        singleNote += " With these inputs, PPI reduces labeled sample size versus classical.";
+      }
       setText(
         "single_formula_note",
-        "Using power_ppi_mean-style variance with lambda_mode='" + lambdaMode +
-        "' and root search for n. Inputs map to (sigma_y2, sigma_f2, cov_yf)."
+        singleNote
       );
     } catch (err) {
       setError("single_message", err.message);
@@ -899,8 +911,8 @@ this package for quick study planning examples.
       if (!(targetPower > 0.5 && targetPower < 0.999)) {
         throw new Error("Power should be between 50% and 99.9%.");
       }
-      if (!(nonresponse >= 0 && nonresponse < 0.95)) {
-        throw new Error("Non-response must be in [0%, 95%).");
+      if (!(nonresponse >= 0 && nonresponse < 0.9)) {
+        throw new Error("Expected non-response must be in [0%, 90%).");
       }
 
       var mA = binaryMoments(pA, sensA, specA);
@@ -954,9 +966,17 @@ this package for quick study planning examples.
       setText("diff_bar_ppi_label", fmtInt(nPpi));
       setText("diff_bar_ppi_adj_label", fmtInt(nPpiAdj));
 
+      var diffNote = "Base n is per-group completed labeled outcomes for analysis. " +
+        "Adjusted n inflates for non-response: n_adj = n_base / (1 - non-response).";
+      if (saving < 0) {
+        diffNote += " Under these assumptions, prediction quality is too weak and PPI needs more labels than classical.";
+        setText("diff_message", "PPI is not improving label efficiency under the current assumptions.");
+      } else {
+        diffNote += " Under these assumptions, PPI reduces per-group labeled sample size.";
+      }
       setText(
         "diff_formula_note",
-        "Using power_ppi_ttest_binary-style moments and two-group PPI variance with group-specific oracle lambda. Solved for equal n per group."
+        diffNote
       );
     } catch (err) {
       setError("diff_message", err.message);
