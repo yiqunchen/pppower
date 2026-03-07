@@ -1,15 +1,15 @@
-test_that("power_ppi_mean formula yields reasonable power range", {
-  out <- power_ppi_mean(delta = 0.2, var_f = 0.3, var_res = 1.0, N = 1000, n = 200)
+test_that("power_ppi_vanilla_mean formula yields reasonable power range", {
+  out <- power_ppi_vanilla_mean(delta = 0.2, var_f = 0.3, var_res = 1.0, N = 1000, n = 200)
   expect_true(out > 0 && out < 1)
 })
 
-test_that("power_ppi_mean equals alpha when delta = 0 (two-sided test)", {
-  out <- power_ppi_mean(delta = 0, var_f = 0.3, var_res = 1.0, N = 1000, n = 200, alpha = 0.05)
+test_that("power_ppi_vanilla_mean equals alpha when delta = 0 (two-sided test)", {
+  out <- power_ppi_vanilla_mean(delta = 0, var_f = 0.3, var_res = 1.0, N = 1000, n = 200, alpha = 0.05)
   expect_equal(out, 0.05, tolerance = 1e-3)
 })
 
-test_that("power_ppi_mean approaches 1 when delta is large", {
-  out <- power_ppi_mean(delta = 5, var_f = 0.3, var_res = 1.0, N = 1000, n = 200)
+test_that("power_ppi_vanilla_mean approaches 1 when delta is large", {
+  out <- power_ppi_vanilla_mean(delta = 5, var_f = 0.3, var_res = 1.0, N = 1000, n = 200)
   expect_gt(out, 0.999)
 })
 
@@ -142,8 +142,9 @@ test_that("power resolvers handle metrics input across metric types", {
       correction = TRUE
     )
 
+    # Vanilla PPI via internal function
     expect_equal(
-      power_ppi_mean(
+      power_ppi_vanilla_mean(
         delta = delta,
         N = N,
         n = n,
@@ -151,7 +152,7 @@ test_that("power resolvers handle metrics input across metric types", {
         metrics = metrics,
         metric_type = metric_type
       ),
-      power_ppi_mean(
+      power_ppi_vanilla_mean(
         delta = delta,
         var_f = resolved_pp$var_f,
         var_res = resolved_pp$var_res,
@@ -163,15 +164,19 @@ test_that("power resolvers handle metrics input across metric types", {
       info = info_msg
     )
 
+    # PPI++ via new unified power_ppi_mean
     expect_equal(
-      power_ppi_pp_mean(
+      power_ppi_mean(
         delta = delta,
         N = N,
         n = n,
-        metrics = metrics,
-        metric_type = metric_type
+        sigma_y2 = moments_ppplus$sigma_y2,
+        sigma_f2 = moments_ppplus$sigma_f2,
+        cov_y_f = moments_ppplus$cov_y_f,
+        var_f = moments_ppplus$var_f,
+        var_res = moments_ppplus$var_res
       ),
-      power_ppi_pp_mean(
+      power_ppi_mean(
         delta = delta,
         N = N,
         n = n,

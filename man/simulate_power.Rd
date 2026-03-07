@@ -40,7 +40,7 @@ simulate_power(
 
 \item{sigma_f2}{Optional prediction variance (needed for PP++ if \code{cov_y_f} is supplied).}
 
-\item{cov_y_f}{Optional covariance \eqn{\mathrm{Cov}(Y, f(X))}; when present, PP++ power is returned.}
+\item{cov_y_f}{Optional covariance \eqn{\Cov(Y, f(X))}; when present, PP++ power is returned.}
 
 \item{metrics}{Optional predictive summaries to recover missing moments.}
 
@@ -55,5 +55,9 @@ Named numeric vector with \code{Exact_PP}, \code{Empirical_PP},
 and when possible \code{Exact_PPplus}, \code{Empirical_PPplus}.
 }
 \description{
-Monte Carlo vs. analytical power for PPI / PPI++ mean estimation
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#soft-deprecated}{\figure{lifecycle-soft-deprecated.svg}{options: alt='[Soft-deprecated]'}}}{\strong{[Soft-deprecated]}}
+
+Prefer \code{\link[=power_ppi_mean]{power_ppi_mean()}} for PPI++ power calculations. This function is
+retained for backward compatibility with \code{power_curve_mean()} and
+\code{type1_error_curve_mean()}.
 }

@@ -48,7 +48,7 @@ A named list of matrices:
 }
 
 These matrices are exactly the inputs needed for
-\code{\link[=n_required_ppi_pp]{n_required_ppi_pp()}} in \code{type = "regression"} mode.
+\code{\link[=power_ppi_regression]{power_ppi_regression()}} in \code{type = "regression"} mode.
 }
 \description{
 Computes all required Hessian/Fisher information matrices and covariance
@@ -62,7 +62,7 @@ This helper wraps:
 }
 
 and produces a unified object that can be passed directly to
-\code{\link[=n_required_ppi_pp]{n_required_ppi_pp()}} for labeled sample size calculations.
+\code{\link[=power_ppi_regression]{power_ppi_regression()}} for labeled sample size calculations.
 }
 \examples{
 set.seed(1)
@@ -90,9 +90,9 @@ blocks <- compute_ppi_blocks(
 c_vec <- c(1, 0, 0)
 delta <- as.numeric(t(c_vec) \%*\% beta)
 
-n_required_ppi_pp(
-  delta = delta, N = n_u,
-  type = "regression", lambda_mode = "oracle",
+power_ppi_regression(
+  delta = delta, N = n_u, power = 0.80,
+  lambda_mode = "oracle",
   c = c_vec,
   H_L = blocks$H_L, H_U = blocks$H_U,
   Sigma_YY = blocks$Sigma_YY,
@@ -103,5 +103,5 @@ n_required_ppi_pp(
 
 }
 \seealso{
-\link{n_required_ppi_pp}
+\link{power_ppi_regression}
 }

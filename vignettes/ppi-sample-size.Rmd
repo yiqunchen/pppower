@@ -1,6 +1,6 @@
 ---
 title: "Detailed Dive: Sample Size & Metrics Interface"
-subtitle: "Using `n_required_ppi_pp()` for mean (continuous/binary)"
+subtitle: "Using `power_ppi_mean()` for mean (continuous/binary)"
 output:
   rmarkdown::html_document:
     toc: true
@@ -29,16 +29,15 @@ set.seed(20251129)
 
 This is the **detailed dive** behind the quickstart:
 
-- How `n_required_ppi_pp()` works for mean estimation
+- How `power_ppi_mean()` works for mean estimation
 - How to feed prediction metrics (MSE, $R^2$, sensitivity/specificity) instead of raw moments
 - Short, focused code blocks you can copy/paste
 
 ## Core call shape (reference)
 
 ```{r overview, eval = FALSE}
-n_required_ppi_pp(
-  delta, N,
-  type = c("mean"),
+power_ppi_mean(
+  delta, N, n = NULL,
   power = 0.80, alpha = 0.05,
   lambda_mode = c("vanilla", "oracle", "user"),
   # mean inputs (choose one path)
@@ -62,20 +61,22 @@ sigma_y2 <- 1.00
 sigma_f2 <- 0.40
 cov_y_f  <- 0.15
 
-n_required_ppi_pp(
+power_ppi_mean(
   delta      = delta,
   N          = N,
-  type       = "mean",
+  n          = NULL,
+  power      = power,
   lambda_mode = "vanilla",
   sigma_y2   = sigma_y2,
   sigma_f2   = sigma_f2,
   cov_y_f    = cov_y_f
 )
 
-n_required_ppi_pp(
+power_ppi_mean(
   delta      = delta,
   N          = N,
-  type       = "mean",
+  n          = NULL,
+  power      = power,
   lambda_mode = "oracle",
   sigma_y2   = sigma_y2,
   sigma_f2   = sigma_f2,
@@ -95,19 +96,21 @@ metrics <- list(
   m_obs   = 500
 )
 
-n_required_ppi_pp(
+power_ppi_mean(
   delta       = 0.15,
   N           = 520,
-  type        = "mean",
+  n           = NULL,
+  power       = 0.80,
   lambda_mode = "vanilla",
   metrics     = metrics,
   metric_type = "continuous"
 )
 
-n_required_ppi_pp(
+power_ppi_mean(
   delta       = 0.15,
   N           = 520,
-  type        = "mean",
+  n           = NULL,
+  power       = 0.80,
   lambda_mode = "oracle",
   metrics     = metrics,
   metric_type = "continuous"
@@ -138,20 +141,22 @@ metrics <- list(
 # accuracy = (tp + tn)/500 = 450/500 = 0.90
 
 # PPI sample-size calculation, λ=1
-n_required_ppi_pp(
+power_ppi_mean(
   delta       = 0.15,
   N           = 520,
-  type        = "mean",
+  n           = NULL,
+  power       = 0.80,
   lambda_mode = "vanilla",
   metrics     = metrics,
   metric_type = "classification"
 )
 
 # PPI++ oracle-λ
-n_required_ppi_pp(
+power_ppi_mean(
   delta       = 0.15,
   N           = 520,
-  type        = "mean",
+  n           = NULL,
+  power       = 0.80,
   lambda_mode = "oracle",
   metrics     = metrics,
   metric_type = "classification"
@@ -207,11 +212,11 @@ Solve sample size for contrast $c^\top \beta$:
 c_vec <- c(0, 1, 0, 0)
 delta <- as.numeric(t(c_vec) %*% beta)
 
-n_required_ppi_pp(
+power_ppi_regression(
   delta       = delta,
   N           = n_u,
+  n           = NULL,
   power       = 0.90,
-  type        = "regression",
   lambda_mode = "vanilla",
   c           = c_vec,
   H_L         = blocks$H_L,
@@ -222,11 +227,11 @@ n_required_ppi_pp(
   Sigma_Yf    = blocks$Sigma_Yf
 )
 
-n_required_ppi_pp(
+power_ppi_regression(
   delta       = delta,
   N           = n_u,
+  n           = NULL,
   power       = 0.90,
-  type        = "regression",
   lambda_mode = "oracle",
   c           = c_vec,
   H_L         = blocks$H_L,
@@ -283,10 +288,11 @@ Then solve for sample size:
 c_vec <- c(1, 0, 0)
 delta <- as.numeric(t(c_vec) %*% beta)
 
-n_required_ppi_pp(
+power_ppi_regression(
   delta       = delta,
   N           = n_u,
-  type        = "regression",
+  n           = NULL,
+  power       = 0.80,
   lambda_mode = "vanilla",
   c           = c_vec,
   H_L         = blocks_glm$H_L,
@@ -297,10 +303,11 @@ n_required_ppi_pp(
   Sigma_Yf    = blocks_glm$Sigma_Yf
 )
 
-n_required_ppi_pp(
+power_ppi_regression(
   delta       = delta,
   N           = n_u,
-  type        = "regression",
+  n           = NULL,
+  power       = 0.80,
   lambda_mode = "oracle",
   c           = c_vec,
   H_L         = blocks_glm$H_L,
@@ -317,10 +324,11 @@ n_required_ppi_pp(
 If the required labeled ($n$) exceeds the unlabeled ($N$), the function throws an error by default (`mode = "error"`):
 
 ```{r infeasible, error=TRUE, message=TRUE}
-out <- n_required_ppi_pp(
+out <- power_ppi_mean(
   delta = 0.03,
   N     = 1000,
-  type  = "mean",
+  n     = NULL,
+  power = 0.80,
   sigma_y2 = 1,
   sigma_f2 = 0.2,
   cov_y_f  = 0.05,
@@ -331,10 +339,11 @@ out <- n_required_ppi_pp(
 Switch to `mode = "cap"` to get an estimate of power at $n = N$:
 
 ```{r infeasible-cap}
-out <- n_required_ppi_pp(
+out <- power_ppi_mean(
   delta = 0.03,
   N     = 1000,
-  type  = "mean",
+  n     = NULL,
+  power = 0.80,
   sigma_y2 = 1,
   sigma_f2 = 0.2,
   cov_y_f  = 0.05,
@@ -364,28 +373,31 @@ lambda_user_value <- 0.70   # example user-specified λ
 results <- lapply(delta_grid, function(d) {
   data.frame(
     delta = d,
-    vanilla = n_required_ppi_pp(
+    vanilla = power_ppi_mean(
       delta       = d,
       N           = N,
-      type        = "mean",
+      n           = NULL,
+      power       = 0.80,
       lambda_mode = "vanilla",
       sigma_y2    = sy2,
       sigma_f2    = sf2,
       cov_y_f     = cyf
     ),
-    oracle = n_required_ppi_pp(
+    oracle = power_ppi_mean(
       delta       = d,
       N           = N,
-      type        = "mean",
+      n           = NULL,
+      power       = 0.80,
       lambda_mode = "oracle",
       sigma_y2    = sy2,
       sigma_f2    = sf2,
       cov_y_f     = cyf
     ),
-    user = n_required_ppi_pp(
+    user = power_ppi_mean(
       delta       = d,
       N           = N,
-      type        = "mean",
+      n           = NULL,
+      power       = 0.80,
       lambda_mode = "user",
       lambda_user = lambda_user_value,
       sigma_y2    = sy2,
@@ -401,7 +413,7 @@ df <- bind_rows(results) |>
                values_to = "n")
 
 ggplot(df, aes(delta, n, color = mode)) +
-  geom_line(linewidth = 1) +
+  geom_line(linewidth = 1.8) +
   scale_color_manual(
     values = pppower_lambda_colors,
     labels = c(

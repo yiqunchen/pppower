@@ -49,13 +49,14 @@ explaining 80% of the variance cuts labeled data needs by ~80%.
 
 ## Supported Designs
 
-| Design                       | Power                    | Sample Size                  | Simulation                            |
-|------------------------------|--------------------------|------------------------------|---------------------------------------|
-| One-sample mean (continuous) | `power_ppi_pp_mean()`    | `n_required_ppi_pp()`        | `simulate_power_ppiplus_mean()`       |
-| One-sample mean (binary)     | `power_ppi_pp_mean()`    | `n_required_ppi_pp()`        | `simulate_power_ppi_mean()`           |
-| Two-sample t-test            | `power_ppi_pp_ttest()`   | —                            | `simulate_power_ppi_pp_ttest_binary()`|
-| Paired t-test                | `power_ppi_pp_paired()`  | `n_required_ppi_pp_paired()` | —                                     |
-| EIF binary surrogate         | `power_eif_binary()`     | `n_required_eif_binary()`    | `simulate_power_eif_binary()`         |
+| Design                       | Power / Sample Size        | Simulation                     |
+|------------------------------|----------------------------|--------------------------------|
+| One-sample mean (continuous) | `power_ppi_mean()`         | `simulate_ppi_mean()`          |
+| One-sample mean (binary)     | `power_ppi_mean()`         | `simulate_ppi_vanilla_mean()`  |
+| Two-sample t-test            | `power_ppi_ttest()`        | `simulate_ppi_ttest_binary()`  |
+| Paired t-test                | `power_ppi_paired()`       | —                              |
+| Regression contrast          | `power_ppi_regression()`   | —                              |
+| EIF binary surrogate         | `power_eif_binary()`       | `simulate_eif_binary()`        |
 
 ## Installation
 
@@ -76,7 +77,7 @@ with Monte Carlo.
 library(pppower)
 
 # Step 1: Compute power for a given sample size
-power_ppi_pp_mean(
+power_ppi_mean(
   delta    = 0.2,
   N        = 5000,
   n        = 200,
@@ -87,18 +88,19 @@ power_ppi_pp_mean(
 )
 
 # Step 2: Solve for required labeled n to achieve 80% power
-n_required_ppi_pp(
-  delta      = 0.2,
-  N          = 5000,
-  power      = 0.80,
-  sigma_y2   = 1.0,
-  sigma_f2   = 0.49,
-  cov_y_f    = 0.63,
+power_ppi_mean(
+  delta       = 0.2,
+  N           = 5000,
+  n           = NULL,
+  power       = 0.80,
+  sigma_y2    = 1.0,
+  sigma_f2    = 0.49,
+  cov_y_f     = 0.63,
   lambda_mode = "oracle"
 )
 
 # Step 3: Verify with Monte Carlo simulation
-simulate_power_ppiplus_mean(
+simulate_ppi_mean(
   R     = 2000,
   n     = 100,
   N     = 5000,
@@ -116,7 +118,7 @@ simulate_power_ppiplus_mean(
 **1. Direct moments** — supply σ\_Y², σ\_f², and Cov(Y, f) directly:
 
 ``` r
-power_ppi_pp_mean(delta = 0.2, N = 5000, n = 200,
+power_ppi_mean(delta = 0.2, N = 5000, n = 200,
                   sigma_y2 = 1.0, sigma_f2 = 0.49, cov_y_f = 0.63)
 ```
 
@@ -124,7 +126,7 @@ power_ppi_pp_mean(delta = 0.2, N = 5000, n = 200,
 variance via `var_f` and `var_res`:
 
 ``` r
-power_ppi_pp_mean(delta = 0.2, N = 5000, n = 200,
+power_ppi_mean(delta = 0.2, N = 5000, n = 200,
                   var_f = 0.49, var_res = 0.51, cov_y_f = 0.49)
 ```
 
@@ -132,7 +134,7 @@ power_ppi_pp_mean(delta = 0.2, N = 5000, n = 200,
 MSE/R² (continuous):
 
 ``` r
-power_ppi_pp_mean(delta = 0.05, N = 5000, n = 200,
+power_ppi_mean(delta = 0.05, N = 5000, n = 200,
                   metrics = list(sensitivity = 0.85, specificity = 0.90,
                                  p_y = 0.3, m_obs = 200),
                   metric_type = "classification")
@@ -144,8 +146,8 @@ power_ppi_pp_mean(delta = 0.05, N = 5000, n = 200,
   walkthrough of power curves and Type I error checks
   (`vignette("intro-ppi")`)
 - **Detailed Dive: Sample Size & Metrics Interface** — how
-  `n_required_ppi_pp()` works across input modes, including regression
-  contrasts (`vignette("ppi-sample-size")`)
+  `power_ppi_mean(..., n = NULL)` works across input modes, including
+  regression contrasts (`vignette("ppi-sample-size")`)
 - **Detailed Dive: Variance Formulas and lambda-star** — mathematical
   derivations behind the PPI++ variance and oracle λ\*
   (`vignette("deep-dive-math")`)

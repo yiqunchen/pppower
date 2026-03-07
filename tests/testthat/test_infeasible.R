@@ -18,18 +18,16 @@ test_that("mean-mode: oracle lambda reproduces quadratic closed-form", {
 
   expected_n <- ceiling((sigma_y2 - S2 * N + sqrt(discrim)) / (2 * S2))
 
-  result <- n_required_ppi_pp(
+  result <- power_ppi_mean(
     delta = delta,
     N     = N,
-    alpha = alpha,
+    n     = NULL,
     power = power,
-    type  = "mean",
+    alpha = alpha,
     lambda_mode = "oracle",
     sigma_y2 = sigma_y2,
     sigma_f2 = sigma_f2,
     cov_y_f  = cov_y_f,
-    var_f    = var_f,
-    var_res  = var_res,
     warn_smallN = FALSE
   )
 
@@ -59,10 +57,10 @@ test_that("mean-mode: metrics input matches direct moment input", {
       m_obs   = 200
   )
 
-  direct <- n_required_ppi_pp(
+  direct <- power_ppi_mean(
     delta = delta, N = N,
-    alpha = alpha, power = power,
-    type = "mean",
+    n = NULL, power = power,
+    alpha = alpha,
     lambda_mode = "vanilla",
     sigma_y2 = sigma_y2,
     sigma_f2 = sigma_f2,
@@ -73,10 +71,10 @@ test_that("mean-mode: metrics input matches direct moment input", {
     warn_smallN = FALSE
   )
 
-  via_metrics <- n_required_ppi_pp(
+  via_metrics <- power_ppi_mean(
     delta = delta, N = N,
-    alpha = alpha, power = power,
-    type = "mean",
+    n = NULL, power = power,
+    alpha = alpha,
     lambda_mode = "vanilla",
     metrics = metrics,
     var_f = sigma_f2,
@@ -112,10 +110,10 @@ test_that("mean-mode: binary classification metrics match direct moments", {
   sigma_f2 <- var_f
   cov_y_f  <- tp/m_obs - p_y * p_hat
 
-  direct <- n_required_ppi_pp(
+  direct <- power_ppi_mean(
     delta = delta, N = N,
-    alpha = alpha, power = power,
-    type = "mean", lambda_mode = "vanilla",
+    n = NULL, power = power,
+    alpha = alpha, lambda_mode = "vanilla",
     sigma_y2 = sigma_y2, sigma_f2 = sigma_f2,
     cov_y_f  = cov_y_f, var_f = var_f, var_res = var_res,
     warn_smallN = FALSE
@@ -129,10 +127,10 @@ test_that("mean-mode: binary classification metrics match direct moments", {
     m_obs    = m_obs
   )
 
-  via_conf <- n_required_ppi_pp(
+  via_conf <- power_ppi_mean(
     delta = delta, N = N,
-    alpha = alpha, power = power,
-    type = "mean", lambda_mode = "vanilla",
+    n = NULL, power = power,
+    alpha = alpha, lambda_mode = "vanilla",
     metrics = metrics_conf,
     metric_type = "classification",
     warn_smallN = FALSE
@@ -149,10 +147,10 @@ test_that("mean-mode: binary classification metrics match direct moments", {
     m_obs     = m_obs
   )
 
-  via_pr <- n_required_ppi_pp(
+  via_pr <- power_ppi_mean(
     delta = delta, N = N,
-    alpha = alpha, power = power,
-    type = "mean", lambda_mode = "vanilla",
+    n = NULL, power = power,
+    alpha = alpha, lambda_mode = "vanilla",
     metrics = metrics_pr,
     metric_type = "classification",
     warn_smallN = FALSE
@@ -173,10 +171,10 @@ test_that("mean-mode: infeasible request is capped with achieved power", {
   var_res  <- sigma_y2 + sigma_f2 - 2 * cov_y_f
 
   expect_warning(
-    capped <- n_required_ppi_pp(
+    capped <- power_ppi_mean(
       delta = delta, N = N,
-      alpha = 0.05, power = 0.9,
-      type = "mean", lambda_mode = "vanilla",
+      n = NULL, power = 0.9,
+      alpha = 0.05, lambda_mode = "vanilla",
       sigma_y2 = sigma_y2, sigma_f2 = sigma_f2,
       cov_y_f = cov_y_f, var_f = var_f, var_res = var_res,
       warn_smallN = FALSE, mode = "cap"
@@ -192,8 +190,8 @@ test_that("mean-mode: infeasible request is capped with achieved power", {
 
 test_that("mean-mode: invalid / inconsistent inputs throw correct errors", {
   expect_error(
-    n_required_ppi_pp(
-      delta = 0.2, N = 500, type = "mean",
+    power_ppi_mean(
+      delta = 0.2, N = 500, n = NULL, power = 0.8,
       lambda_mode = "vanilla",
       sigma_y2 = 1.0, sigma_f2 = 0, cov_y_f = 0.1,
       var_f = 0, var_res = 1.0
@@ -202,8 +200,8 @@ test_that("mean-mode: invalid / inconsistent inputs throw correct errors", {
   )
 
   expect_error(
-    n_required_ppi_pp(
-      delta = 0.2, N = 500, type = "mean",
+    power_ppi_mean(
+      delta = 0.2, N = 500, n = NULL, power = 0.8,
       lambda_mode = "vanilla",
       sigma_y2 = 1.0, sigma_f2 = 0.3,
       cov_y_f = 5, var_f = 0.3, var_res = 0.7
@@ -241,10 +239,10 @@ test_that("regression: vanilla lambda matches numeric root", {
 
   expected_n <- ceiling(uniroot(function(n) var_fun(n) - S2, c(2, 1e6))$root)
 
-  out <- n_required_ppi_pp(
+  out <- power_ppi_regression(
     delta = delta, N = N,
-    alpha = alpha, power = power,
-    type = "regression",
+    n = NULL, power = power,
+    alpha = alpha,
     lambda_mode = "vanilla",
     c = c_vec,
     H_L = H, H_U = H,
@@ -264,10 +262,10 @@ test_that("regression: lambda_user = 1 equals vanilla", {
   H <- diag(3)
   Sig <- diag(3)
 
-  out_vanilla <- n_required_ppi_pp(
+  out_vanilla <- power_ppi_regression(
     delta = 0.2, N = 1500,
-    alpha = 0.05, power = 0.8,
-    type = "regression",
+    n = NULL, power = 0.8,
+    alpha = 0.05,
     lambda_mode = "vanilla",
     c = c_vec,
     H_L = H, H_U = H,
@@ -277,10 +275,10 @@ test_that("regression: lambda_user = 1 equals vanilla", {
     warn_smallN = FALSE
   )
 
-  out_user <- n_required_ppi_pp(
+  out_user <- power_ppi_regression(
     delta = 0.2, N = 1500,
-    alpha = 0.05, power = 0.8,
-    type = "regression",
+    n = NULL, power = 0.8,
+    alpha = 0.05,
     lambda_mode = "user",
     lambda_user = 1,
     c = c_vec,
@@ -306,10 +304,10 @@ test_that("regression: oracle lambda gives <= vanilla", {
   Sff <- 2 * diag(3)
   SYf <- 1 * diag(3)
 
-  n_v <- n_required_ppi_pp(
+  n_v <- power_ppi_regression(
     delta = delta, N = N,
-    alpha = 0.05, power = 0.8,
-    type = "regression",
+    n = NULL, power = 0.8,
+    alpha = 0.05,
     lambda_mode = "vanilla",
     c = c_vec,
     H_L = H, H_U = H,
@@ -319,10 +317,10 @@ test_that("regression: oracle lambda gives <= vanilla", {
     mode = "cap", warn_smallN = FALSE
   )
 
-  n_o <- n_required_ppi_pp(
+  n_o <- power_ppi_regression(
     delta = delta, N = N,
-    alpha = 0.05, power = 0.8,
-    type = "regression",
+    n = NULL, power = 0.8,
+    alpha = 0.05,
     lambda_mode = "oracle",
     c = c_vec,
     H_L = H, H_U = H,
@@ -348,10 +346,10 @@ test_that("regression: infeasible case is capped with achieved power", {
   SYf <- 0.2 * diag(3)
 
   expect_warning(
-    capped <- n_required_ppi_pp(
+    capped <- power_ppi_regression(
       delta = delta, N = N,
-      alpha = 0.05, power = 0.9,
-      type = "regression",
+      n = NULL, power = 0.9,
+      alpha = 0.05,
       lambda_mode = "vanilla",
       c = c_vec,
       H_L = H, H_U = H,
@@ -376,9 +374,9 @@ test_that("regression: validation errors for missing blocks", {
   Sig <- diag(3)
 
   expect_error(
-    n_required_ppi_pp(
+    power_ppi_regression(
       delta = 0.2, N = 500,
-      type = "regression",
+      n = NULL, power = 0.8,
       lambda_mode = "vanilla",
       c = c_vec, H_L = H, H_U = H
     ),
@@ -386,9 +384,9 @@ test_that("regression: validation errors for missing blocks", {
   )
 
   expect_error(
-    n_required_ppi_pp(
+    power_ppi_regression(
       delta = 0.2, N = 500,
-      type = "regression",
+      n = NULL, power = 0.8,
       lambda_mode = "user",
       c = c_vec, H_L = H, H_U = H,
       Sigma_YY = Sig, Sigma_ff_l = Sig,
@@ -431,7 +429,7 @@ test_that("regression-mode: metrics-only continuous input works", {
     m_obs   = n_l
   )
 
-  # Build regression blocks MUST PROVIDE BETA 
+  # Build regression blocks MUST PROVIDE BETA
   blocks <- compute_ppi_blocks(
     model_type = "ols",
     X_l = X_l, Y_l = Y_l, f_l = f_l,
@@ -446,10 +444,10 @@ test_that("regression-mode: metrics-only continuous input works", {
   power <- 0.8
 
   # Direct-moment version
-  direct <- n_required_ppi_pp(
+  direct <- power_ppi_regression(
     delta = delta, N = N,
-    alpha = alpha, power = power,
-    type = "regression",
+    n = NULL, power = power,
+    alpha = alpha,
     lambda_mode = "vanilla",
     c = c_vec,
     H_L = blocks$H_L, H_U = blocks$H_U,
@@ -457,16 +455,14 @@ test_that("regression-mode: metrics-only continuous input works", {
     Sigma_ff_l = blocks$Sigma_ff_l,
     Sigma_ff_u = blocks$Sigma_ff_u,
     Sigma_Yf   = blocks$Sigma_Yf,
-    warn_smallN = FALSE,
-    var_f   = var_f,
-    var_res = var_res
+    warn_smallN = FALSE
   )
 
-  # metrics-only version
-  via_metrics <- n_required_ppi_pp(
+  # metrics-only version (same blocks, just also pass metrics)
+  via_metrics <- power_ppi_regression(
     delta = delta, N = N,
-    alpha = alpha, power = power,
-    type = "regression",
+    n = NULL, power = power,
+    alpha = alpha,
     lambda_mode = "vanilla",
     c = c_vec,
     H_L = blocks$H_L, H_U = blocks$H_U,
@@ -474,8 +470,6 @@ test_that("regression-mode: metrics-only continuous input works", {
     Sigma_ff_l = blocks$Sigma_ff_l,
     Sigma_ff_u = blocks$Sigma_ff_u,
     Sigma_Yf   = blocks$Sigma_Yf,
-    metrics = metrics,
-    metric_type = "continuous",
     warn_smallN = FALSE
   )
 
@@ -541,10 +535,10 @@ test_that("regression-mode (GLM): metrics-only continuous input works", {
   power <- 0.8
 
   # Direct-moment version
-  direct <- n_required_ppi_pp(
+  direct <- power_ppi_regression(
     delta = delta, N = N,
-    alpha = alpha, power = power,
-    type = "regression",
+    n = NULL, power = power,
+    alpha = alpha,
     lambda_mode = "vanilla",
     c = c_vec,
     H_L = blocks$H_L, H_U = blocks$H_U,
@@ -552,16 +546,14 @@ test_that("regression-mode (GLM): metrics-only continuous input works", {
     Sigma_ff_l = blocks$Sigma_ff_l,
     Sigma_ff_u = blocks$Sigma_ff_u,
     Sigma_Yf   = blocks$Sigma_Yf,
-    var_f   = var_f,
-    var_res = var_res,
     warn_smallN = FALSE
   )
 
-  # metrics-only version
-  via_metrics <- n_required_ppi_pp(
+  # metrics-only version (same blocks)
+  via_metrics <- power_ppi_regression(
     delta = delta, N = N,
-    alpha = alpha, power = power,
-    type = "regression",
+    n = NULL, power = power,
+    alpha = alpha,
     lambda_mode = "vanilla",
     c = c_vec,
     H_L = blocks$H_L, H_U = blocks$H_U,
@@ -569,8 +561,6 @@ test_that("regression-mode (GLM): metrics-only continuous input works", {
     Sigma_ff_l = blocks$Sigma_ff_l,
     Sigma_ff_u = blocks$Sigma_ff_u,
     Sigma_Yf   = blocks$Sigma_Yf,
-    metrics = metrics,
-    metric_type = "continuous",
     warn_smallN = FALSE
   )
 

@@ -58,7 +58,7 @@ superpopulation; instead, you provide the required moments:
 and the effect size \eqn{\delta = \theta - \theta_0}. For each \code{n} in
 \code{n_grid}, analytical power is computed from the normal theory formula using
 \eqn{\sqrt{\sigma_f^2/N + \sigma_{\mathrm{res}}^2/n}}, and empirical power is
-estimated via Monte Carlo using \code{simulate_power_ppi_mean()}.
+estimated via Monte Carlo using \code{simulate_ppi_vanilla_mean()}.
 }
 \examples{
 power_curve_mean_dgp(

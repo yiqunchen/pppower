@@ -1,4 +1,4 @@
-# Population parameters 
+# Population parameters
 N <- 1500    # unlabeled sample size
 n <- 200     # labeled sample size
 alpha <- 0.05
@@ -21,7 +21,7 @@ test_that("Monte Carlo power aligns with analytical power for PPI and PPI++ mean
     var_res = var_res_pop
   )
 
-  res_ppi <- simulate_power_ppi_mean(
+  res_ppi <- simulate_ppi_vanilla_mean(
     R = R_sim,
     n = n,
     N = N,
@@ -55,7 +55,7 @@ test_that("Monte Carlo power aligns with analytical power for PPI and PPI++ mean
     var_res   = var_res_pop
   )
 
-  res_ppiplus <- simulate_power_ppiplus_mean(
+  res_ppiplus <- simulate_ppi_mean(
     R = R_sim,
     n = n,
     N = N,

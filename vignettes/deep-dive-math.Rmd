@@ -1,0 +1,86 @@
+---
+title: "Detailed Dive: Variance Formulas and lambda-star"
+output:
+  rmarkdown::html_document:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Detailed Dive: Variance Formulas and lambda-star}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(pppower)
+```
+
+## Mean estimator and PPI++
+
+For labeled size $n$ and unlabeled size $N$:
+
+*Estimator*
+$$
+\hat\theta_\lambda = \bar{Y}_L + \lambda(\bar{f}_U - \bar{f}_L).
+$$
+
+*Variance*
+$$
+\operatorname{Var}(\hat\theta_\lambda) =
+\frac{\sigma_Y^2}{n}
+ + \lambda^2 \sigma_f^2 \left(\frac{1}{N} + \frac{1}{n}\right)
+ - \frac{2\lambda\,\operatorname{Cov}(Y,f)}{n}.
+$$
+
+Minimizing yields
+$$
+\lambda^\* = \frac{\operatorname{Cov}(Y,f)}{(1 + n/N)\sigma_f^2}, \qquad
+\operatorname{Var}(\hat\theta_{\lambda^\*}) =
+\frac{\sigma_Y^2}{n} - \frac{\operatorname{Cov}(Y,f)^2}{\sigma_f^2}\frac{N}{n(n+N)}.
+$$
+
+```{r lambda-star}
+lambda_opt <- function(n, N, cov_y_f, var_f) cov_y_f / ((1 + n / N) * var_f)
+lambda_opt(n = 200, N = 5000, cov_y_f = 0.6, var_f = 0.6)
+```
+
+## Power and required $n$
+
+Given effect size $\Delta$, target power $1-\beta$, and level $\alpha$,
+$$
+\frac{|\Delta|}{\sqrt{\operatorname{Var}(\hat\theta_{\lambda^\*})}}
+\ge z_{1-\alpha/2} + z_{1-\beta}.
+$$
+`power_ppi_mean()` solves this directly; use it instead of hand algebra:
+
+```{r n-required}
+power_ppi_mean(
+  delta      = 0.2,
+  N          = 5000,
+  n          = NULL,
+  power      = 0.9,
+  sigma_y2   = 1.0,
+  sigma_f2   = 0.6,
+  cov_y_f    = 0.6,
+  lambda_mode = "oracle"
+)
+```
+
+## Metrics-to-moments mapping (binary)
+
+For sensitivity/specificity $(\text{sens}, \text{spec})$ and prevalence $p$,
+$$
+p_{\hat{Y}} = \text{sens}\,p + (1-\text{spec})(1-p), \qquad
+\operatorname{Cov}(Y,f) = p(1-p)(\text{sens} + \text{spec} - 1).
+$$
+The helper `binary_moments_from_sens_spec()` returns $\operatorname{Var}(Y)$, $\operatorname{Var}(f)$, and
+$\operatorname{Cov}(Y,f)$:
+
+```{r sens-spec}
+binary_moments_from_sens_spec(p = 0.3, sens = 0.85, spec = 0.85)
+```
+
+Use these outputs directly in `power_ppi_mean()`.

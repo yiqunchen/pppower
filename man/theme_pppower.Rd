@@ -4,16 +4,15 @@
 \alias{theme_pppower}
 \title{Publication-ready ggplot2 theme for pppower}
 \usage{
-theme_pppower(base_size = 11)
+theme_pppower(base_size = 14)
 }
 \arguments{
-\item{base_size}{Base font size (default 11).}
+\item{base_size}{Base font size (default 14).}
 }
 \value{
 A ggplot2 theme object.
 }
 \description{
-A minimal theme with bold titles, bottom legend, and no minor gridlines.
-Merges the conventions of \code{theme_pub()} and \code{theme_validation()} used
-in earlier simulation scripts.
+Clean theme with no top/right panel borders, bold titles, bottom legend,
+and no minor gridlines. Designed for figures4papers-style output.
 }
