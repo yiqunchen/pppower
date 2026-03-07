@@ -23,18 +23,15 @@ Use `power_ppi_mean(..., n = NULL)` for one-sample prevalence and
 
 ## Interactive Calculator
 
-<div style="margin: 1rem 0 1.4rem; padding: 0.9rem; border: 2px solid #d9e7df; border-radius: 12px; background: #f8fbf9;">
+<div style="margin: 1rem 0 1.4rem; padding: 1.0rem; border: 2px solid #d9e7df; border-radius: 12px; text-align: center; background: #f8fbf9;">
 
-<iframe
-    src="https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html"
-    title="Interactive PPI Sample Size Calculator"
-    style="width: 100%; min-height: 880px; border: 0; border-radius: 8px; background: #ffffff;"
-    loading="lazy"> </iframe>
+<a href="https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html" style="display: inline-block; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;">
+    Open Interactive PPI Sample Size Calculator
+</a>
 
-<div style="margin-top: 0.55rem; font-size: 0.92rem; color: #3f4d4a; text-align: center;">
+<div style="margin-top: 0.55rem; font-size: 0.92rem; color: #3f4d4a;">
 
-    If the embedded view does not load, open the
-    <a href="articles/sample-size-calculator.html">full calculator page</a>.
+    Direct link to the live calculator page.
 
 </div>
 
