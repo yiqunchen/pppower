@@ -4,216 +4,243 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>pppower: Convenient Prediction-Powered Inference Power Calculations • pppower</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="bootstrap-toc.css">
-<script src="bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
-<script src="pkgdown.js"></script><meta property="og:title" content="pppower: Convenient Prediction-Powered Inference Power Calculations">
-<meta property="og:description" content="Provides unified tools for power analysis and sample-size calculation under Prediction-Powered Inference (PPI and PPI++), supporting mean estimation, OLS/GLM regression contrasts, and both moment-based and metric-based inputs.">
-<!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
-<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]-->
+<script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="pppower: Convenient Prediction-Powered Inference Power Calculations">
+<meta name="description" content="Provides unified tools for power analysis and sample-size calculation under Prediction-Powered Inference (PPI and PPI++), supporting mean estimation and two-sample t-tests.">
+<meta property="og:description" content="Provides unified tools for power analysis and sample-size calculation under Prediction-Powered Inference (PPI and PPI++), supporting mean estimation and two-sample t-tests.">
 </head>
-<body data-spy="scroll" data-target="#toc">
+<body>
+    <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <div class="container template-home">
-      <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
-  <div class="container">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <span class="navbar-brand">
-        <a class="navbar-link" href="index.html">pppower</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
-      </span>
-    </div>
+    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
 
-    <div id="navbar" class="navbar-collapse collapse">
-      <ul class="nav navbar-nav">
-<li>
-  <a href="reference/index.html">Reference</a>
-</li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    Articles
+    <a class="navbar-brand me-2" href="index.html">pppower</a>
 
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-<li>
-      <a href="articles/intro-ppi.html">Prediction-Powered Power Planning</a>
-    </li>
-    <li>
-      <a href="articles/ppi-sample-size.html">Prediction-Powered Sample Size Calculation</a>
-    </li>
-  </ul>
-</li>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar" class="collapse navbar-collapse ms-3">
+      <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="articles/intro-ppi.html">Basics</a></li>
+<li class="nav-item"><a class="nav-link" href="articles/deep-dive-math.html">Variance &amp; Metrics</a></li>
+<li class="nav-item"><a class="nav-link" href="articles/ppi-sample-size.html">Sample Size</a></li>
+<li class="nav-item"><a class="nav-link" href="articles/sample-size-calculator.html">Calculator</a></li>
+<li class="nav-item"><a class="nav-link" href="articles/llm-judge-binary.html">LLM Judge (Binary)</a></li>
+<li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
       </ul>
-<ul class="nav navbar-nav navbar-right"></ul>
+<ul class="navbar-nav">
+<li class="nav-item"><form class="form-inline" role="search">
+ <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
+</form></li>
+      </ul>
 </div>
-<!--/.nav-collapse -->
+
+
   </div>
-<!--/.container -->
-</div>
-<!--/.navbar -->
-
-
-
-      </header><div class="row">
-  <div class="contents col-md-9">
-<div class="section level1">
+</nav><div class="container template-home">
+<div class="row">
+  <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="pppower">pppower<a class="anchor" aria-label="anchor" href="#pppower"></a>
 </h1></div>
-<!-- badges: start -->
-
-<p>The goal of <code>pppower</code> is to conduct power analysis based on the Prediction-Powered Inference (PPI) framework. It is a convenient tools for planning and evaluating studies with PPI estimators. The package provides analytical formulas, Monte Carlo estimators, plotting helpers, and sample-size solvers for both mean estimation and linear regression (PPI-OLS) workflows.</p>
+<p><strong>pppower</strong> is an R package for power analysis and sample-size calculation under the Prediction-Powered Inference (PPI/PPI++) framework.</p>
+<div class="section level2">
+<h2 id="prevalence-estimation-with-ppi">Prevalence Estimation with PPI<a class="anchor" aria-label="anchor" href="#prevalence-estimation-with-ppi"></a>
+</h2>
+<p>For binary outcomes (prevalence), you can estimate required <strong>labeled</strong> sample size while leveraging model predictions on a large unlabeled set. This is exactly what PPI is for:</p>
+<ul>
+<li>Inputs: target effect size (), unlabeled size (N), and model quality (e.g., sensitivity/specificity)</li>
+<li>Output: required labeled (n) for your target power</li>
+<li>Benefit: better predictions can reduce labeled annotation burden</li>
+</ul>
+<p>Use <code>power_ppi_mean(..., n = NULL)</code> for one-sample prevalence and <code><a href="reference/power_ppi_ttest_binary.html">power_ppi_ttest_binary()</a></code> for two-group prevalence differences.</p>
+</div>
+<div class="section level2">
+<h2 id="interactive-calculator">Interactive Calculator<a class="anchor" aria-label="anchor" href="#interactive-calculator"></a>
+</h2>
+<div style="margin: 1rem 0 1.4rem; padding: 1.1rem; border: 2px solid #d9e7df; border-radius: 12px; text-align: center; background: #f8fbf9;">
+<a href="articles/sample-size-calculator.html" style="display: inline-block; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;"> Open Interactive PPI Sample Size Calculator </a>
+<div style="margin-top: 0.55rem; font-size: 0.92rem; color: #3f4d4a;">
+<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>Includes one<span class="sc">-</span>sample PPI mean<span class="sc">/</span>prevalence and two<span class="sc">-</span>group difference <span class="cf">in</span> prevalence examples.</span></code></pre></div>
+</div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="what-is-prediction-powered-inference">What is Prediction-Powered Inference?<a class="anchor" aria-label="anchor" href="#what-is-prediction-powered-inference"></a>
+</h2>
+<p>Many modern studies have access to:</p>
+<ul>
+<li>
+<strong>Labeled data</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>i</mi></msub><mo>,</mo><msub><mi>Y</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(X_i, Y_i)</annotation></semantics></math> for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>n</mi></mrow><annotation encoding="application/x-tex">i = 1, \ldots, n</annotation></semantics></math> — expensive to obtain (human annotations, lab assays, expert reviews)</li>
+<li>
+<strong>Unlabeled data</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>X</mi><mo accent="true">̃</mo></mover><mi>j</mi></msub><annotation encoding="application/x-tex">\tilde{X}_j</annotation></semantics></math> for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>N</mi></mrow><annotation encoding="application/x-tex">j = 1, \ldots, N</annotation></semantics></math> — cheap and abundant, with ML predictions <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>X</mi><mo accent="true">̃</mo></mover><mi>j</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(\tilde{X}_j)</annotation></semantics></math> available</li>
+</ul>
+<p>PPI combines both sources for valid, efficient inference. The PPI++ estimator for the population mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>θ</mi><mo>*</mo></msup><mo>=</mo><mi>E</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>Y</mi><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">\theta^* = E[Y]</annotation></semantics></math> is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>λ</mi></msub><mo>=</mo><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>L</mi></msub><mo>+</mo><mi>λ</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>f</mi><mo accent="true">‾</mo></mover><mi>U</mi></msub><mo>−</mo><msub><mover><mi>f</mi><mo accent="true">‾</mo></mover><mi>L</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\hat{\theta}_\lambda = \bar{Y}_L + \lambda(\bar{f}_U - \bar{f}_L)</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> controls the blend between labeled data and predictions. The key insight: <strong>good predictions reduce the amount of labeled data needed</strong> for a given level of statistical power.</p>
+</div>
+<div class="section level2">
+<h2 id="key-formulas">Key Formulas<a class="anchor" aria-label="anchor" href="#key-formulas"></a>
+</h2>
+<p>The PPI++ variance under the oracle <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>λ</mi><mo>*</mo></msup><annotation encoding="application/x-tex">\lambda^*</annotation></semantics></math> is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Var</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><msup><mi>λ</mi><mo>*</mo></msup></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mi>n</mi></mfrac><mo>−</mo><mfrac><mrow><mtext mathvariant="normal">Cov</mtext><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup></mfrac><mo>⋅</mo><mfrac><mi>N</mi><mrow><mi>n</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo>+</mo><mi>N</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac></mrow><annotation encoding="application/x-tex">\text{Var}(\hat{\theta}_{\lambda^*}) = \frac{\sigma_Y^2}{n} - \frac{\text{Cov}(Y,f)^2}{\sigma_f^2} \cdot \frac{N}{n(n+N)}</annotation></semantics></math></p>
+<p>Solving for the required labeled sample size (quadratic in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>≥</mo><mfrac><mrow><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mo>−</mo><msup><mi>S</mi><mn>2</mn></msup><mi>N</mi><mo>+</mo><msqrt><mrow><msup><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mo>−</mo><msup><mi>S</mi><mn>2</mn></msup><mi>N</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo>+</mo><mn>4</mn><msup><mi>S</mi><mn>2</mn></msup><mi>N</mi><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msubsup><mi>ρ</mi><mrow><mi>Y</mi><mi>f</mi></mrow><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msqrt></mrow><mrow><mn>2</mn><msup><mi>S</mi><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">n \geq \frac{\sigma_Y^2 - S^2 N + \sqrt{(\sigma_Y^2 - S^2 N)^2 + 4 S^2 N \sigma_Y^2 (1 - \rho_{Yf}^2)}}{2S^2}</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>S</mi><mn>2</mn></msup><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>Δ</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>z</mi><mrow><mn>1</mn><mo>−</mo><mi>α</mi><mi>/</mi><mn>2</mn></mrow></msub><mo>+</mo><msub><mi>z</mi><mrow><mn>1</mn><mo>−</mo><mi>β</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">S^2 = (\Delta / (z_{1-\alpha/2} + z_{1-\beta}))^2</annotation></semantics></math>.</p>
+<p><strong>Rule of thumb:</strong> The sample size ratio satisfies <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="normal">PPI++</mtext></msub><mi>/</mi><msub><mi>n</mi><mtext mathvariant="normal">classical</mtext></msub><mo>≈</mo><mn>1</mn><mo>−</mo><msup><mi>R</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">n_{\text{PPI++}} / n_{\text{classical}} \approx 1 - R^2</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math> is the squared correlation between <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(X)</annotation></semantics></math>. A predictor explaining 80% of the variance cuts labeled data needs by ~80%.</p>
+</div>
+<div class="section level2">
+<h2 id="supported-designs">Supported Designs<a class="anchor" aria-label="anchor" href="#supported-designs"></a>
+</h2>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="31%">
+<col width="35%">
+</colgroup>
+<thead><tr class="header">
+<th>Design</th>
+<th>Power / Sample Size</th>
+<th>Simulation</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>One-sample mean (continuous)</td>
+<td><code><a href="reference/power_ppi_mean.html">power_ppi_mean()</a></code></td>
+<td><code><a href="reference/simulate_ppi_mean.html">simulate_ppi_mean()</a></code></td>
+</tr>
+<tr class="even">
+<td>One-sample mean (binary)</td>
+<td><code><a href="reference/power_ppi_mean.html">power_ppi_mean()</a></code></td>
+<td><code>simulate_ppi_vanilla_mean()</code></td>
+</tr>
+<tr class="odd">
+<td>Two-sample t-test</td>
+<td><code><a href="reference/power_ppi_ttest.html">power_ppi_ttest()</a></code></td>
+<td><code><a href="reference/simulate_ppi_ttest_binary.html">simulate_ppi_ttest_binary()</a></code></td>
+</tr>
+<tr class="even">
+<td>Paired t-test</td>
+<td><code><a href="reference/power_ppi_paired.html">power_ppi_paired()</a></code></td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td>Regression contrast</td>
+<td><code><a href="reference/power_ppi_regression.html">power_ppi_regression()</a></code></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>EIF binary surrogate</td>
+<td><code><a href="reference/power_eif_binary.html">power_eif_binary()</a></code></td>
+<td><code><a href="reference/simulate_eif_binary.html">simulate_eif_binary()</a></code></td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <p>You can install the development version of <code>pppower</code> from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"yiqunchen/pppower"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="quick-example">Quick Example<a class="anchor" aria-label="anchor" href="#quick-example"></a>
+</h2>
+<p>A three-step workflow: compute power → solve for required n → verify with Monte Carlo.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://yiqunchen.github.io/pppower">pppower</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Step 1: Compute power for a given sample size</span></span>
+<span><span class="fu"><a href="reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
+<span>  delta    <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  N        <span class="op">=</span> <span class="fl">5000</span>,</span>
+<span>  n        <span class="op">=</span> <span class="fl">200</span>,</span>
+<span>  var_f    <span class="op">=</span> <span class="fl">0.6</span>,</span>
+<span>  var_res  <span class="op">=</span> <span class="fl">0.4</span>,</span>
+<span>  cov_y_f  <span class="op">=</span> <span class="fl">0.6</span>,</span>
+<span>  alpha    <span class="op">=</span> <span class="fl">0.05</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Step 2: Solve for required labeled n to achieve 80% power</span></span>
+<span><span class="fu"><a href="reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
+<span>  delta       <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  N           <span class="op">=</span> <span class="fl">5000</span>,</span>
+<span>  n           <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  power       <span class="op">=</span> <span class="fl">0.80</span>,</span>
+<span>  sigma_y2    <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>  sigma_f2    <span class="op">=</span> <span class="fl">0.49</span>,</span>
+<span>  cov_y_f     <span class="op">=</span> <span class="fl">0.63</span>,</span>
+<span>  lambda_mode <span class="op">=</span> <span class="st">"oracle"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Step 3: Verify with Monte Carlo simulation</span></span>
+<span><span class="fu"><a href="reference/simulate_ppi_mean.html">simulate_ppi_mean</a></span><span class="op">(</span></span>
+<span>  R     <span class="op">=</span> <span class="fl">2000</span>,</span>
+<span>  n     <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  N     <span class="op">=</span> <span class="fl">5000</span>,</span>
+<span>  delta <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  var_f   <span class="op">=</span> <span class="fl">0.49</span>,</span>
+<span>  var_res <span class="op">=</span> <span class="fl">0.51</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fl">0.05</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="input-modes">Input Modes<a class="anchor" aria-label="anchor" href="#input-modes"></a>
+</h2>
+<p><code>pppower</code> supports three ways to specify variance components:</p>
+<p><strong>1. Direct moments</strong> — supply σ_Y², σ_f², and Cov(Y, f) directly:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span>delta <span class="op">=</span> <span class="fl">0.2</span>, N <span class="op">=</span> <span class="fl">5000</span>, n <span class="op">=</span> <span class="fl">200</span>,</span>
+<span>                  sigma_y2 <span class="op">=</span> <span class="fl">1.0</span>, sigma_f2 <span class="op">=</span> <span class="fl">0.49</span>, cov_y_f <span class="op">=</span> <span class="fl">0.63</span><span class="op">)</span></span></code></pre></div>
+<p><strong>2. Prediction variance / residual variance</strong> — decompose outcome variance via <code>var_f</code> and <code>var_res</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span>delta <span class="op">=</span> <span class="fl">0.2</span>, N <span class="op">=</span> <span class="fl">5000</span>, n <span class="op">=</span> <span class="fl">200</span>,</span>
+<span>                  var_f <span class="op">=</span> <span class="fl">0.49</span>, var_res <span class="op">=</span> <span class="fl">0.51</span>, cov_y_f <span class="op">=</span> <span class="fl">0.49</span><span class="op">)</span></span></code></pre></div>
+<p><strong>3. Metrics interface</strong> — supply sensitivity/specificity (binary) or MSE/R² (continuous):</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span>delta <span class="op">=</span> <span class="fl">0.05</span>, N <span class="op">=</span> <span class="fl">5000</span>, n <span class="op">=</span> <span class="fl">200</span>,</span>
+<span>                  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sensitivity <span class="op">=</span> <span class="fl">0.85</span>, specificity <span class="op">=</span> <span class="fl">0.90</span>,</span>
+<span>                                 p_y <span class="op">=</span> <span class="fl">0.3</span>, m_obs <span class="op">=</span> <span class="fl">200</span><span class="op">)</span>,</span>
+<span>                  metric_type <span class="op">=</span> <span class="st">"classification"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="vignettes">Vignettes<a class="anchor" aria-label="anchor" href="#vignettes"></a>
 </h2>
 <ul>
 <li>
-<strong>Prediction-Powered Power Planning</strong><br>
-</li>
-<li><strong>Prediction-Powered Sample Size Calculation</strong></li>
+<strong>Quickstart: Prediction-Powered Power &amp; Sample Size</strong> — end-to-end walkthrough of power curves and Type I error checks (<code><a href="articles/intro-ppi.html">vignette("intro-ppi")</a></code>)</li>
+<li>
+<strong>Detailed Dive: Sample Size &amp; Metrics Interface</strong> — how <code>power_ppi_mean(..., n = NULL)</code> works across input modes, including regression contrasts (<code><a href="articles/ppi-sample-size.html">vignette("ppi-sample-size")</a></code>)</li>
+<li>
+<strong>Detailed Dive: Variance Formulas and lambda-star</strong> — mathematical derivations behind the PPI++ variance and oracle λ* (<code><a href="articles/deep-dive-math.html">vignette("deep-dive-math")</a></code>)</li>
+<li>
+<strong>Real Data: LLM-as-a-Judge (Binary Surrogates)</strong> — EIF-based power analysis for binary surrogate evaluators (<code><a href="articles/llm-judge-binary.html">vignette("llm-judge-binary")</a></code>)</li>
 </ul>
-<p>Open in R:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"intro-ppi"</span>, package <span class="op">=</span> <span class="st">"pppower"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"ppi-sample-size"</span>, package <span class="op">=</span> <span class="st">"pppower"</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co">#&gt; ─ Session info ───────────────────────────────────────────────────────────</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt;  setting  value</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;  version  R version 4.3.1 Patched (2023-07-19 r84711)</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt;  os       Rocky Linux 9.4 (Blue Onyx)</span></span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt;  system   x86_64, linux-gnu</span></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;  ui       X11</span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;  language (EN)</span></span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;  collate  en_US.UTF-8</span></span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt;  ctype    en_US.UTF-8</span></span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;  tz       US/Eastern</span></span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;  date     2025-11-29</span></span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt;  pandoc   3.1.3 @ /jhpce/shared/community/core/conda_R/4.3/bin/ (via rmarkdown)</span></span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt;  quarto   NA</span></span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; ─ Packages ───────────────────────────────────────────────────────────────</span></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt;  ! package      * version    date (UTC) lib source</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt;    askpass        1.2.0      2023-09-03 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt;    brio           1.1.3      2021-11-30 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt;    cachem         1.0.8      2023-05-01 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt;    callr          3.7.3      2022-11-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt;    cli            3.6.5      2025-04-23 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt;    colorspace     2.1-0      2023-01-23 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt;    commonmark     1.9.0      2023-03-17 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt;    crayon         1.5.2      2022-09-29 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt;    credentials    2.0.1      2023-09-06 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt;    curl           7.0.0      2025-08-19 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt;    desc           1.4.3      2023-12-10 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt;    devtools       2.4.5      2022-10-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt;    diffobj        0.3.5      2021-10-05 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt;    digest         0.6.33     2023-07-07 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt;    dplyr        * 1.1.3      2023-09-03 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt;    ellipsis       0.3.2      2021-04-29 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt;    evaluate       1.0.5      2025-08-27 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt;    fansi          1.0.4      2023-01-22 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt;    farver         2.1.1      2022-07-06 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt;    fastmap        1.1.1      2023-02-24 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt;    fs             1.6.3      2023-07-20 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt;    generics       0.1.4      2025-05-09 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt;    gert           1.9.3      2023-08-07 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt;    ggplot2      * 3.4.3      2023-08-14 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt;    glue           1.8.0      2024-09-30 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt;    gtable         0.3.4      2023-08-21 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt;    htmltools      0.5.6      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt;    htmlwidgets    1.6.2      2023-03-17 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt;    httpuv         1.6.11     2023-05-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt;    knitr          1.44       2023-09-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="co">#&gt;    labeling       0.4.3      2023-08-29 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a><span class="co">#&gt;    later          1.3.1      2023-05-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a><span class="co">#&gt;    lattice        0.21-8     2023-04-05 [3] CRAN (R 4.3.1)</span></span>
-<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a><span class="co">#&gt;    lifecycle      1.0.4      2023-11-07 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a><span class="co">#&gt;    magrittr       2.0.4      2025-09-12 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a><span class="co">#&gt;    Matrix         1.6-1.1    2023-09-18 [3] CRAN (R 4.3.1)</span></span>
-<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a><span class="co">#&gt;    memoise        2.0.1      2021-11-26 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a><span class="co">#&gt;    mime           0.12       2021-09-28 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a><span class="co">#&gt;    miniUI         0.1.2      2025-04-17 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a><span class="co">#&gt;    munsell        0.5.0      2018-06-12 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a><span class="co">#&gt;    openssl        2.1.1      2023-09-25 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a><span class="co">#&gt;    pillar         1.9.0      2023-03-22 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a><span class="co">#&gt;    pkgbuild       1.4.8      2025-05-26 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a><span class="co">#&gt;    pkgconfig      2.0.3      2019-09-22 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a><span class="co">#&gt;    pkgdown        2.0.7      2022-12-14 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a><span class="co">#&gt;    pkgload        1.4.1      2025-09-23 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a><span class="co">#&gt;  P pppower      * 0.0.0.9000 2025-11-17 [?] load_all()</span></span>
-<span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a><span class="co">#&gt;    praise         1.0.0      2015-08-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a><span class="co">#&gt;    prettyunits    1.1.1      2020-01-24 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a><span class="co">#&gt;    processx       3.8.2      2023-06-30 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-67"><a href="#cb3-67" tabindex="-1"></a><span class="co">#&gt;    profvis        0.3.8      2023-05-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-68"><a href="#cb3-68" tabindex="-1"></a><span class="co">#&gt;    promises       1.2.1      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-69"><a href="#cb3-69" tabindex="-1"></a><span class="co">#&gt;    ps             1.7.5      2023-04-18 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-70"><a href="#cb3-70" tabindex="-1"></a><span class="co">#&gt;    purrr          1.0.2      2023-08-10 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-71"><a href="#cb3-71" tabindex="-1"></a><span class="co">#&gt;    R6             2.6.1      2025-02-15 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-72"><a href="#cb3-72" tabindex="-1"></a><span class="co">#&gt;    randomForest   4.7-1.2    2024-09-22 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-73"><a href="#cb3-73" tabindex="-1"></a><span class="co">#&gt;    ranger         0.17.0     2024-11-08 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-74"><a href="#cb3-74" tabindex="-1"></a><span class="co">#&gt;    rcmdcheck      1.4.0      2021-09-27 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-75"><a href="#cb3-75" tabindex="-1"></a><span class="co">#&gt;    Rcpp           1.1.0      2025-07-02 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-76"><a href="#cb3-76" tabindex="-1"></a><span class="co">#&gt;    remotes        2.5.0      2024-03-17 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-77"><a href="#cb3-77" tabindex="-1"></a><span class="co">#&gt;    rlang          1.1.6      2025-04-11 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-78"><a href="#cb3-78" tabindex="-1"></a><span class="co">#&gt;    rmarkdown      2.30       2025-09-28 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-79"><a href="#cb3-79" tabindex="-1"></a><span class="co">#&gt;    roxygen2       7.2.3      2022-12-08 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-80"><a href="#cb3-80" tabindex="-1"></a><span class="co">#&gt;    rprojroot      2.1.1      2025-08-26 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-81"><a href="#cb3-81" tabindex="-1"></a><span class="co">#&gt;    rstudioapi     0.15.0     2023-07-07 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-82"><a href="#cb3-82" tabindex="-1"></a><span class="co">#&gt;    scales         1.2.1      2022-08-20 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-83"><a href="#cb3-83" tabindex="-1"></a><span class="co">#&gt;    sessioninfo    1.2.3      2025-02-05 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-84"><a href="#cb3-84" tabindex="-1"></a><span class="co">#&gt;    shiny          1.7.5      2023-08-12 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-85"><a href="#cb3-85" tabindex="-1"></a><span class="co">#&gt;    stringi        1.7.12     2023-01-11 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-86"><a href="#cb3-86" tabindex="-1"></a><span class="co">#&gt;    stringr        1.5.0      2022-12-02 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-87"><a href="#cb3-87" tabindex="-1"></a><span class="co">#&gt;    sys            3.4.2      2023-05-23 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-88"><a href="#cb3-88" tabindex="-1"></a><span class="co">#&gt;    testthat     * 3.1.10     2023-07-06 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-89"><a href="#cb3-89" tabindex="-1"></a><span class="co">#&gt;    tibble         3.2.1      2023-03-20 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-90"><a href="#cb3-90" tabindex="-1"></a><span class="co">#&gt;    tidyr        * 1.3.0      2023-01-24 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-91"><a href="#cb3-91" tabindex="-1"></a><span class="co">#&gt;    tidyselect     1.2.0      2022-10-10 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-92"><a href="#cb3-92" tabindex="-1"></a><span class="co">#&gt;    urlchecker     1.0.1      2021-11-30 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-93"><a href="#cb3-93" tabindex="-1"></a><span class="co">#&gt;    usethis        3.2.1      2025-09-06 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-94"><a href="#cb3-94" tabindex="-1"></a><span class="co">#&gt;    utf8           1.2.6      2025-06-08 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-95"><a href="#cb3-95" tabindex="-1"></a><span class="co">#&gt;    vctrs          0.6.5      2023-12-01 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-96"><a href="#cb3-96" tabindex="-1"></a><span class="co">#&gt;    waldo          0.6.2      2025-07-11 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-97"><a href="#cb3-97" tabindex="-1"></a><span class="co">#&gt;    withr          3.0.2      2024-10-28 [1] CRAN (R 4.3.1)</span></span>
-<span id="cb3-98"><a href="#cb3-98" tabindex="-1"></a><span class="co">#&gt;    xfun           0.40       2023-08-09 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-99"><a href="#cb3-99" tabindex="-1"></a><span class="co">#&gt;    xml2           1.3.5      2023-07-06 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-100"><a href="#cb3-100" tabindex="-1"></a><span class="co">#&gt;    xopen          1.0.0      2018-09-17 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-101"><a href="#cb3-101" tabindex="-1"></a><span class="co">#&gt;    xtable         1.8-4      2019-04-21 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-102"><a href="#cb3-102" tabindex="-1"></a><span class="co">#&gt;    yaml           2.3.7      2023-01-23 [2] CRAN (R 4.3.1)</span></span>
-<span id="cb3-103"><a href="#cb3-103" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-104"><a href="#cb3-104" tabindex="-1"></a><span class="co">#&gt;  [1] /users/mguo/R/4.3</span></span>
-<span id="cb3-105"><a href="#cb3-105" tabindex="-1"></a><span class="co">#&gt;  [2] /jhpce/shared/community/core/conda_R/4.3/R/lib64/R/site-library</span></span>
-<span id="cb3-106"><a href="#cb3-106" tabindex="-1"></a><span class="co">#&gt;  [3] /jhpce/shared/community/core/conda_R/4.3/R/lib64/R/library</span></span>
-<span id="cb3-107"><a href="#cb3-107" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-108"><a href="#cb3-108" tabindex="-1"></a><span class="co">#&gt;  * ── Packages attached to the search path.</span></span>
-<span id="cb3-109"><a href="#cb3-109" tabindex="-1"></a><span class="co">#&gt;  P ── Loaded and on-disk path mismatch.</span></span>
-<span id="cb3-110"><a href="#cb3-110" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb3-111"><a href="#cb3-111" tabindex="-1"></a><span class="co">#&gt; ──────────────────────────────────────────────────────────────────────────</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
+</h2>
+<p>If you use <code>pppower</code> in your research, please cite:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="sc">@</span>software{pppower,</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  title <span class="ot">=</span> {pppower<span class="sc">:</span> Prediction<span class="sc">-</span>Powered Inference Power Calculations},</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  author <span class="ot">=</span> {Guo, Moran and Chen, Yiqun},</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  url <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>yiqunchen<span class="sc">/</span>pppower},</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  year <span class="ot">=</span> {<span class="dv">2025</span>}</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 </div>
-  </div>
-
-  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
-    <div class="license">
+  </main><aside class="col-md-3"><div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li><a href="LICENSE.html">Full license</a></li>
@@ -237,30 +264,22 @@
 </ul>
 </div>
 
-<div class="dev-status">
-<h2 data-toc-skip>Dev status</h2>
-<ul class="list-unstyled">
-<li><a href="https://github.com/yiqunchen/pppower/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/yiqunchen/pppower/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
-</ul>
-</div>
 
-  </div>
+
+  </aside>
 </div>
 
 
-      <footer><div class="copyright">
-  <p></p>
-<p>Developed by Moran Guo, Yiqun Chen.</p>
+    <footer><div class="pkgdown-footer-left">
+  <p>Developed by Moran Guo, Yiqun Chen.</p>
 </div>
 
-<div class="pkgdown">
-  <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+<div class="pkgdown-footer-right">
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
-      </footer>
+    </footer>
 </div>
-
 
 
 
