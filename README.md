@@ -3,14 +3,34 @@
 
 # pppower
 
-<!-- badges: start -->
-
-[![R-CMD-check](https://github.com/yiqunchen/pppower/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yiqunchen/pppower/actions/workflows/R-CMD-check.yaml)
-<!-- badges: end -->
-
 **pppower** is an R package for power analysis and sample-size
 calculation under the Prediction-Powered Inference (PPI/PPI++)
 framework.
+
+## Prevalence Estimation with PPI
+
+For binary outcomes (prevalence), you can estimate required **labeled**
+sample size while leveraging model predictions on a large unlabeled set.
+This is exactly what PPI is for:
+
+- Inputs: target effect size \(\Delta\), unlabeled size \(N\), and model quality
+  (e.g., sensitivity/specificity)
+- Output: required labeled \(n\) for your target power
+- Benefit: better predictions can reduce labeled annotation burden
+
+Use `power_ppi_mean(..., n = NULL)` for one-sample prevalence and
+`power_ppi_ttest_binary()` for two-group prevalence differences.
+
+## Interactive Calculator
+
+<div style="margin: 1rem 0 1.4rem; padding: 1.1rem; border: 2px solid #d9e7df; border-radius: 12px; text-align: center; background: #f8fbf9;">
+  <a href="articles/sample-size-calculator.html" style="display: inline-block; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;">
+    Open Interactive PPI Sample Size Calculator
+  </a>
+  <div style="margin-top: 0.55rem; font-size: 0.92rem; color: #3f4d4a;">
+    Includes one-sample PPI mean/prevalence and two-group difference in prevalence examples.
+  </div>
+</div>
 
 ## What is Prediction-Powered Inference?
 
