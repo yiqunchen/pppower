@@ -21,9 +21,11 @@ for two-group prevalence differences.
 
 ## Interactive Calculator
 
+[Open Interactive PPI Sample Size
+Calculator](https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html)
+
 ``` R
-If the embedded view does not load, open the
-<a href="articles/sample-size-calculator.html">full calculator page</a>.
+Direct link to the live calculator page.
 ```
 
 ## What is Prediction-Powered Inference?
