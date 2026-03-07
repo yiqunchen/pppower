@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">pppower</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,10 +29,10 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="active nav-item"><a class="nav-link" href="../articles/sample-size-calculator.html">Calculator</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/intro-ppi.html">Basics</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/deep-dive-math.html">Variance &amp; Metrics</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/ppi-sample-size.html">Sample Size</a></li>
-<li class="active nav-item"><a class="nav-link" href="../articles/sample-size-calculator.html">Calculator</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/llm-judge-binary.html">LLM Judge (Binary)</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul>
@@ -66,8 +66,8 @@ one-sample mean/prevalence and difference in prevalence</h3>
     
 <p>This calculator uses <strong>prediction-powered inference
 (PPI/PPI++)</strong> formulas from this package for quick study planning
-examples. Calculations run in-browser with JavaScript that mirrors
-<code>pppower</code> formulas (no server-side computation).</p>
+examples. It is designed for planning and intuition; for final protocol
+numbers, confirm assumptions with your statistician.</p>
 <style>
 .sscalc {
   --bg-soft: #f5f5f4;
@@ -404,18 +404,22 @@ examples. Calculations run in-browser with JavaScript that mirrors
               <input id="single_prev" type="number" min="0.1" max="99.9" step="0.1" value="30">
 </div>
             <div class="sscalc-field">
+              <label for="single_nonresponse">Expected non-response (%)</label>
+              <input id="single_nonresponse" type="number" min="0" max="80" step="1" value="10">
+</div>
+          </div>
+        </div>
+
+        <div class="sscalc-subgroup" id="single_binary_pred_group">
+          <p class="sscalc-subgroup-title">Prediction quality</p>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
               <label for="single_sens">Sensitivity</label>
               <input id="single_sens" type="number" min="0" max="1" step="0.01" value="0.85">
 </div>
-          </div>
-          <div class="sscalc-form-row">
             <div class="sscalc-field">
               <label for="single_spec">Specificity</label>
               <input id="single_spec" type="number" min="0" max="1" step="0.01" value="0.90">
-</div>
-            <div class="sscalc-field">
-              <label for="single_nonresponse">Expected non-response (%)</label>
-              <input id="single_nonresponse" type="number" min="0" max="80" step="1" value="10">
 </div>
           </div>
         </div>
@@ -551,8 +555,12 @@ examples. Calculations run in-browser with JavaScript that mirrors
 
         <div class="sscalc-form-row">
           <div class="sscalc-field">
-            <label for="diff_nonresponse">Expected non-response (%)</label>
-            <input id="diff_nonresponse" type="number" min="0" max="80" step="1" value="10">
+            <label for="diff_nonresponse_A">Expected non-response A (%)</label>
+            <input id="diff_nonresponse_A" type="number" min="0" max="80" step="1" value="10">
+</div>
+          <div class="sscalc-field">
+            <label for="diff_nonresponse_B">Expected non-response B (%)</label>
+            <input id="diff_nonresponse_B" type="number" min="0" max="80" step="1" value="10">
 </div>
         </div>
       </div>
@@ -566,7 +574,7 @@ examples. Calculations run in-browser with JavaScript that mirrors
             <strong id="diff_n_ppi_group">-</strong>
           </div>
           <div class="sscalc-stat">
-            <span>PPI n per group (adjusted)</span>
+            <span>PPI recruitment n (adj A / B)</span>
             <strong id="diff_n_ppi_group_adj">-</strong>
           </div>
           <div class="sscalc-stat">
@@ -800,6 +808,7 @@ examples. Calculations run in-browser with JavaScript that mirrors
   function updateSingleModeUI() {
     var outcome = id("single_outcome").value;
     id("single_binary_group").style.display = outcome === "binary" ? "block" : "none";
+    id("single_binary_pred_group").style.display = outcome === "binary" ? "block" : "none";
     id("single_cont_group").style.display = outcome === "continuous" ? "block" : "none";
   }
 
@@ -935,7 +944,8 @@ examples. Calculations run in-browser with JavaScript that mirrors
       var specA = readNum("diff_spec_A");
       var sensB = readNum("diff_sens_B");
       var specB = readNum("diff_spec_B");
-      var nonresponse = readNum("diff_nonresponse") / 100;
+      var nonresponseA = readNum("diff_nonresponse_A") / 100;
+      var nonresponseB = readNum("diff_nonresponse_B") / 100;
 
       if (!(pA > 0 && pA < 1 && pB > 0 && pB < 1)) {
         throw new Error("pA and pB must be in (0,1).");
@@ -952,8 +962,8 @@ examples. Calculations run in-browser with JavaScript that mirrors
       if (!(targetPower > 0.5 && targetPower < 0.999)) {
         throw new Error("Power should be between 50% and 99.9%.");
       }
-      if (!(nonresponse >= 0 && nonresponse < 0.9)) {
-        throw new Error("Expected non-response must be in [0%, 90%).");
+      if (!(nonresponseA >= 0 && nonresponseA < 0.9 && nonresponseB >= 0 && nonresponseB < 0.9)) {
+        throw new Error("Expected non-response for groups A and B must be in [0%, 90%).");
       }
 
       var mA = binaryMoments(pA, sensA, specA);
@@ -990,25 +1000,27 @@ examples. Calculations run in-browser with JavaScript that mirrors
         throw new Error("Infeasible under current assumptions: no finite n found.");
       }
 
-      var nPpiAdj = Math.ceil(nPpi / (1 - nonresponse));
+      var nPpiAdjA = Math.ceil(nPpi / (1 - nonresponseA));
+      var nPpiAdjB = Math.ceil(nPpi / (1 - nonresponseB));
+      var nPpiAdjMax = Math.max(nPpiAdjA, nPpiAdjB);
       var saving = 1 - (nPpi / nClassic);
 
       setError("diff_message", "");
       setText("diff_n_ppi_group", fmtInt(nPpi));
-      setText("diff_n_ppi_group_adj", fmtInt(nPpiAdj));
+      setText("diff_n_ppi_group_adj", "A: " + fmtInt(nPpiAdjA) + " | B: " + fmtInt(nPpiAdjB));
       setText("diff_n_classic_group", fmtInt(nClassic));
       setText("diff_saving", fmtPct(saving));
 
-      var maxBar = Math.max(nClassic, nPpi, nPpiAdj);
+      var maxBar = Math.max(nClassic, nPpi, nPpiAdjMax);
       setBar("diff_bar_classic", nClassic, maxBar);
       setBar("diff_bar_ppi", nPpi, maxBar);
-      setBar("diff_bar_ppi_adj", nPpiAdj, maxBar);
+      setBar("diff_bar_ppi_adj", nPpiAdjMax, maxBar);
       setText("diff_bar_classic_label", fmtInt(nClassic));
       setText("diff_bar_ppi_label", fmtInt(nPpi));
-      setText("diff_bar_ppi_adj_label", fmtInt(nPpiAdj));
+      setText("diff_bar_ppi_adj_label", "max " + fmtInt(nPpiAdjMax));
 
       var diffNote = "Base n is per-group completed labeled outcomes for analysis. " +
-        "Adjusted n inflates for non-response: n_adj = n_base / (1 - non-response).";
+        "Adjusted n is computed separately by group using its own non-response rate.";
       if (saving < 0) {
         diffNote += " Under these assumptions, prediction quality is too weak and PPI needs more labels than classical.";
         setText("diff_message", "PPI is not improving label efficiency under the current assumptions.");
@@ -1077,7 +1089,7 @@ examples. Calculations run in-browser with JavaScript that mirrors
 
     [
       "diff_pA", "diff_pB", "diff_N_A", "diff_N_B", "diff_alpha", "diff_power",
-      "diff_sens_A", "diff_spec_A", "diff_sens_B", "diff_spec_B", "diff_nonresponse"
+      "diff_sens_A", "diff_spec_A", "diff_sens_B", "diff_spec_B", "diff_nonresponse_A", "diff_nonresponse_B"
     ].forEach(function (field) {
       id(field).addEventListener("input", updateDiff);
       id(field).addEventListener("change", updateDiff);
@@ -1094,17 +1106,7 @@ examples. Calculations run in-browser with JavaScript that mirrors
     init();
   }
 })();
-</script><div class="section level3">
-<h3 id="notes">Notes<a class="anchor" aria-label="anchor" href="#notes"></a>
-</h3>
-<ul>
-<li>This page is now <strong>PPI-specific</strong> (not a generic
-textbook calculator).</li>
-<li>It is designed for planning and intuition; for final protocol
-numbers, confirm assumptions with your statistician.</li>
-</ul>
-</div>
-  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+</script></main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
 

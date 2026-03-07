@@ -1,9 +1,9 @@
 # Interactive PPI Sample Size Calculator
 
 This calculator uses **prediction-powered inference (PPI/PPI++)**
-formulas from this package for quick study planning examples.
-Calculations run in-browser with JavaScript that mirrors `pppower`
-formulas (no server-side computation).
+formulas from this package for quick study planning examples. It is
+designed for planning and intuition; for final protocol numbers, confirm
+assumptions with your statistician.
 
 Interactive PPI Tool
 
@@ -44,11 +44,13 @@ Binary prevalence inputs
 
 Prevalence p = P(Y=1) (%)
 
+Expected non-response (%)
+
+Prediction quality
+
 Sensitivity
 
 Specificity
-
-Expected non-response (%)
 
 Continuous mean moments
 
@@ -108,13 +110,15 @@ Sensitivity B
 
 Specificity B
 
-Expected non-response (%)
+Expected non-response A (%)
+
+Expected non-response B (%)
 
 ### Results
 
 PPI n per group (base) **-**
 
-PPI n per group (adjusted) **-**
+PPI recruitment n (adj A / B) **-**
 
 Classical n per group **-**
 
@@ -138,9 +142,3 @@ Formula details intentionally hidden here for readability. See [Variance
 &
 Methods](https://yiqunchen.github.io/pppower/articles/deep-dive-math.md)
 for full equations.
-
-### Notes
-
-- This page is now **PPI-specific** (not a generic textbook calculator).
-- It is designed for planning and intuition; for final protocol numbers,
-  confirm assumptions with your statistician.
