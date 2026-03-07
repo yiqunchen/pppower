@@ -5,6 +5,15 @@
 /doc/
 /Meta/
 
+# Local/agent-generated artifacts
+.DS_Store
+.claude/
+CHANGES_MADE.md
+DIAGNOSIS.md
+REFACTORING_PLAN.md
+REFACTORING_SUMMARY.md
+LICENSE.md
+
 # Simulation outputs (generated files)
 simulation_studies/*.pdf
 simulation_studies/*.png
