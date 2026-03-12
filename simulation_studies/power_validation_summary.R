@@ -136,7 +136,7 @@ if (exists("results_2x2_or") && is.data.frame(results_2x2_or)) {
 }
 
 if (exists("results_2x2_rr") && is.data.frame(results_2x2_rr)) {
-  cat("Setting 22 (RR): 2x2 Table Risk Ratio - Max |theo - emp| PPI++:\n")
+  cat("Setting 22 (RR): 2x2 Table Relative Risk - Max |theo - emp| PPI++:\n")
   cat(sprintf("  %.4f\n\n",
               max(abs(results_2x2_rr$power_theo_ppi - results_2x2_rr$power_emp_ppi), na.rm = TRUE)))
 }

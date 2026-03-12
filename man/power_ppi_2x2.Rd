@@ -45,7 +45,7 @@ Default \code{0.5} (balanced groups).}
 \item{spec}{Specificity of the binary surrogate classifier.}
 
 \item{effect_measure}{Character. \code{"OR"} (odds ratio, default) or \code{"RR"}
-(risk ratio).}
+(relative risk).}
 
 \item{lambda_mode}{\code{"oracle"} (default), \code{"vanilla"}, or \code{"user"}.}
 
@@ -61,7 +61,7 @@ When computing sample size: integer \code{n} required.
 }
 \description{
 Computes power or solves for the required labeled sample size for testing
-an odds ratio (OR) or risk ratio (RR) from a 2x2 contingency table
+an odds ratio (OR) or relative risk (RR) from a 2x2 contingency table
 when a binary PPI++ surrogate is available.
 
 Follows the \pkg{pwr} convention: exactly one of \code{n} or \code{power} must be
@@ -73,7 +73,7 @@ is \eqn{\beta_1 = \log(\text{OR})}. Analytical variance blocks are
 computed from the cell probabilities and surrogate performance, then
 passed to \code{\link[=power_ppi_regression]{power_ppi_regression()}}.
 
-\strong{Risk ratio}: Uses the delta method on per-group PPI++ mean estimates.
+\strong{Relative risk}: Uses the delta method on per-group PPI++ mean estimates.
 The test statistic is a Wald test for \eqn{\log(\hat p_1 / \hat p_0)}.
 }
 \examples{

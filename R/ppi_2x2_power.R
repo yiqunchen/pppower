@@ -6,7 +6,7 @@
 #'
 #' @description
 #' Computes power or solves for the required labeled sample size for testing
-#' an odds ratio (OR) or risk ratio (RR) from a 2x2 contingency table
+#' an odds ratio (OR) or relative risk (RR) from a 2x2 contingency table
 #' when a binary PPI++ surrogate is available.
 #'
 #' Follows the \pkg{pwr} convention: exactly one of `n` or `power` must be
@@ -18,7 +18,7 @@
 #' computed from the cell probabilities and surrogate performance, then
 #' passed to [power_ppi_regression()].
 #'
-#' **Risk ratio**: Uses the delta method on per-group PPI++ mean estimates.
+#' **Relative risk**: Uses the delta method on per-group PPI++ mean estimates.
 #' The test statistic is a Wald test for \eqn{\log(\hat p_1 / \hat p_0)}.
 #'
 #' @param p_exp Numeric scalar. Probability of outcome in the exposed group,
@@ -35,7 +35,7 @@
 #' @param sens Sensitivity of the binary surrogate classifier.
 #' @param spec Specificity of the binary surrogate classifier.
 #' @param effect_measure Character. `"OR"` (odds ratio, default) or `"RR"`
-#'   (risk ratio).
+#'   (relative risk).
 #' @param lambda_mode `"oracle"` (default), `"vanilla"`, or `"user"`.
 #' @param lambda_user Scalar lambda when `lambda_mode = "user"`.
 #' @param warn_smallN Logical. Warn when `N` is small.
@@ -216,7 +216,7 @@ power_ppi_2x2 <- function(
 
 
 # --------------------------------------------------------------------------
-# Internal: RR via delta method on per-group PPI++ means
+# Internal: RR (relative risk) via delta method on per-group PPI++ means
 # --------------------------------------------------------------------------
 .ppi_2x2_rr <- function(p_exp, p_ctrl, N, n, power, alpha, prev_exp,
                          sens, spec, lambda_mode, lambda_user) {

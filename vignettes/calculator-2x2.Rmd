@@ -1,6 +1,6 @@
 ---
 title: "2x2 Contingency Table Calculator"
-subtitle: "Prediction-powered odds ratio and risk ratio sample size planning"
+subtitle: "Prediction-powered odds ratio and relative risk sample size planning"
 output:
   rmarkdown::html_document:
     toc: false
@@ -12,7 +12,7 @@ vignette: >
 
 This calculator uses **prediction-powered inference (PPI/PPI++)** formulas from
 this package for planning studies that compare two groups via a 2x2 contingency
-table. It supports both **odds ratio** (OR) and **risk ratio** (RR) effect
+table. It supports both **odds ratio** (OR) and **relative risk** (RR) effect
 measures.
 
 ```{=html}
@@ -287,14 +287,14 @@ measures.
     <p class="sscalc-kicker">Interactive PPI Tool</p>
     <h2>2&times;2 contingency table calculator</h2>
     <p>
-      Compare two groups using odds ratio or risk ratio with a binary PPI++ surrogate.
+      Compare two groups using odds ratio or relative risk with a binary PPI++ surrogate.
     </p>
   </div>
 
   <div class="sscalc-assumptions">
     <p><strong>Setup:</strong> Two groups (exposed/control) with a binary outcome Y and a binary surrogate prediction f with known sensitivity and specificity.</p>
     <p><strong>Odds ratio:</strong> Tested via logistic regression with PPI++ sandwich variance. Equivalent to a Wald test for log(OR).</p>
-    <p><strong>Risk ratio:</strong> Tested via delta method on per-group PPI++ mean estimates. Wald test for log(RR).</p>
+    <p><strong>Relative risk:</strong> Tested via delta method on per-group PPI++ mean estimates. Wald test for log(RR).</p>
     <p><strong>Methods:</strong> details and derivations are on <a href="deep-dive-math.html">Variance &amp; Methods</a>.</p>
   </div>
 
@@ -303,7 +303,7 @@ measures.
       Odds Ratio (OR)
     </button>
     <button class="sscalc-tab" id="tab-rr" type="button" data-panel="panel-rr" role="tab" aria-selected="false">
-      Risk Ratio (RR)
+      Relative Risk (RR)
     </button>
   </div>
 
@@ -875,7 +875,7 @@ measures.
   }
 
   /* ================================================================ */
-  /* UPDATE: Risk Ratio                                               */
+  /* UPDATE: Relative Risk                                             */
   /* ================================================================ */
   function updateRR() {
     try {

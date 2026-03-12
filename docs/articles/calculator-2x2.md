@@ -3,13 +3,13 @@
 This calculator uses **prediction-powered inference (PPI/PPI++)**
 formulas from this package for planning studies that compare two groups
 via a 2x2 contingency table. It supports both **odds ratio** (OR) and
-**risk ratio** (RR) effect measures.
+**relative risk** (RR) effect measures.
 
 Interactive PPI Tool
 
 ## 2×2 contingency table calculator
 
-Compare two groups using odds ratio or risk ratio with a binary PPI++
+Compare two groups using odds ratio or relative risk with a binary PPI++
 surrogate.
 
 **Setup:** Two groups (exposed/control) with a binary outcome Y and a
@@ -18,7 +18,7 @@ binary surrogate prediction f with known sensitivity and specificity.
 **Odds ratio:** Tested via logistic regression with PPI++ sandwich
 variance. Equivalent to a Wald test for log(OR).
 
-**Risk ratio:** Tested via delta method on per-group PPI++ mean
+**Relative risk:** Tested via delta method on per-group PPI++ mean
 estimates. Wald test for log(RR).
 
 **Methods:** details and derivations are on [Variance &
@@ -26,7 +26,7 @@ Methods](https://yiqunchen.github.io/pppower/articles/deep-dive-math.md).
 
 Odds Ratio (OR)
 
-Risk Ratio (RR)
+Relative Risk (RR)
 
 ### Inputs
 

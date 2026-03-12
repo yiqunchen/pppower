@@ -718,7 +718,7 @@ if (exists("results_2x2_rr") && is.data.frame(results_2x2_rr)) {
     scale_color_manual(values = colors_val) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(
-      title = "V. 2x2 Table: Risk Ratio (PPI++ Delta Method)",
+      title = "V. 2x2 Table: Relative Risk (PPI++ Delta Method)",
       subtitle = sprintf("p_ctrl = %.2f, prev_exp = %.1f, R = %d",
                          results_2x2_rr$p_ctrl[1], 0.5, 1000),
       x = "Total Labeled Sample Size (n)", y = "Power", color = ""
