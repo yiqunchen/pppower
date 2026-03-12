@@ -1,7 +1,7 @@
 # Power or required sample size for a 2x2 table with PPI++ surrogates
 
 Computes power or solves for the required labeled sample size for
-testing an odds ratio (OR) or risk ratio (RR) from a 2x2 contingency
+testing an odds ratio (OR) or relative risk (RR) from a 2x2 contingency
 table when a binary PPI++ surrogate is available.
 
 Follows the pwr convention: exactly one of `n` or `power` must be
@@ -14,8 +14,9 @@ computed from the cell probabilities and surrogate performance, then
 passed to
 [`power_ppi_regression()`](https://yiqunchen.github.io/pppower/reference/power_ppi_regression.md).
 
-**Risk ratio**: Uses the delta method on per-group PPI++ mean estimates.
-The test statistic is a Wald test for \\\log(\hat p_1 / \hat p_0)\\.
+**Relative risk**: Uses the delta method on per-group PPI++ mean
+estimates. The test statistic is a Wald test for \\\log(\hat p_1 / \hat
+p_0)\\.
 
 ## Usage
 
@@ -82,7 +83,7 @@ power_ppi_2x2(
 
 - effect_measure:
 
-  Character. `"OR"` (odds ratio, default) or `"RR"` (risk ratio).
+  Character. `"OR"` (odds ratio, default) or `"RR"` (relative risk).
 
 - lambda_mode:
 

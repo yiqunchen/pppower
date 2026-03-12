@@ -56,7 +56,7 @@
 
       <h1>2x2 Contingency Table Calculator</h1>
             <h3 data-toc-skip class="subtitle">Prediction-powered odds
-ratio and risk ratio sample size planning</h3>
+ratio and relative risk sample size planning</h3>
             
       
 
@@ -68,7 +68,7 @@ ratio and risk ratio sample size planning</h3>
 <p>This calculator uses <strong>prediction-powered inference
 (PPI/PPI++)</strong> formulas from this package for planning studies
 that compare two groups via a 2x2 contingency table. It supports both
-<strong>odds ratio</strong> (OR) and <strong>risk ratio</strong> (RR)
+<strong>odds ratio</strong> (OR) and <strong>relative risk</strong> (RR)
 effect measures.</p>
 <style>
 .sscalc {
@@ -340,14 +340,14 @@ effect measures.</p>
     <p class="sscalc-kicker">Interactive PPI Tool</p>
     <h2>2×2 contingency table calculator</h2>
     <p>
-      Compare two groups using odds ratio or risk ratio with a binary PPI++ surrogate.
+      Compare two groups using odds ratio or relative risk with a binary PPI++ surrogate.
     </p>
   </div>
 
   <div class="sscalc-assumptions">
     <p><strong>Setup:</strong> Two groups (exposed/control) with a binary outcome Y and a binary surrogate prediction f with known sensitivity and specificity.</p>
     <p><strong>Odds ratio:</strong> Tested via logistic regression with PPI++ sandwich variance. Equivalent to a Wald test for log(OR).</p>
-    <p><strong>Risk ratio:</strong> Tested via delta method on per-group PPI++ mean estimates. Wald test for log(RR).</p>
+    <p><strong>Relative risk:</strong> Tested via delta method on per-group PPI++ mean estimates. Wald test for log(RR).</p>
     <p><strong>Methods:</strong> details and derivations are on <a href="deep-dive-math.html">Variance &amp; Methods</a>.</p>
   </div>
 
@@ -356,7 +356,7 @@ effect measures.</p>
       Odds Ratio (OR)
     </button>
     <button class="sscalc-tab" id="tab-rr" type="button" data-panel="panel-rr" role="tab" aria-selected="false">
-      Risk Ratio (RR)
+      Relative Risk (RR)
     </button>
   </div>
 
@@ -919,7 +919,7 @@ effect measures.</p>
   }
 
   /* ================================================================ */
-  /* UPDATE: Risk Ratio                                               */
+  /* UPDATE: Relative Risk                                             */
   /* ================================================================ */
   function updateRR() {
     try {
