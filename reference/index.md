@@ -15,6 +15,8 @@
   : Power for PPI++ paired test with binary outcomes
 - [`power_ppi_regression()`](https://yiqunchen.github.io/pppower/reference/power_ppi_regression.md)
   : Power or required sample size for PPI++ regression contrast
+- [`power_ppi_2x2()`](https://yiqunchen.github.io/pppower/reference/power_ppi_2x2.md)
+  : Power or required sample size for a 2x2 table with PPI++ surrogates
 - [`power_eif_binary()`](https://yiqunchen.github.io/pppower/reference/power_eif_binary.md)
   : Power or required calibration size for EIF estimator with binary
   surrogates

@@ -2,12 +2,13 @@ pandoc: 3.1.11
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
+  calculator-2x2: calculator-2x2.html
   deep-dive-math: deep-dive-math.html
   intro-ppi: intro-ppi.html
   llm-judge-binary: llm-judge-binary.html
   ppi-sample-size: ppi-sample-size.html
   sample-size-calculator: sample-size-calculator.html
-last_built: 2026-03-07T22:10Z
+last_built: 2026-03-12T14:37Z
 urls:
   reference: https://yiqunchen.github.io/pppower/reference
   article: https://yiqunchen.github.io/pppower/articles
