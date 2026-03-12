@@ -1,179 +1,279 @@
-#' Simulation Utilities for PPPower Validation
-#'
-#' Simple, focused functions for power analysis validation.
-#' No external dependencies beyond base R.
+# =============================================================================
+# Simulation utilities for power validation scripts
+# =============================================================================
 
-#' Generate bivariate normal (Y, f) data
-#'
-#' @param n Sample size
-#' @param mu_y True mean of Y (theta_star)
-#' @param sigma_y SD of Y
-#' @param sigma_f SD of f (predictor)
-#' @param rho Correlation between Y and f
-#' @return data.frame with columns y and f
-generate_bivariate_normal <- function(n, mu_y = 0, sigma_y = 1, sigma_f = 1, rho = 0.5) {
-  # Generate correlated normals using Cholesky
-  z1 <- rnorm(n)
-  z2 <- rnorm(n)
+# Progress tracking helper with elapsed time and ETA
+progress_bar <- function(current, total, setting_name, prefix = "",
+                         start_time = NULL) {
+  pct <- round(100 * current / total)
+  bar_width <- 30
+  filled <- round(bar_width * current / total)
+  bar <- paste0("[", paste(rep("=", filled), collapse = ""),
+                paste(rep(" ", bar_width - filled), collapse = ""), "]")
 
-  y <- mu_y + sigma_y * z1
-  f <- sigma_f * (rho * z1 + sqrt(1 - rho^2) * z2)
-
-  data.frame(y = y, f = f)
-}
-
-#' Single Monte Carlo replicate for PPI mean estimation
-#'
-#' @param n Labeled sample size
-#' @param N Unlabeled sample size
-#' @param mu_y True mean (theta_star)
-#' @param sigma_y SD of Y
-#' @param sigma_f SD of f
-#' @param rho Correlation between Y and f
-#' @param alpha Significance level
-#' @param use_ppi_plus Use PPI++ (TRUE) or vanilla PPI (FALSE)
-#' @return List with theta_hat, se, z_stat, reject
-ppi_mean_one_rep <- function(n, N, mu_y = 0, sigma_y = 1, sigma_f = 1, rho = 0.5,
-                              alpha = 0.05, use_ppi_plus = FALSE) {
-  # Generate labeled data
-  dat_L <- generate_bivariate_normal(n, mu_y, sigma_y, sigma_f, rho)
-
-  # Generate unlabeled data (only f observed)
-  dat_U <- generate_bivariate_normal(N, mu_y, sigma_y, sigma_f, rho)
-
-  y_L <- dat_L$y
-  f_L <- dat_L$f
-  f_U <- dat_U$f
-
-  if (use_ppi_plus) {
-    # PPI++ estimator with plug-in lambda
-    cov_yf <- cov(y_L, f_L)
-    var_f <- var(c(f_L, f_U))  # pooled variance
-    r <- n / N
-
-    # Optimal lambda (clipped to [0, 1])
-    lambda_raw <- cov_yf / ((1 + r) * var_f)
-    lambda <- pmin(1, pmax(0, lambda_raw))
-
-    # PPI++ estimator
-    theta_hat <- mean(y_L) + lambda * (mean(f_U) - mean(f_L))
-
-    # Variance components
-    var_res <- var(y_L - lambda * f_L)
-    se <- sqrt(var_res / n + (lambda^2) * var(f_U) / N)
-
-  } else {
-    # Vanilla PPI estimator (lambda = 1)
-    theta_hat <- mean(f_U) + mean(y_L - f_L)
-
-    # Variance components
-    var_f_U <- var(f_U)
-    var_res <- var(y_L - f_L)
-    se <- sqrt(var_f_U / N + var_res / n)
-    lambda <- 1
+  time_str <- ""
+  if (!is.null(start_time) && current > 0) {
+    elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+    eta     <- elapsed / current * (total - current)
+    time_str <- sprintf(" [%s elapsed, ~%s left]",
+                        format_seconds(elapsed), format_seconds(eta))
   }
 
-  # Test H0: theta = 0 vs H1: theta != 0
-  z_stat <- theta_hat / se
-  z_crit <- qnorm(1 - alpha / 2)
-  reject <- abs(z_stat) > z_crit
+  cat(sprintf("\r%s%s %s %d%% (%d/%d)%s    ",
+              prefix, setting_name, bar, pct, current, total, time_str))
+  if (current == total) cat("\n")
+  flush.console()
+}
 
+# Format seconds into human-readable string
+format_seconds <- function(secs) {
+  if (is.na(secs) || secs < 0) return("?")
+  if (secs < 60)   return(sprintf("%.0fs", secs))
+  if (secs < 3600) return(sprintf("%.0fm%02.0fs", secs %/% 60, secs %% 60))
+  return(sprintf("%.0fh%02.0fm", secs %/% 3600, (secs %% 3600) %/% 60))
+}
+
+# =============================================================================
+# HELPER WRAPPERS (thin wrappers around package functions for simulation)
+# =============================================================================
+
+#' Wrapper for ppi_mean_test that accepts lambda_oracle parameter name
+run_ppi_mean_test <- function(Y_L, f_L, f_U, theta0 = 0, alpha = 0.05, lambda_oracle = NULL) {
+  result <- pppower::ppi_mean_test(Y_L, f_L, f_U, theta0 = theta0, alpha = alpha,
+                                  lambda = lambda_oracle)
+  # Return with legacy field names for compatibility
   list(
-    theta_hat = theta_hat,
-    se = se,
-    z_stat = z_stat,
-    reject = reject,
-    lambda = lambda
+    theta_hat = result$estimate,
+    se = result$se,
+    z_stat = result$z_stat,
+    p_value = result$p_value,
+    reject = result$reject,
+    lambda = result$lambda
   )
 }
 
-#' Compute empirical power via Monte Carlo
+#' Wrapper for ppi_ttest that accepts lambda_A_oracle/lambda_B_oracle parameter names
+run_ppi_ttest <- function(Y_A, f_A_L, f_A_U, Y_B, f_B_L, f_B_U,
+                          delta0 = 0, alpha = 0.05,
+                          lambda_A_oracle = NULL, lambda_B_oracle = NULL) {
+  result <- pppower::ppi_ttest(Y_A, f_A_L, f_A_U, Y_B, f_B_L, f_B_U,
+                              delta0 = delta0, alpha = alpha,
+                              lambda_A = lambda_A_oracle, lambda_B = lambda_B_oracle)
+  # Return with legacy field names for compatibility
+  list(
+    delta_hat = result$estimate,
+    se = result$se,
+    z_stat = result$z_stat,
+    p_value = result$p_value,
+    reject = result$reject,
+    lambda_A = result$lambda_A,
+    lambda_B = result$lambda_B
+  )
+}
+
+#' Classical one-sample mean test (wraps t.test)
+classical_mean_test <- function(Y, theta0 = 0, alpha = 0.05) {
+  test <- t.test(Y, mu = theta0, conf.level = 1 - alpha)
+  list(
+    theta_hat = as.numeric(test$estimate),
+    se = test$stderr,
+    reject = test$p.value < alpha
+  )
+}
+
+#' Classical two-sample t-test (wraps t.test)
+classical_ttest <- function(Y_A, Y_B, delta0 = 0, alpha = 0.05) {
+  test <- t.test(Y_A, Y_B, mu = delta0, conf.level = 1 - alpha, var.equal = FALSE)
+  list(
+    delta_hat = as.numeric(diff(rev(test$estimate))),
+    se = test$stderr,
+    reject = test$p.value < alpha
+  )
+}
+
+# =============================================================================
+# THEORETICAL POWER FUNCTIONS
+# Wrapper functions that call pppower and pwr packages
+# =============================================================================
+
+#' PPI++ power for mean estimation (wraps pppower::power_ppi_mean)
+#' @param rho Correlation between Y and f (used to derive cov_y_f)
+theo_power_ppi_mean <- function(delta, n, N, sigma_Y2, sigma_f2, cov_y_f, alpha = 0.05) {
+  pppower::power_ppi_mean(
+    delta    = delta,
+    N        = N,
+    n        = n,
+    alpha    = alpha,
+    sigma_y2 = sigma_Y2,
+    sigma_f2 = sigma_f2,
+    cov_y_f  = cov_y_f
+  )
+}
+
+#' PPI++ power for paired t-test (wraps pppower::power_ppi_paired)
+theo_power_ppi_paired <- function(delta, n, N, sigma_D2, rho_D, alpha = 0.05) {
+  pppower::power_ppi_paired(
+    delta    = delta,
+    N        = N,
+    n        = n,
+    alpha    = alpha,
+    sigma_D2 = sigma_D2,
+    rho_D    = rho_D
+  )
+}
+
+#' PPI++ power for paired binary test (wraps pppower::power_ppi_paired_binary)
+theo_power_ppi_paired_binary <- function(delta, n, N, p_A, p_B,
+                                         rho_within, sens, spec, alpha = 0.05) {
+  pppower::power_ppi_paired_binary(
+    delta = delta,
+    N = N,
+    n = n,
+    alpha = alpha,
+    p_A = p_A,
+    p_B = p_B,
+    rho_within = rho_within,
+    sens = sens,
+    spec = spec
+  )
+}
+
+#' Vanilla PPI power for mean estimation (lambda = 1, no tuning)
+theo_power_vanilla_ppi_mean <- function(delta, n, N, sigma_Y2, sigma_f2, cov_y_f, alpha = 0.05) {
+  pppower::power_ppi_mean(
+    delta    = delta,
+    N        = N,
+    n        = n,
+    alpha    = alpha,
+    sigma_y2 = sigma_Y2,
+    sigma_f2 = sigma_f2,
+    cov_y_f  = cov_y_f,
+    lambda   = 1,
+    lambda_type = "user"
+  )
+}
+
+#' Classical power for one-sample mean (wraps pwr::pwr.t.test)
+theo_power_classical_onesample <- function(delta, n, sigma_Y2, alpha = 0.05) {
+  d <- abs(delta) / sqrt(sigma_Y2)
+  pwr::pwr.t.test(n = n, d = d, sig.level = alpha, type = "one.sample",
+                 alternative = "two.sided")$power
+}
+
+#' Classical power for two-sample t-test (wraps pwr::pwr.t.test)
+theo_power_classical_twosample <- function(delta, n, sigma_Y2, alpha = 0.05) {
+  d <- abs(delta) / sqrt(sigma_Y2)
+  pwr::pwr.t.test(n = n, d = d, sig.level = alpha, type = "two.sample",
+                 alternative = "two.sided")$power
+}
+
+#' PPI++ power for two-sample test (wraps pppower::power_ppi_ttest)
+theo_power_ppi_twosample <- function(delta, n_A, n_B, N_A, N_B,
+                                     sigma_Y2_A, sigma_f2_A, cov_A,
+                                     sigma_Y2_B, sigma_f2_B, cov_B,
+                                     alpha = 0.05) {
+  pppower::power_ppi_ttest(
+    delta = delta,
+    n_A = n_A, n_B = n_B,
+    N_A = N_A, N_B = N_B,
+    alpha = alpha,
+    sigma_y2_A = sigma_Y2_A, sigma_f2_A = sigma_f2_A, cov_yf_A = cov_A,
+    sigma_y2_B = sigma_Y2_B, sigma_f2_B = sigma_f2_B, cov_yf_B = cov_B
+  )
+}
+
+#' Monte Carlo power for two-sample binary proportion tests (PPI++)
 #'
-#' @param R Number of MC replicates
-#' @param n Labeled sample size
-#' @param N Unlabeled sample size
-#' @param delta Effect size (mu_y under H1)
-#' @param sigma_y SD of Y
-#' @param sigma_f SD of f
-#' @param rho Correlation between Y and f
-#' @param alpha Significance level
-#' @param use_ppi_plus Use PPI++ (TRUE) or vanilla PPI (FALSE)
-#' @param seed Random seed for reproducibility
-#' @return List with empirical_power, mc_se, analytical_power
-compute_empirical_power <- function(R = 500, n, N, delta, sigma_y = 1, sigma_f = 1,
-                                     rho = 0.5, alpha = 0.05, use_ppi_plus = FALSE,
-                                     seed = NULL) {
+#' Uses sensitivity/specificity to derive population moments, computes
+#' theoretical power via `power_ppi_ttest_binary()`, and estimates
+#' empirical power via repeated simulations with oracle lambdas.
+simulate_twosample_binary_power <- function(p0, delta, sens, spec,
+                                            n_values, N_values,
+                                            R = 1000,
+                                            alpha = 0.05,
+                                            seed = NULL,
+                                            progress = TRUE) {
   if (!is.null(seed)) set.seed(seed)
 
-  # Run MC replicates
-  rejects <- replicate(R, {
-    res <- ppi_mean_one_rep(n, N, mu_y = delta, sigma_y, sigma_f, rho, alpha, use_ppi_plus)
-    res$reject
-  })
+  p_A <- p0 + delta / 2
+  p_B <- p0 - delta / 2
 
-  emp_power <- mean(rejects)
-  mc_se <- sqrt(emp_power * (1 - emp_power) / R)
+  moments_A <- pppower::binary_moments_from_sens_spec(p = p_A, sens = sens, spec = spec)
+  moments_B <- pppower::binary_moments_from_sens_spec(p = p_B, sens = sens, spec = spec)
 
-  # Analytical power
-  cov_yf <- rho * sigma_y * sigma_f
-  var_eps <- sigma_y^2 - 2 * cov_yf + sigma_f^2  # Var(Y - f)
-  r <- n / N
+  grid <- expand.grid(N = N_values, n = n_values, KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE)
+  total <- nrow(grid)
 
-  if (use_ppi_plus) {
-    # PPI++ optimal lambda
-    lambda_star <- cov_yf / ((1 + r) * sigma_f^2)
-    # PPI++ variance
-    var_theta <- sigma_y^2 / n - (cov_yf^2 / sigma_f^2) * N / (n * (n + N))
-    se_analytical <- sqrt(var_theta)
-  } else {
-    # Vanilla PPI variance
-    se_analytical <- sqrt(sigma_f^2 / N + var_eps / n)
-  }
-
-  z_alpha <- qnorm(1 - alpha / 2)
-  analytical_power <- 1 - pnorm(z_alpha - delta / se_analytical) +
-                      pnorm(-z_alpha - delta / se_analytical)
-
-  list(
-    empirical_power = emp_power,
-    mc_se = mc_se,
-    analytical_power = analytical_power,
-    se_analytical = se_analytical,
-    n = n,
-    N = N,
-    delta = delta,
-    rho = rho,
-    method = if (use_ppi_plus) "PPI++" else "PPI"
-  )
-}
-
-#' Simple power curve comparison
-#'
-#' @param n_values Vector of labeled sample sizes
-#' @param delta_values Vector of effect sizes
-#' @param N Unlabeled sample size
-#' @param sigma_y SD of Y
-#' @param sigma_f SD of f
-#' @param rho Correlation between Y and f
-#' @param R MC replicates per configuration
-#' @param use_ppi_plus Use PPI++ or vanilla PPI
-#' @return data.frame with results
-power_curve_grid <- function(n_values, delta_values, N, sigma_y = 1, sigma_f = 1,
-                              rho = 0.5, R = 200, use_ppi_plus = FALSE, seed = 42) {
-  results <- list()
-  k <- 1
-
-  for (n in n_values) {
-    for (delta in delta_values) {
-      res <- compute_empirical_power(
-        R = R, n = n, N = N, delta = delta,
-        sigma_y = sigma_y, sigma_f = sigma_f, rho = rho,
-        use_ppi_plus = use_ppi_plus, seed = seed + k
-      )
-      results[[k]] <- as.data.frame(res)
-      k <- k + 1
+  out <- vector("list", total)
+  for (i in seq_len(total)) {
+    N <- grid$N[i]; n <- grid$n[i]
+    if (progress) {
+      progress_bar(i, total, "Setting 4",
+                   sprintf("sens=%.0f%%, N=%d, n=%d: ", sens * 100, N, n))
     }
+
+    lambda_A <- moments_A$cov_y_f / ((1 + n / N) * moments_A$sigma_f2)
+    lambda_B <- moments_B$cov_y_f / ((1 + n / N) * moments_B$sigma_f2)
+
+    # theoretical power
+    power_theo_ppi <- pppower::power_ppi_ttest_binary(
+      p_A = p_A, p_B = p_B,
+      n_A = n, n_B = n,
+      N_A = N, N_B = N,
+      sens_A = sens, spec_A = spec,
+      sens_B = sens, spec_B = spec,
+      delta = delta,
+      alpha = alpha
+    )
+
+    # classical (use average variance)
+    sigma_Y2_avg <- (moments_A$sigma_y2 + moments_B$sigma_y2) / 2
+    power_theo_classical <- theo_power_classical_twosample(delta, n, sigma_Y2_avg, alpha)
+
+    # Monte Carlo
+    rej_ppi <- 0
+    rej_classical <- 0
+
+    for (r in seq_len(R)) {
+      Y_A <- rbinom(n, 1, p_A)
+      f_A_L <- ifelse(Y_A == 1, rbinom(n, 1, sens), rbinom(n, 1, 1 - spec))
+      Y_A_U <- rbinom(N, 1, p_A)
+      f_A_U <- ifelse(Y_A_U == 1, rbinom(N, 1, sens), rbinom(N, 1, 1 - spec))
+
+      Y_B <- rbinom(n, 1, p_B)
+      f_B_L <- ifelse(Y_B == 1, rbinom(n, 1, sens), rbinom(n, 1, 1 - spec))
+      Y_B_U <- rbinom(N, 1, p_B)
+      f_B_U <- ifelse(Y_B_U == 1, rbinom(N, 1, sens), rbinom(N, 1, 1 - spec))
+
+      test_ppi <- pppower::ppi_ttest(
+        Y_A, f_A_L, f_A_U,
+        Y_B, f_B_L, f_B_U,
+        delta0 = 0,
+        alpha = alpha,
+        lambda_A = lambda_A,
+        lambda_B = lambda_B
+      )
+      rej_ppi <- rej_ppi + as.integer(test_ppi$reject)
+
+      test_classical <- classical_ttest(Y_A, Y_B, delta0 = 0, alpha = alpha)
+      rej_classical <- rej_classical + as.integer(test_classical$reject)
+    }
+
+    out[[i]] <- data.frame(
+      setting = "Proportion Test (Binary)",
+      sens = sens,
+      spec = spec,
+      n = n,
+      N = N,
+      delta = delta,
+      rho_A = moments_A$cov_y_f / sqrt(moments_A$sigma_y2 * moments_A$sigma_f2),
+      rho_B = moments_B$cov_y_f / sqrt(moments_B$sigma_y2 * moments_B$sigma_f2),
+      power_theo_ppi = power_theo_ppi,
+      power_emp_ppi = rej_ppi / R,
+      power_theo_classical = power_theo_classical,
+      power_emp_classical = rej_classical / R
+    )
   }
 
-  do.call(rbind, results)
+  do.call(rbind, out)
 }

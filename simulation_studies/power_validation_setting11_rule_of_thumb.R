@@ -12,7 +12,7 @@ setting11_start <- Sys.time()
 library(pppower)
 
 rho_grid     <- seq(0.10, 0.99, by = 0.05)
-N_rot_values <- c(1000, 5000, 10000, 50000)
+N_rot_values <- c(200, 500, 1000, 5000)
 delta_rot    <- 0.3
 power_rot    <- 0.80
 alpha_rot    <- 0.05
@@ -38,14 +38,15 @@ for (i in seq_len(total_11)) {
   N   <- grid_11$N[i]
 
   progress_bar(i, total_11, "Setting 11",
-               sprintf("rho=%.2f, N=%d: ", rho, N))
+               sprintf("rho=%.2f, N=%d: ", rho, N),
+               start_time = setting11_start)
 
   sigma_f2 <- rho^2 * sigma_y2_rot
   cov_yf   <- rho * sqrt(sigma_y2_rot * sigma_f2)
 
   n_ppi <- tryCatch(
-    n_required_ppi_pp(
-      delta = delta_rot, N = N, power = power_rot, alpha = alpha_rot,
+    power_ppi_mean(
+      delta = delta_rot, N = N, n = NULL, power = power_rot, alpha = alpha_rot,
       sigma_y2 = sigma_y2_rot, sigma_f2 = sigma_f2, cov_y_f = cov_yf,
       lambda_mode = "oracle"
     ),

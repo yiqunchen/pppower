@@ -14,8 +14,8 @@ library(pppower)
 # Parameters
 p_values     <- c(0.3, 0.5)
 sens_spec    <- list(c(0.70, 0.70), c(0.85, 0.85), c(0.95, 0.95))
-N_values     <- c(2000, 5000)
-m_cal_values <- c(100, 200, 500, 1000)
+N_values     <- c(200, 500)
+m_cal_values <- c(20, 40, 60, 80, 100)
 delta_eif    <- 0.05
 R_eif        <- 1000
 alpha_eif    <- 0.05
@@ -39,7 +39,8 @@ for (i in seq_len(total_9)) {
 
   progress_bar(i, total_9, "Setting 9",
                sprintf("p=%.1f, sens=%.2f, N=%d, m=%d: ",
-                       row$p, sens_i, row$N, row$m_cal))
+                       row$p, sens_i, row$N, row$m_cal),
+               start_time = setting9_start)
 
   # Analytical power (PPI EIF)
   power_theo <- tryCatch(
@@ -52,7 +53,7 @@ for (i in seq_len(total_9)) {
 
   # Empirical power via Monte Carlo
   sim_res <- tryCatch(
-    simulate_power_eif_binary(
+    simulate_eif_binary(
       R = R_eif, delta = delta_eif, N = row$N, m_cal = row$m_cal,
       alpha = alpha_eif, p = row$p, sens = sens_i, spec = spec_i,
       seed = 9000 + i

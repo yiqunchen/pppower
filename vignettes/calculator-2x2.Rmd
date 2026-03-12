@@ -1,0 +1,998 @@
+---
+title: "2x2 Contingency Table Calculator"
+subtitle: "Prediction-powered odds ratio and risk ratio sample size planning"
+output:
+  rmarkdown::html_document:
+    toc: false
+vignette: >
+  %\VignetteIndexEntry{2x2 Contingency Table Calculator}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This calculator uses **prediction-powered inference (PPI/PPI++)** formulas from
+this package for planning studies that compare two groups via a 2x2 contingency
+table. It supports both **odds ratio** (OR) and **risk ratio** (RR) effect
+measures.
+
+```{=html}
+<style>
+.sscalc {
+  --bg-soft: #f5f5f4;
+  --bg-panel: #ffffff;
+  --ink: #111111;
+  --muted: #666666;
+  --line: #e5e5e3;
+  --brand: #191919;
+  --danger: #b00020;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem;
+  background: #fafaf9;
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+.sscalc-hero {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem;
+  margin-bottom: 0.9rem;
+}
+
+.sscalc-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sscalc-hero h2 {
+  margin: 0.22rem 0 0.3rem;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.sscalc-hero p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.sscalc-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+}
+
+.sscalc-tab {
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: #222222;
+  border-radius: 8px;
+  padding: 0.56rem 0.66rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sscalc-tab.is-active {
+  border-color: #cfcfcc;
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+.sscalc-panel {
+  display: none;
+}
+
+.sscalc-panel.is-active {
+  display: block;
+}
+
+.sscalc-grid {
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 0.8rem;
+}
+
+.sscalc-inputs,
+.sscalc-results {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+.sscalc-inputs h3,
+.sscalc-results h3 {
+  margin: 0 0 0.6rem;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.sscalc-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.58rem;
+  margin-bottom: 0.58rem;
+}
+
+.sscalc-field {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.sscalc-field label {
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: #343434;
+}
+
+.sscalc-field input,
+.sscalc-field select {
+  width: 100%;
+  border: 1px solid #dddddb;
+  border-radius: 8px;
+  padding: 0.44rem 0.52rem;
+  font-size: 0.88rem;
+  color: #181818;
+  background: #ffffff;
+  font-family: inherit;
+  font-weight: 300;
+}
+
+.sscalc-field input:focus,
+.sscalc-field select:focus {
+  outline: none;
+  border-color: #bdbdb9;
+  box-shadow: 0 0 0 2px rgba(28, 28, 28, 0.08);
+}
+
+.sscalc-subgroup {
+  margin: 0 0 0.58rem;
+  padding: 0.6rem;
+  border: 1px solid #ebebe9;
+  border-radius: 8px;
+  background: #fcfcfc;
+}
+
+.sscalc-subgroup-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5d5d5d;
+  font-weight: 600;
+}
+
+.sscalc-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.48rem;
+}
+
+.sscalc-stat {
+  border: 1px solid #ececeb;
+  border-radius: 8px;
+  padding: 0.52rem 0.55rem;
+  background: var(--bg-soft);
+}
+
+.sscalc-stat span {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 0.08rem;
+}
+
+.sscalc-stat strong {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.sscalc-msg {
+  min-height: 1.2rem;
+  margin: 0 0 0.45rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.sscalc-msg.error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.sscalc-bars {
+  margin-top: 0.58rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.sscalc-bar-row {
+  display: grid;
+  grid-template-columns: 4.2rem 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.74rem;
+}
+
+.sscalc-bar-shell {
+  height: 0.52rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #ececeb;
+}
+
+.sscalc-bar-fill {
+  height: 100%;
+  width: 0;
+  background: #222222;
+  transition: width 200ms ease;
+}
+
+.sscalc-footnote {
+  margin-top: 0.5rem;
+  padding: 0.52rem 0.58rem;
+  background: #f7f7f6;
+  border: 1px solid #e7e7e5;
+  border-radius: 8px;
+  color: #555555;
+  font-size: 0.76rem;
+}
+
+.sscalc-assumptions {
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.68rem;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  color: #444444;
+}
+
+.sscalc-assumptions p {
+  margin: 0.18rem 0;
+}
+
+@media (max-width: 920px) {
+  .sscalc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .sscalc {
+    padding: 0.72rem;
+    border-radius: 12px;
+  }
+
+  .sscalc-form-row,
+  .sscalc-result-grid,
+  .sscalc-tabs {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<div class="sscalc" id="calc-2x2">
+  <div class="sscalc-hero">
+    <p class="sscalc-kicker">Interactive PPI Tool</p>
+    <h2>2&times;2 contingency table calculator</h2>
+    <p>
+      Compare two groups using odds ratio or risk ratio with a binary PPI++ surrogate.
+    </p>
+  </div>
+
+  <div class="sscalc-assumptions">
+    <p><strong>Setup:</strong> Two groups (exposed/control) with a binary outcome Y and a binary surrogate prediction f with known sensitivity and specificity.</p>
+    <p><strong>Odds ratio:</strong> Tested via logistic regression with PPI++ sandwich variance. Equivalent to a Wald test for log(OR).</p>
+    <p><strong>Risk ratio:</strong> Tested via delta method on per-group PPI++ mean estimates. Wald test for log(RR).</p>
+    <p><strong>Methods:</strong> details and derivations are on <a href="deep-dive-math.html">Variance &amp; Methods</a>.</p>
+  </div>
+
+  <div class="sscalc-tabs" role="tablist" aria-label="Effect measure">
+    <button class="sscalc-tab is-active" id="tab-or" type="button" data-panel="panel-or" role="tab" aria-selected="true">
+      Odds Ratio (OR)
+    </button>
+    <button class="sscalc-tab" id="tab-rr" type="button" data-panel="panel-rr" role="tab" aria-selected="false">
+      Risk Ratio (RR)
+    </button>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- ODDS RATIO PANEL                                                 -->
+  <!-- ================================================================ -->
+  <section class="sscalc-panel is-active" id="panel-or" role="tabpanel" aria-labelledby="tab-or">
+    <div class="sscalc-grid">
+      <div class="sscalc-inputs">
+        <h3>Inputs</h3>
+
+        <div class="sscalc-subgroup">
+          <p class="sscalc-subgroup-title">Group probabilities</p>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="or_p_ctrl">Control P(Y=1) (%)</label>
+              <input id="or_p_ctrl" type="number" min="0.1" max="99.9" step="0.1" value="20">
+            </div>
+            <div class="sscalc-field">
+              <label for="or_p_exp">Exposed P(Y=1) (%)</label>
+              <input id="or_p_exp" type="number" min="0.1" max="99.9" step="0.1" value="35">
+            </div>
+          </div>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="or_prev_exp">Prevalence of exposure (%)</label>
+              <input id="or_prev_exp" type="number" min="1" max="99" step="1" value="50">
+            </div>
+            <div class="sscalc-field"></div>
+          </div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="or_N">Unlabeled N (total)</label>
+            <input id="or_N" type="number" min="10" step="1" value="500">
+          </div>
+          <div class="sscalc-field">
+            <label for="or_alpha">Alpha (two-sided)</label>
+            <input id="or_alpha" type="number" min="0.001" max="0.2" step="0.001" value="0.05">
+          </div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="or_power">Target power (%)</label>
+            <input id="or_power" type="number" min="50" max="99.9" step="0.1" value="80">
+          </div>
+          <div class="sscalc-field">
+            <label for="or_nonresponse">Expected non-response (%)</label>
+            <input id="or_nonresponse" type="number" min="0" max="80" step="1" value="0">
+          </div>
+        </div>
+
+        <div class="sscalc-subgroup">
+          <p class="sscalc-subgroup-title">Surrogate quality</p>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="or_sens">Sensitivity</label>
+              <input id="or_sens" type="number" min="0.01" max="0.99" step="0.01" value="0.85">
+            </div>
+            <div class="sscalc-field">
+              <label for="or_spec">Specificity</label>
+              <input id="or_spec" type="number" min="0.01" max="0.99" step="0.01" value="0.85">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sscalc-results">
+        <h3>Results</h3>
+        <p class="sscalc-msg" id="or_message"></p>
+        <div class="sscalc-result-grid">
+          <div class="sscalc-stat">
+            <span>PPI++ n (total labeled)</span>
+            <strong id="or_n_ppi">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>PPI++ recruitment n (adj.)</span>
+            <strong id="or_n_ppi_adj">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Classical n (no surrogate)</span>
+            <strong id="or_n_classic">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Labeled saving vs classical</span>
+            <strong id="or_saving">-</strong>
+          </div>
+        </div>
+
+        <div class="sscalc-result-grid" style="margin-top: 0.48rem;">
+          <div class="sscalc-stat">
+            <span>True OR</span>
+            <strong id="or_true_or">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Oracle lambda</span>
+            <strong id="or_lambda">-</strong>
+          </div>
+        </div>
+
+        <div class="sscalc-bars">
+          <div class="sscalc-bar-row">
+            <span>Classic</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="or_bar_classic"></div></div>
+            <span id="or_bar_classic_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI++</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="or_bar_ppi"></div></div>
+            <span id="or_bar_ppi_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI adj.</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="or_bar_ppi_adj"></div></div>
+            <span id="or_bar_ppi_adj_label">-</span>
+          </div>
+        </div>
+
+        <div class="sscalc-footnote" id="or_formula_note">Formula note will appear here.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- RISK RATIO PANEL                                                 -->
+  <!-- ================================================================ -->
+  <section class="sscalc-panel" id="panel-rr" role="tabpanel" aria-labelledby="tab-rr">
+    <div class="sscalc-grid">
+      <div class="sscalc-inputs">
+        <h3>Inputs</h3>
+
+        <div class="sscalc-subgroup">
+          <p class="sscalc-subgroup-title">Group probabilities</p>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="rr_p_ctrl">Control P(Y=1) (%)</label>
+              <input id="rr_p_ctrl" type="number" min="0.1" max="99.9" step="0.1" value="20">
+            </div>
+            <div class="sscalc-field">
+              <label for="rr_p_exp">Exposed P(Y=1) (%)</label>
+              <input id="rr_p_exp" type="number" min="0.1" max="99.9" step="0.1" value="35">
+            </div>
+          </div>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="rr_prev_exp">Prevalence of exposure (%)</label>
+              <input id="rr_prev_exp" type="number" min="1" max="99" step="1" value="50">
+            </div>
+            <div class="sscalc-field"></div>
+          </div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="rr_N">Unlabeled N (total)</label>
+            <input id="rr_N" type="number" min="10" step="1" value="500">
+          </div>
+          <div class="sscalc-field">
+            <label for="rr_alpha">Alpha (two-sided)</label>
+            <input id="rr_alpha" type="number" min="0.001" max="0.2" step="0.001" value="0.05">
+          </div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="rr_power">Target power (%)</label>
+            <input id="rr_power" type="number" min="50" max="99.9" step="0.1" value="80">
+          </div>
+          <div class="sscalc-field">
+            <label for="rr_nonresponse">Expected non-response (%)</label>
+            <input id="rr_nonresponse" type="number" min="0" max="80" step="1" value="0">
+          </div>
+        </div>
+
+        <div class="sscalc-subgroup">
+          <p class="sscalc-subgroup-title">Surrogate quality</p>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="rr_sens">Sensitivity</label>
+              <input id="rr_sens" type="number" min="0.01" max="0.99" step="0.01" value="0.85">
+            </div>
+            <div class="sscalc-field">
+              <label for="rr_spec">Specificity</label>
+              <input id="rr_spec" type="number" min="0.01" max="0.99" step="0.01" value="0.85">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sscalc-results">
+        <h3>Results</h3>
+        <p class="sscalc-msg" id="rr_message"></p>
+        <div class="sscalc-result-grid">
+          <div class="sscalc-stat">
+            <span>PPI++ n (total labeled)</span>
+            <strong id="rr_n_ppi">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>PPI++ recruitment n (adj.)</span>
+            <strong id="rr_n_ppi_adj">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Classical n (no surrogate)</span>
+            <strong id="rr_n_classic">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Labeled saving vs classical</span>
+            <strong id="rr_saving">-</strong>
+          </div>
+        </div>
+
+        <div class="sscalc-result-grid" style="margin-top: 0.48rem;">
+          <div class="sscalc-stat">
+            <span>True RR</span>
+            <strong id="rr_true_rr">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>log(RR)</span>
+            <strong id="rr_log_rr">-</strong>
+          </div>
+        </div>
+
+        <div class="sscalc-bars">
+          <div class="sscalc-bar-row">
+            <span>Classic</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="rr_bar_classic"></div></div>
+            <span id="rr_bar_classic_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI++</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="rr_bar_ppi"></div></div>
+            <span id="rr_bar_ppi_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI adj.</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="rr_bar_ppi_adj"></div></div>
+            <span id="rr_bar_ppi_adj_label">-</span>
+          </div>
+        </div>
+
+        <div class="sscalc-footnote" id="rr_formula_note">Formula note will appear here.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="sscalc-footnote">
+    Uses the same formulas as <code>power_ppi_2x2()</code> in the pppower R package.
+    See <a href="deep-dive-math.html">Variance &amp; Methods</a> for derivations.
+  </div>
+</div>
+
+<script>
+(function () {
+  function id(name) {
+    return document.getElementById(name);
+  }
+
+  function readNum(name) {
+    var v = parseFloat(id(name).value);
+    return Number.isFinite(v) ? v : NaN;
+  }
+
+  function fmtInt(x) {
+    if (!Number.isFinite(x)) return "-";
+    return Math.ceil(x).toLocaleString();
+  }
+
+  function fmtPct(x) {
+    if (!Number.isFinite(x)) return "-";
+    return (x * 100).toFixed(1) + "%";
+  }
+
+  function fmtDec(x, d) {
+    if (!Number.isFinite(x)) return "-";
+    return x.toFixed(d);
+  }
+
+  function setText(name, value) {
+    var el = id(name);
+    if (el) el.textContent = value;
+  }
+
+  function setError(msgId, msg) {
+    var el = id(msgId);
+    el.textContent = msg;
+    if (msg) { el.classList.add("error"); }
+    else { el.classList.remove("error"); }
+  }
+
+  function setBar(name, value, maxValue) {
+    var el = id(name);
+    if (!el) return;
+    if (!Number.isFinite(value) || !Number.isFinite(maxValue) || maxValue <= 0) {
+      el.style.width = "0%";
+      return;
+    }
+    var pct = Math.max(0, Math.min(100, (value / maxValue) * 100));
+    el.style.width = pct.toFixed(1) + "%";
+  }
+
+  /* ---- Normal distribution helpers ---- */
+  function inverseNormal(p) {
+    if (!(p > 0 && p < 1)) throw new Error("Probability must be in (0,1).");
+    var a = [-39.6968302866538, 220.946098424521, -275.928510446969, 138.357751867269, -30.6647980661472, 2.50662827745924];
+    var b = [-54.4760987982241, 161.585836858041, -155.698979859887, 66.8013118877197, -13.2806815528857];
+    var c = [-0.00778489400243029, -0.322396458041136, -2.40075827716184, -2.54973253934373, 4.37466414146497, 2.93816398269878];
+    var d = [0.00778469570904146, 0.32246712907004, 2.445134137143, 3.75440866190742];
+    var plow = 0.02425, phigh = 1 - plow;
+    var q;
+    if (p < plow) {
+      q = Math.sqrt(-2 * Math.log(p));
+      return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+    }
+    if (p > phigh) {
+      q = Math.sqrt(-2 * Math.log(1-p));
+      return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+    }
+    q = p - 0.5;
+    var r = q * q;
+    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q / (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+  }
+
+  function normalCdf(x) {
+    var t = 1 / (1 + 0.2316419 * Math.abs(x));
+    var dd = 0.3989423 * Math.exp(-x * x / 2);
+    var prob = 1 - dd * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+    return x >= 0 ? prob : (1 - prob);
+  }
+
+  function powerFromSE(delta, alpha, se) {
+    if (!(se > 0)) return delta === 0 ? alpha : 1;
+    var zAlpha = inverseNormal(1 - alpha / 2);
+    var mu = Math.abs(delta) / se;
+    return 1 - normalCdf(zAlpha - mu) + normalCdf(-zAlpha - mu);
+  }
+
+  function binaryMoments(p, sens, spec) {
+    var pHat = sens * p + (1 - spec) * (1 - p);
+    var sigmaY2 = p * (1 - p);
+    var sigmaF2 = pHat * (1 - pHat);
+    var covYf = p * (1 - p) * (sens + spec - 1);
+    return { sigmaY2: sigmaY2, sigmaF2: sigmaF2, covYf: covYf, pHat: pHat };
+  }
+
+  /* ---- 2x2 matrix helpers (column-major 2x2) ---- */
+  function mat2(a, b, c, d) { return [a, b, c, d]; }
+  function mat2inv(m) {
+    var det = m[0]*m[3] - m[1]*m[2];
+    if (Math.abs(det) < 1e-30) throw new Error("Singular matrix.");
+    return [m[3]/det, -m[1]/det, -m[2]/det, m[0]/det];
+  }
+  // c^T M c for 2-vector c and 2x2 matrix M (row-major: [[m0,m2],[m1,m3]] or just do it right)
+  // Actually let's use row-major: M = [[m[0],m[1]],[m[2],m[3]]]
+  function mat2quad(M, c) {
+    // c^T M c where M is row-major 2x2, c is 2-vector
+    return c[0]*c[0]*M[0] + c[0]*c[1]*M[1] + c[1]*c[0]*M[2] + c[1]*c[1]*M[3];
+  }
+  function mat2inv_rm(M) {
+    // Row-major inverse
+    var det = M[0]*M[3] - M[1]*M[2];
+    if (Math.abs(det) < 1e-30) throw new Error("Singular matrix.");
+    return [M[3]/det, -M[1]/det, -M[2]/det, M[0]/det];
+  }
+  function mat2mul_rm(A, B) {
+    return [
+      A[0]*B[0] + A[1]*B[2],
+      A[0]*B[1] + A[1]*B[3],
+      A[2]*B[0] + A[3]*B[2],
+      A[2]*B[1] + A[3]*B[3]
+    ];
+  }
+
+  /* ---- OR: logistic regression blocks ---- */
+  function logisticBlocks(pExp, pCtrl, prevExp, sens, spec) {
+    var pi = prevExp;
+    var p1 = pExp, p0 = pCtrl;
+
+    var beta0 = Math.log(p0 / (1 - p0));
+    var beta1 = Math.log(p1 / (1 - p1)) - beta0;
+    var OR = Math.exp(beta1);
+
+    var w0 = p0 * (1 - p0);
+    var w1 = p1 * (1 - p1);
+
+    // Fisher info H (row-major)
+    var H = [
+      (1-pi)*w0 + pi*w1,  pi*w1,
+      pi*w1,              pi*w1
+    ];
+
+    var SigmaYY = H.slice(); // correctly specified logistic
+
+    // Surrogate prevalence per stratum
+    var pf0 = sens*p0 + (1-spec)*(1-p0);
+    var pf1 = sens*p1 + (1-spec)*(1-p1);
+
+    // Sigma_ff
+    var vf0 = pf0*(1-p0)*(1-p0) + (1-pf0)*p0*p0;
+    var vf1 = pf1*(1-p1)*(1-p1) + (1-pf1)*p1*p1;
+    var Sigmaff = [
+      (1-pi)*vf0 + pi*vf1,  pi*vf1,
+      pi*vf1,               pi*vf1
+    ];
+
+    // Sigma_Yf
+    var cYf0 = p0 * (sens - pf0);
+    var cYf1 = p1 * (sens - pf1);
+    var SigmaYf = [
+      (1-pi)*cYf0 + pi*cYf1,  pi*cYf1,
+      pi*cYf1,                pi*cYf1
+    ];
+
+    return { H: H, SigmaYY: SigmaYY, Sigmaff: Sigmaff, SigmaYf: SigmaYf, beta1: beta1, OR: OR };
+  }
+
+  /* ---- OR: PPI++ variance for contrast c=(0,1) given n ---- */
+  function orPpiVariance(n, N, blk) {
+    var cvec = [0, 1];
+    var Hinv = mat2inv_rm(blk.H);
+
+    // A = c^T H^{-1} Sigma_ff H^{-1} c
+    var HinvSigmaff = mat2mul_rm(Hinv, blk.Sigmaff);
+    var HinvSigmaffHinv = mat2mul_rm(HinvSigmaff, Hinv);
+    var A = mat2quad(HinvSigmaffHinv, cvec);
+
+    // C = c^T H^{-1} Sigma_Yf H^{-1} c
+    var HinvSigmaYf = mat2mul_rm(Hinv, blk.SigmaYf);
+    var HinvSigmaYfHinv = mat2mul_rm(HinvSigmaYf, Hinv);
+    var C = mat2quad(HinvSigmaYfHinv, cvec);
+
+    // Oracle lambda
+    var lambda = C / ((1 + n/N) * A);
+    lambda = Math.max(0, Math.min(1, lambda));
+
+    // Classical variance: c^T H^{-1} c / n
+    var varClassical = mat2quad(Hinv, cvec) / n;
+
+    // PPI++ variance: (c^T H^{-1} Sigma_YY H^{-1} c) / n - C^2 / (A * n * (1 + n/N))
+    var HinvSigmaYY = mat2mul_rm(Hinv, blk.SigmaYY);
+    var HinvSigmaYYHinv = mat2mul_rm(HinvSigmaYY, Hinv);
+    var B = mat2quad(HinvSigmaYYHinv, cvec);
+
+    var varPpi = B / n - (C * C) / (A * n * (1 + n/N));
+
+    return { varPpi: varPpi, varClassical: varClassical, lambda: lambda };
+  }
+
+  /* ---- RR: PPI++ variance via delta method ---- */
+  function rrPpiVariance(n, N, pExp, pCtrl, prevExp, sens, spec) {
+    var pi = prevExp;
+    var n1 = pi * n, n0 = (1-pi) * n;
+    var N1 = pi * N, N0 = (1-pi) * N;
+
+    var mom1 = binaryMoments(pExp, sens, spec);
+    var mom0 = binaryMoments(pCtrl, sens, spec);
+
+    // Oracle variance for each group
+    var varPpi1 = mom1.sigmaY2/n1 - mom1.covYf*mom1.covYf / (mom1.sigmaF2 * n1 * (1 + n1/N1));
+    var varPpi0 = mom0.sigmaY2/n0 - mom0.covYf*mom0.covYf / (mom0.sigmaF2 * n0 * (1 + n0/N0));
+
+    // Delta method: Var(log(RR)) = Var(p1)/p1^2 + Var(p0)/p0^2
+    var varLogRR = Math.max(varPpi1, 0) / (pExp*pExp) + Math.max(varPpi0, 0) / (pCtrl*pCtrl);
+
+    // Classical: Var(p_x) = p_x(1-p_x)/n_x
+    var varCl1 = pExp*(1-pExp)/n1;
+    var varCl0 = pCtrl*(1-pCtrl)/n0;
+    var varLogRR_cl = varCl1/(pExp*pExp) + varCl0/(pCtrl*pCtrl);
+
+    return { varPpi: varLogRR, varClassical: varLogRR_cl };
+  }
+
+  /* ---- Binary search for n ---- */
+  function solveNByPower(powerFn, targetPower) {
+    var lo = 4, hi = lo, maxCap = 10000000;
+    if (powerFn(lo) >= targetPower) return lo;
+    while (hi < maxCap && powerFn(hi) < targetPower) hi *= 2;
+    if (hi >= maxCap && powerFn(hi) < targetPower) return NaN;
+    var left = lo, right = Math.ceil(hi);
+    while (left + 1 < right) {
+      var mid = Math.floor((left + right) / 2);
+      if (powerFn(mid) >= targetPower) right = mid;
+      else left = mid;
+    }
+    return right;
+  }
+
+  /* ================================================================ */
+  /* UPDATE: Odds Ratio                                               */
+  /* ================================================================ */
+  function updateOR() {
+    try {
+      var pCtrl = readNum("or_p_ctrl") / 100;
+      var pExp = readNum("or_p_exp") / 100;
+      var prevExp = readNum("or_prev_exp") / 100;
+      var N = readNum("or_N");
+      var alpha = readNum("or_alpha");
+      var targetPower = readNum("or_power") / 100;
+      var nonresponse = readNum("or_nonresponse") / 100;
+      var sens = readNum("or_sens");
+      var spec = readNum("or_spec");
+
+      if (!(pCtrl > 0 && pCtrl < 1)) throw new Error("Control prevalence must be in (0%, 100%).");
+      if (!(pExp > 0 && pExp < 1)) throw new Error("Exposed prevalence must be in (0%, 100%).");
+      if (Math.abs(pCtrl - pExp) < 1e-8) throw new Error("Groups must have different outcome rates.");
+      if (!(prevExp > 0 && prevExp < 1)) throw new Error("Exposure prevalence must be in (0%, 100%).");
+      if (!(N > 0)) throw new Error("Unlabeled N must be positive.");
+      if (!(alpha > 0 && alpha < 0.5)) throw new Error("alpha must be in (0, 0.5).");
+      if (!(targetPower > 0.5 && targetPower < 0.999)) throw new Error("Power should be between 50% and 99.9%.");
+      if (!(nonresponse >= 0 && nonresponse < 0.9)) throw new Error("Non-response must be in [0%, 90%).");
+      if (!(sens > 0 && sens < 1 && spec > 0 && spec < 1)) throw new Error("Sensitivity and specificity must be in (0, 1).");
+
+      var blk = logisticBlocks(pExp, pCtrl, prevExp, sens, spec);
+      var delta = blk.beta1; // log(OR)
+
+      // Solve for n
+      var lambdaRef = 0;
+      var nPpi = solveNByPower(function(n) {
+        var res = orPpiVariance(n, N, blk);
+        lambdaRef = res.lambda;
+        return powerFromSE(delta, alpha, Math.sqrt(Math.max(res.varPpi, 0)));
+      }, targetPower);
+
+      if (!Number.isFinite(nPpi)) throw new Error("No feasible n found. Try increasing N or effect size.");
+
+      // Classical n
+      var nClassic = solveNByPower(function(n) {
+        var res = orPpiVariance(n, N, blk);
+        return powerFromSE(delta, alpha, Math.sqrt(Math.max(res.varClassical, 0)));
+      }, targetPower);
+
+      var nPpiAdj = Math.ceil(nPpi / (1 - nonresponse));
+      var saving = 1 - (nPpi / nClassic);
+
+      setError("or_message", "");
+      setText("or_n_ppi", fmtInt(nPpi));
+      setText("or_n_ppi_adj", fmtInt(nPpiAdj));
+      setText("or_n_classic", fmtInt(nClassic));
+      setText("or_saving", fmtPct(saving));
+      setText("or_true_or", fmtDec(blk.OR, 3));
+      setText("or_lambda", fmtDec(lambdaRef, 3));
+
+      var maxBar = Math.max(nClassic, nPpi, nPpiAdj);
+      setBar("or_bar_classic", nClassic, maxBar);
+      setBar("or_bar_ppi", nPpi, maxBar);
+      setBar("or_bar_ppi_adj", nPpiAdj, maxBar);
+      setText("or_bar_classic_label", fmtInt(nClassic));
+      setText("or_bar_ppi_label", fmtInt(nPpi));
+      setText("or_bar_ppi_adj_label", fmtInt(nPpiAdj));
+
+      var note = "n is total labeled (both groups). Groups are split by exposure prevalence. ";
+      if (saving < 0) {
+        note += "Under these inputs, PPI++ requires more labels than classical (weak surrogate).";
+        setText("or_message", "PPI++ is not improving efficiency under these assumptions.");
+      } else {
+        note += "PPI++ reduces labeled sample size by " + fmtPct(saving) + " vs classical logistic regression.";
+      }
+      setText("or_formula_note", note);
+    } catch (err) {
+      setError("or_message", err.message);
+      ["or_n_ppi","or_n_ppi_adj","or_n_classic","or_saving","or_true_or","or_lambda"].forEach(function(x) { setText(x, "-"); });
+      ["or_bar_classic_label","or_bar_ppi_label","or_bar_ppi_adj_label"].forEach(function(x) { setText(x, "-"); });
+      setBar("or_bar_classic", NaN, NaN);
+      setBar("or_bar_ppi", NaN, NaN);
+      setBar("or_bar_ppi_adj", NaN, NaN);
+      setText("or_formula_note", "Please adjust inputs and try again.");
+    }
+  }
+
+  /* ================================================================ */
+  /* UPDATE: Risk Ratio                                               */
+  /* ================================================================ */
+  function updateRR() {
+    try {
+      var pCtrl = readNum("rr_p_ctrl") / 100;
+      var pExp = readNum("rr_p_exp") / 100;
+      var prevExp = readNum("rr_prev_exp") / 100;
+      var N = readNum("rr_N");
+      var alpha = readNum("rr_alpha");
+      var targetPower = readNum("rr_power") / 100;
+      var nonresponse = readNum("rr_nonresponse") / 100;
+      var sens = readNum("rr_sens");
+      var spec = readNum("rr_spec");
+
+      if (!(pCtrl > 0 && pCtrl < 1)) throw new Error("Control prevalence must be in (0%, 100%).");
+      if (!(pExp > 0 && pExp < 1)) throw new Error("Exposed prevalence must be in (0%, 100%).");
+      if (Math.abs(pCtrl - pExp) < 1e-8) throw new Error("Groups must have different outcome rates.");
+      if (!(prevExp > 0 && prevExp < 1)) throw new Error("Exposure prevalence must be in (0%, 100%).");
+      if (!(N > 0)) throw new Error("Unlabeled N must be positive.");
+      if (!(alpha > 0 && alpha < 0.5)) throw new Error("alpha must be in (0, 0.5).");
+      if (!(targetPower > 0.5 && targetPower < 0.999)) throw new Error("Power should be between 50% and 99.9%.");
+      if (!(nonresponse >= 0 && nonresponse < 0.9)) throw new Error("Non-response must be in [0%, 90%).");
+      if (!(sens > 0 && sens < 1 && spec > 0 && spec < 1)) throw new Error("Sensitivity and specificity must be in (0, 1).");
+
+      var RR = pExp / pCtrl;
+      var delta = Math.log(RR); // log(RR)
+
+      // Solve for n
+      var nPpi = solveNByPower(function(n) {
+        var res = rrPpiVariance(n, N, pExp, pCtrl, prevExp, sens, spec);
+        return powerFromSE(delta, alpha, Math.sqrt(Math.max(res.varPpi, 0)));
+      }, targetPower);
+
+      if (!Number.isFinite(nPpi)) throw new Error("No feasible n found. Try increasing N or effect size.");
+
+      // Classical n
+      var nClassic = solveNByPower(function(n) {
+        var res = rrPpiVariance(n, N, pExp, pCtrl, prevExp, sens, spec);
+        return powerFromSE(delta, alpha, Math.sqrt(Math.max(res.varClassical, 0)));
+      }, targetPower);
+
+      var nPpiAdj = Math.ceil(nPpi / (1 - nonresponse));
+      var saving = 1 - (nPpi / nClassic);
+
+      setError("rr_message", "");
+      setText("rr_n_ppi", fmtInt(nPpi));
+      setText("rr_n_ppi_adj", fmtInt(nPpiAdj));
+      setText("rr_n_classic", fmtInt(nClassic));
+      setText("rr_saving", fmtPct(saving));
+      setText("rr_true_rr", fmtDec(RR, 3));
+      setText("rr_log_rr", fmtDec(delta, 4));
+
+      var maxBar = Math.max(nClassic, nPpi, nPpiAdj);
+      setBar("rr_bar_classic", nClassic, maxBar);
+      setBar("rr_bar_ppi", nPpi, maxBar);
+      setBar("rr_bar_ppi_adj", nPpiAdj, maxBar);
+      setText("rr_bar_classic_label", fmtInt(nClassic));
+      setText("rr_bar_ppi_label", fmtInt(nPpi));
+      setText("rr_bar_ppi_adj_label", fmtInt(nPpiAdj));
+
+      var note = "n is total labeled (split by exposure prevalence). ";
+      if (saving < 0) {
+        note += "Under these inputs, PPI++ requires more labels than classical (weak surrogate).";
+        setText("rr_message", "PPI++ is not improving efficiency under these assumptions.");
+      } else {
+        note += "PPI++ reduces labeled sample size by " + fmtPct(saving) + " vs classical RR test.";
+      }
+      setText("rr_formula_note", note);
+    } catch (err) {
+      setError("rr_message", err.message);
+      ["rr_n_ppi","rr_n_ppi_adj","rr_n_classic","rr_saving","rr_true_rr","rr_log_rr"].forEach(function(x) { setText(x, "-"); });
+      ["rr_bar_classic_label","rr_bar_ppi_label","rr_bar_ppi_adj_label"].forEach(function(x) { setText(x, "-"); });
+      setBar("rr_bar_classic", NaN, NaN);
+      setBar("rr_bar_ppi", NaN, NaN);
+      setBar("rr_bar_ppi_adj", NaN, NaN);
+      setText("rr_formula_note", "Please adjust inputs and try again.");
+    }
+  }
+
+  /* ---- Tab switching ---- */
+  function setActivePanel(targetPanelId) {
+    document.querySelectorAll("#calc-2x2 .sscalc-tab").forEach(function (tab) {
+      var active = tab.getAttribute("data-panel") === targetPanelId;
+      tab.classList.toggle("is-active", active);
+      tab.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    document.querySelectorAll("#calc-2x2 .sscalc-panel").forEach(function (panel) {
+      panel.classList.toggle("is-active", panel.id === targetPanelId);
+    });
+  }
+
+  /* ---- Init ---- */
+  function init() {
+    document.querySelectorAll("#calc-2x2 .sscalc-tab").forEach(function (button) {
+      button.addEventListener("click", function () {
+        setActivePanel(button.getAttribute("data-panel"));
+      });
+    });
+
+    ["or_p_ctrl","or_p_exp","or_prev_exp","or_N","or_alpha","or_power","or_nonresponse","or_sens","or_spec"].forEach(function(f) {
+      id(f).addEventListener("input", updateOR);
+      id(f).addEventListener("change", updateOR);
+    });
+
+    ["rr_p_ctrl","rr_p_exp","rr_prev_exp","rr_N","rr_alpha","rr_power","rr_nonresponse","rr_sens","rr_spec"].forEach(function(f) {
+      id(f).addEventListener("input", updateRR);
+      id(f).addEventListener("change", updateRR);
+    });
+
+    updateOR();
+    updateRR();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+```

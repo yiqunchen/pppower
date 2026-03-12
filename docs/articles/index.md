@@ -2,6 +2,8 @@
 
 ### All vignettes
 
+- [2x2 Contingency Table
+  Calculator](https://yiqunchen.github.io/pppower/articles/calculator-2x2.md):
 - [Detailed Dive: Variance Formulas and
   lambda-star](https://yiqunchen.github.io/pppower/articles/deep-dive-math.md):
 - [Quickstart: Prediction-Powered Power & Sample

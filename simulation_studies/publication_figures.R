@@ -13,11 +13,12 @@ library(ggplot2)
 library(gridExtra)
 library(grid)
 
-# Use centralized palette from the package
-source(file.path(dirname(getwd()), "R", "palette.R"), local = FALSE)
+# Palette objects are exported by pppower (loaded above).
+# Fallback: source from package root if running in dev mode.
 if (!exists("pppower_method_colors")) {
-  # Fallback: source relative to script location
-  tryCatch(source("R/palette.R", local = FALSE), error = function(e) NULL)
+  tryCatch(source("R/palette.R", local = FALSE), error = function(e) {
+    tryCatch(source("../R/palette.R", local = FALSE), error = function(e2) NULL)
+  })
 }
 
 # Aliases for backward compatibility
@@ -61,6 +62,7 @@ power_cont_results <- expand.grid(
   r2_label = names(r2_levels)
 )
 power_cont_results$power_ppi <- NA
+power_cont_results$power_vanilla <- NA
 power_cont_results$power_classical <- NA
 
 for (i in seq_len(nrow(power_cont_results))) {
@@ -69,18 +71,22 @@ for (i in seq_len(nrow(power_cont_results))) {
   r2_label <- power_cont_results$r2_label[i]
   r2 <- r2_levels[[r2_label]]
 
-  # For bivariate normal: rho = correlation(Y, f)
-  # var_f = rho^2 * sigma_y^2, var_res = sigma_y^2 * (1 - rho^2)
-  # cov_yf = rho * sigma_y * sigma_f = rho^2 * sigma_y^2
   rho <- sqrt(r2)
   var_f <- r2 * sigma_y^2
   var_res <- (1 - r2) * sigma_y^2
   cov_yf <- r2 * sigma_y^2
 
-  # PPI++ power
-  power_cont_results$power_ppi[i] <- power_ppi_pp_mean(
+  # PPI++ power (oracle lambda = EIF-optimal)
+  power_cont_results$power_ppi[i] <- power_ppi_mean(
     delta = delta, N = N_cont, n = n, alpha = alpha,
     var_f = var_f, var_res = var_res, cov_y_f = cov_yf
+  )
+
+  # Vanilla PPI power (lambda = 1)
+  power_cont_results$power_vanilla[i] <- power_ppi_mean(
+    delta = delta, N = N_cont, n = n, alpha = alpha,
+    var_f = var_f, var_res = var_res, cov_y_f = cov_yf,
+    lambda = 1, lambda_type = "user"
   )
 
   # Classical power
@@ -109,6 +115,7 @@ ss_cont_results <- expand.grid(
   r2_label = names(r2_levels)
 )
 ss_cont_results$n_ppi <- NA
+ss_cont_results$n_vanilla <- NA
 ss_cont_results$n_classical <- NA
 
 z_alpha <- qnorm(1 - alpha/2)
@@ -119,18 +126,27 @@ for (i in seq_len(nrow(ss_cont_results))) {
   r2_label <- ss_cont_results$r2_label[i]
   r2 <- r2_levels[[r2_label]]
 
-  # For n_required_ppi_pp, use sigma_y2, sigma_f2, cov_y_f
   rho <- sqrt(r2)
   sigma_y2 <- sigma_y^2
   sigma_f2 <- r2 * sigma_y^2
   cov_yf <- rho * sigma_y * sqrt(sigma_f2)
 
-  # PPI++ required n (oracle lambda to match power function)
+  # PPI++ required n (oracle lambda = EIF-optimal)
   ss_cont_results$n_ppi[i] <- tryCatch(
-    n_required_ppi_pp(
-      delta = delta, N = N_cont, power = power_target, alpha = alpha,
+    power_ppi_mean(
+      delta = delta, N = N_cont, n = NULL, power = power_target, alpha = alpha,
       sigma_y2 = sigma_y2, sigma_f2 = sigma_f2, cov_y_f = cov_yf,
       lambda_mode = "oracle"
+    ),
+    error = function(e) NA
+  )
+
+  # Vanilla PPI required n (lambda = 1)
+  ss_cont_results$n_vanilla[i] <- tryCatch(
+    power_ppi_mean(
+      delta = delta, N = N_cont, n = NULL, power = power_target, alpha = alpha,
+      sigma_y2 = sigma_y2, sigma_f2 = sigma_f2, cov_y_f = cov_yf,
+      lambda_mode = "vanilla"
     ),
     error = function(e) NA
   )
@@ -171,6 +187,7 @@ power_bin_results <- expand.grid(
   clf_label = names(classifier_levels)
 )
 power_bin_results$power_ppi <- NA
+power_bin_results$power_vanilla <- NA
 power_bin_results$power_classical <- NA
 
 var_y_bin <- prevalence * (1 - prevalence)
@@ -181,14 +198,25 @@ for (i in seq_len(nrow(power_bin_results))) {
   clf_label <- power_bin_results$clf_label[i]
   clf <- classifier_levels[[clf_label]]
 
-  # PPI++ power
-  power_bin_results$power_ppi[i] <- power_ppi_pp_mean(
+  # PPI++ power (oracle lambda = EIF-optimal)
+  power_bin_results$power_ppi[i] <- power_ppi_mean(
     delta = delta, N = N_bin, n = n, alpha = alpha,
     metrics = list(
       sensitivity = clf["sens"], specificity = clf["spec"],
       p_y = prevalence, m_obs = n
     ),
     metric_type = "classification"
+  )
+
+  # Vanilla PPI power (lambda = 1)
+  power_bin_results$power_vanilla[i] <- power_ppi_mean(
+    delta = delta, N = N_bin, n = n, alpha = alpha,
+    metrics = list(
+      sensitivity = clf["sens"], specificity = clf["spec"],
+      p_y = prevalence, m_obs = n
+    ),
+    metric_type = "classification",
+    lambda = 1, lambda_type = "user"
   )
 
   # Classical power
@@ -216,6 +244,7 @@ ss_bin_results <- expand.grid(
   clf_label = names(classifier_levels)
 )
 ss_bin_results$n_ppi <- NA
+ss_bin_results$n_vanilla <- NA
 ss_bin_results$n_classical <- NA
 
 for (i in seq_len(nrow(ss_bin_results))) {
@@ -223,16 +252,30 @@ for (i in seq_len(nrow(ss_bin_results))) {
   clf_label <- ss_bin_results$clf_label[i]
   clf <- classifier_levels[[clf_label]]
 
-  # PPI++ required n (oracle lambda to match power function)
+  # PPI++ required n (oracle lambda = EIF-optimal)
   ss_bin_results$n_ppi[i] <- tryCatch(
-    n_required_ppi_pp(
-      delta = delta, N = N_bin, power = power_target, alpha = alpha,
+    power_ppi_mean(
+      delta = delta, N = N_bin, n = NULL, power = power_target, alpha = alpha,
       metrics = list(
         sensitivity = clf["sens"], specificity = clf["spec"],
         p_y = prevalence, m_obs = 200
       ),
       metric_type = "classification",
       lambda_mode = "oracle"
+    ),
+    error = function(e) NA
+  )
+
+  # Vanilla PPI required n (lambda = 1)
+  ss_bin_results$n_vanilla[i] <- tryCatch(
+    power_ppi_mean(
+      delta = delta, N = N_bin, n = NULL, power = power_target, alpha = alpha,
+      metrics = list(
+        sensitivity = clf["sens"], specificity = clf["spec"],
+        p_y = prevalence, m_obs = 200
+      ),
+      metric_type = "classification",
+      lambda_mode = "vanilla"
     ),
     error = function(e) NA
   )
@@ -258,16 +301,18 @@ power_cont_long <- rbind(
   data.frame(power_cont_results[, c("n", "delta", "r2_label", "n_label")],
              power = power_cont_results$power_ppi, method = "PPI++"),
   data.frame(power_cont_results[, c("n", "delta", "r2_label", "n_label")],
+             power = power_cont_results$power_vanilla, method = "Vanilla PPI"),
+  data.frame(power_cont_results[, c("n", "delta", "r2_label", "n_label")],
              power = power_cont_results$power_classical, method = "Classical")
 )
 
 fig1 <- ggplot(power_cont_long[power_cont_long$n == 200, ],
                aes(x = delta, y = power, color = method, linetype = method)) +
-  geom_line(linewidth = 1) +
+  geom_line(linewidth = 1.8) +
   geom_hline(yintercept = 0.8, linetype = "dashed", color = "gray50", alpha = 0.5) +
   facet_wrap(~r2_label, nrow = 1) +
   scale_color_manual(values = colors_method) +
-  scale_linetype_manual(values = c("PPI++" = "solid", "Classical" = "dashed")) +
+  scale_linetype_manual(values = pppower_method_linetypes) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   labs(
     title = "A. Continuous Outcomes: Power Curves by Prediction Quality",
@@ -286,16 +331,18 @@ power_bin_long <- rbind(
   data.frame(power_bin_results[, c("n", "delta", "clf_label", "n_label")],
              power = power_bin_results$power_ppi, method = "PPI++"),
   data.frame(power_bin_results[, c("n", "delta", "clf_label", "n_label")],
+             power = power_bin_results$power_vanilla, method = "Vanilla PPI"),
+  data.frame(power_bin_results[, c("n", "delta", "clf_label", "n_label")],
              power = power_bin_results$power_classical, method = "Classical")
 )
 
 fig2 <- ggplot(power_bin_long[power_bin_long$n == 200, ],
                aes(x = delta, y = power, color = method, linetype = method)) +
-  geom_line(linewidth = 1) +
+  geom_line(linewidth = 1.8) +
   geom_hline(yintercept = 0.8, linetype = "dashed", color = "gray50", alpha = 0.5) +
   facet_wrap(~clf_label, nrow = 1) +
   scale_color_manual(values = colors_method) +
-  scale_linetype_manual(values = c("PPI++" = "solid", "Classical" = "dashed")) +
+  scale_linetype_manual(values = pppower_method_linetypes) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   labs(
     title = "B. Binary Outcomes: Power Curves by Classifier Quality",
@@ -314,15 +361,17 @@ ss_cont_long <- rbind(
   data.frame(ss_cont_results[, c("delta", "r2_label")],
              n = ss_cont_results$n_ppi, method = "PPI++"),
   data.frame(ss_cont_results[, c("delta", "r2_label")],
+             n = ss_cont_results$n_vanilla, method = "Vanilla PPI"),
+  data.frame(ss_cont_results[, c("delta", "r2_label")],
              n = ss_cont_results$n_classical, method = "Classical")
 )
 ss_cont_long <- ss_cont_long[!is.na(ss_cont_long$n), ]
 
 fig3 <- ggplot(ss_cont_long, aes(x = delta, y = n, color = method, linetype = method)) +
-  geom_line(linewidth = 1) +
+  geom_line(linewidth = 1.8) +
   facet_wrap(~r2_label, nrow = 1, scales = "free_y") +
   scale_color_manual(values = colors_method) +
-  scale_linetype_manual(values = c("PPI++" = "solid", "Classical" = "dashed")) +
+  scale_linetype_manual(values = pppower_method_linetypes) +
   labs(
     title = "C. Continuous Outcomes: Required Sample Size for 80% Power",
     subtitle = expression(paste("N = 10,000 unlabeled, ", sigma[Y], " = 1, ", alpha, " = 0.05")),
@@ -340,15 +389,17 @@ ss_bin_long <- rbind(
   data.frame(ss_bin_results[, c("delta", "clf_label")],
              n = ss_bin_results$n_ppi, method = "PPI++"),
   data.frame(ss_bin_results[, c("delta", "clf_label")],
+             n = ss_bin_results$n_vanilla, method = "Vanilla PPI"),
+  data.frame(ss_bin_results[, c("delta", "clf_label")],
              n = ss_bin_results$n_classical, method = "Classical")
 )
 ss_bin_long <- ss_bin_long[!is.na(ss_bin_long$n), ]
 
 fig4 <- ggplot(ss_bin_long, aes(x = delta, y = n, color = method, linetype = method)) +
-  geom_line(linewidth = 1) +
+  geom_line(linewidth = 1.8) +
   facet_wrap(~clf_label, nrow = 1, scales = "free_y") +
   scale_color_manual(values = colors_method) +
-  scale_linetype_manual(values = c("PPI++" = "solid", "Classical" = "dashed")) +
+  scale_linetype_manual(values = pppower_method_linetypes) +
   labs(
     title = "D. Binary Outcomes: Required Sample Size for 80% Power",
     subtitle = "N = 10,000 unlabeled, prevalence = 30%, alpha = 0.05",
@@ -381,7 +432,7 @@ for (i in 1:4) {
   var_res <- (1 - r2) * sigma_y^2
   cov_yf <- r2 * sigma_y^2
 
-  gain_summary$power_ppi[i] <- power_ppi_pp_mean(
+  gain_summary$power_ppi[i] <- power_ppi_mean(
     delta = delta_cont_fixed, N = N_cont, n = n_fixed, alpha = alpha,
     var_f = var_f, var_res = var_res, cov_y_f = cov_yf
   )
@@ -395,7 +446,7 @@ for (i in 1:4) {
 for (i in 1:4) {
   clf <- classifier_levels[[i]]
 
-  gain_summary$power_ppi[i + 4] <- power_ppi_pp_mean(
+  gain_summary$power_ppi[i + 4] <- power_ppi_mean(
     delta = delta_bin_fixed, N = N_bin, n = n_fixed, alpha = alpha,
     metrics = list(sensitivity = clf["sens"], specificity = clf["spec"],
                    p_y = prevalence, m_obs = n_fixed),
@@ -433,14 +484,21 @@ fig5 <- ggplot(gain_summary, aes(x = quality, y = gain, fill = outcome)) +
 cat("\nPart 4: Saving Figures\n")
 cat("----------------------\n")
 
-# Individual figures
-ggsave("simulation_studies/fig_power_continuous.pdf", fig1, width = 12, height = 4)
-ggsave("simulation_studies/fig_power_binary.pdf", fig2, width = 12, height = 4)
-ggsave("simulation_studies/fig_samplesize_continuous.pdf", fig3, width = 12, height = 4)
-ggsave("simulation_studies/fig_samplesize_binary.pdf", fig4, width = 12, height = 4)
-ggsave("simulation_studies/fig_power_gain_summary.pdf", fig5, width = 10, height = 5)
+# Helper: save PDF + PNG at 400 DPI
+save_fig <- function(plot, path, width = 12, height = 4.5) {
+  ggsave(paste0(path, ".pdf"), plot, width = width, height = height)
+  ggsave(paste0(path, ".png"), plot, width = width, height = height,
+         dpi = 400, bg = "white")
+}
 
-cat("  Saved individual PDFs\n")
+# Individual figures
+save_fig(fig1, "simulation_studies/fig_power_continuous")
+save_fig(fig2, "simulation_studies/fig_power_binary")
+save_fig(fig3, "simulation_studies/fig_samplesize_continuous")
+save_fig(fig4, "simulation_studies/fig_samplesize_binary")
+save_fig(fig5, "simulation_studies/fig_power_gain_summary", width = 10, height = 5)
+
+cat("  Saved individual figures (PDF + PNG)\n")
 
 # Combined figure (main figure for paper)
 combined <- grid.arrange(
@@ -449,10 +507,7 @@ combined <- grid.arrange(
   heights = c(1, 1, 1, 1)
 )
 
-ggsave("simulation_studies/fig_main_power_analysis.pdf", combined,
-       width = 12, height = 14)
-ggsave("simulation_studies/fig_main_power_analysis.png", combined,
-       width = 12, height = 14, dpi = 300)
+save_fig(combined, "simulation_studies/fig_main_power_analysis", width = 12, height = 15)
 
 cat("  Saved combined figure (PDF + PNG)\n")
 
@@ -473,9 +528,9 @@ for (label in names(r2_levels)) {
   cov_yf <- rho * sigma_y * sqrt(sigma_f2)
 
   n_ppi <- tryCatch(
-    n_required_ppi_pp(delta = 0.3, N = N_cont, power = 0.8, alpha = 0.05,
-                      sigma_y2 = sigma_y2, sigma_f2 = sigma_f2, cov_y_f = cov_yf,
-                      lambda_mode = "oracle"),
+    power_ppi_mean(delta = 0.3, N = N_cont, n = NULL, power = 0.8, alpha = 0.05,
+                   sigma_y2 = sigma_y2, sigma_f2 = sigma_f2, cov_y_f = cov_yf,
+                   lambda_mode = "oracle"),
     error = function(e) NA
   )
   n_classical <- sigma_y^2 * ((z_alpha + z_beta) / 0.3)^2
@@ -491,11 +546,11 @@ for (label in names(classifier_levels)) {
   clf <- classifier_levels[[label]]
 
   n_ppi <- tryCatch(
-    n_required_ppi_pp(delta = 0.05, N = N_bin, power = 0.8, alpha = 0.05,
-                      metrics = list(sensitivity = clf["sens"], specificity = clf["spec"],
-                                     p_y = prevalence, m_obs = 200),
-                      metric_type = "classification",
-                      lambda_mode = "oracle"),
+    power_ppi_mean(delta = 0.05, N = N_bin, n = NULL, power = 0.8, alpha = 0.05,
+                   metrics = list(sensitivity = clf["sens"], specificity = clf["spec"],
+                                  p_y = prevalence, m_obs = 200),
+                   metric_type = "classification",
+                   lambda_mode = "oracle"),
     error = function(e) NA
   )
   n_classical <- var_y_bin * ((z_alpha + z_beta) / 0.05)^2
