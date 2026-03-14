@@ -107,9 +107,7 @@ fig_A <- ggplot(plot_data_A, aes(x = n)) +
   scale_color_manual(values = colors_val) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   labs(
-    title = "A. Mean Estimation (Continuous)",
-    subtitle = sprintf("PPI++ power: Delta = %.1f, R = %d replications",
-                       delta, R),
+    title = "Mean Estimation (Continuous)",
     x = "Labeled Sample Size (n)", y = "Power", color = ""
   ) +
   theme_validation()
@@ -131,9 +129,7 @@ fig_B <- ggplot(plot_data_B, aes(x = n)) +
   scale_color_manual(values = colors_val) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   labs(
-    title = "B. Mean Estimation (Binary/Prevalence)",
-    subtitle = sprintf("PPI++ power: Delta = %.2f, p0 = %.1f",
-                       delta_bin, p0),
+    title = "Mean Estimation (Binary)",
     x = "Labeled Sample Size (n)", y = "Power", color = ""
   ) +
   theme_validation()
@@ -156,8 +152,7 @@ fig_C <- ggplot(plot_data_C, aes(x = n)) +
   scale_color_manual(values = colors_val) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   labs(
-    title = "C. Two-Sample t-Test (Continuous)",
-    subtitle = sprintf("PPI++ power: Delta = %.1f", delta_ttest),
+    title = "Two-Sample t-Test (Continuous)",
     x = "Per-Group Labeled Sample Size (n)", y = "Power", color = ""
   ) +
   theme_validation()
@@ -179,9 +174,7 @@ fig_D <- ggplot(plot_data_D, aes(x = n)) +
   scale_color_manual(values = colors_val) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   labs(
-    title = "D. Two-Sample Proportion Test (Binary)",
-    subtitle = sprintf("PPI++ power: Delta = %.2f, p0 = %.1f",
-                       delta_prop, p0_prop),
+    title = "Two-Sample Proportion Test (Binary)",
     x = "Per-Group Labeled Sample Size (n)", y = "Power", color = ""
   ) +
   theme_validation()
@@ -204,8 +197,7 @@ fig_E <- ggplot(plot_data_E, aes(x = n)) +
   scale_color_manual(values = colors_val) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   labs(
-    title = "E. Paired t-Test (Continuous)",
-    subtitle = sprintf("PPI++ power: Delta = %.1f", delta_paired),
+    title = "Paired t-Test (Continuous)",
     x = "Number of Pairs (n)", y = "Power", color = ""
   ) +
   theme_validation()
@@ -227,9 +219,7 @@ fig_F <- ggplot(plot_data_F, aes(x = n)) +
   scale_color_manual(values = colors_val) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   labs(
-    title = "F. Paired Proportion Test (Binary)",
-    subtitle = sprintf("PPI++ power: Delta = %.2f, p0 = %.1f",
-                       delta_paired_bin, p0_paired),
+    title = "Paired Proportion Test (Binary)",
     x = "Number of Pairs (n)", y = "Power", color = ""
   ) +
   theme_validation()
@@ -252,8 +242,7 @@ fig_G <- ggplot(plot_data_G, aes(x = n)) +
   scale_color_manual(values = colors_val) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   labs(
-    title = "G. Mean Estimation (Log-Normal, Skewed)",
-    subtitle = sprintf("PPI++ power: Delta = %.3f", delta_lognorm),
+    title = "Mean Estimation (Log-Normal)",
     x = "Labeled Sample Size (n)", y = "Power", color = ""
   ) +
   theme_validation()
@@ -276,8 +265,7 @@ fig_H <- ggplot(plot_data_H, aes(x = n)) +
   scale_color_manual(values = colors_val) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   labs(
-    title = "H. Mean Estimation (t-dist df=5, Heavy-Tailed)",
-    subtitle = sprintf("PPI++ power: Delta = %.1f", delta_t),
+    title = "Mean Estimation (t-Distribution, df = 5)",
     x = "Labeled Sample Size (n)", y = "Power", color = ""
   ) +
   theme_validation()
@@ -310,8 +298,7 @@ if (exists("results_eif_binary") && is.data.frame(results_eif_binary)) {
     scale_color_manual(values = colors_val) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(
-      title = "I. EIF Binary Surrogate Validation",
-      subtitle = sprintf("PPI++ power: Delta = %.2f, R = %d", 0.05, 1000),
+      title = "EIF Binary Surrogate",
       x = "Calibration Sample Size (m_cal)", y = "Power", color = ""
     ) +
     theme_validation()
@@ -339,8 +326,7 @@ if (exists("results_n_inversion") && is.data.frame(results_n_inversion)) {
     scale_x_continuous(limits = c(0.5, 1), breaks = seq(0.5, 1, 0.1)) +
     scale_y_continuous(limits = c(0.5, 1), breaks = seq(0.5, 1, 0.1)) +
     labs(
-      title = "J. Sample Size Inversion Validation",
-      subtitle = "Achieved power at n* vs. target power (dashed = identity)",
+      title = "Sample Size Inversion",
       x = "Target Power", y = "Achieved Power at n*",
       color = "Design", shape = "Design"
     ) +
@@ -354,20 +340,28 @@ if (exists("results_n_inversion") && is.data.frame(results_n_inversion)) {
 # =============================================================================
 if (exists("results_rule_of_thumb") && is.data.frame(results_rule_of_thumb)) {
   plot_data_K <- results_rule_of_thumb
-  plot_data_K$N_label <- paste0("N = ", formatC(plot_data_K$N, big.mark = ","))
+  plot_data_K$N_label <- factor(
+    paste0("N = ", formatC(plot_data_K$N, big.mark = ",")),
+    levels = paste0("N = ", formatC(sort(unique(plot_data_K$N)), big.mark = ","))
+  )
+
+  n_colors <- c("#E69F00", "#56B4E9", "#009E73", "#CC79A7")
+  n_linetypes <- c("solid", "longdash", "twodash", "dotted")
 
   fig_K <- ggplot(plot_data_K, aes(x = rho_sq)) +
-    geom_line(aes(y = ratio, color = N_label), linewidth = 1.8) +
-    geom_line(aes(y = theoretical_ratio), linetype = "dashed",
-              color = pppower_colors$reference, linewidth = 1.2) +
+    geom_line(aes(y = theoretical_ratio), linetype = "solid",
+              color = "black", linewidth = 1.5) +
+    geom_line(aes(y = ratio, color = N_label, linetype = N_label),
+              linewidth = 1.2) +
+    scale_color_manual(values = n_colors) +
+    scale_linetype_manual(values = n_linetypes) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     scale_x_continuous(breaks = seq(0, 1, 0.2)) +
     labs(
-      title = expression(paste("K. Rule of Thumb: ", n[PPI] / n[classical], " vs. 1 - ", rho^2)),
-      subtitle = "Dashed line = theoretical 1 - rho^2",
+      title = expression(paste("Rule of Thumb: ", n[PPI] / n[classical], " vs. 1 - ", rho^2)),
       x = expression(rho^2),
       y = expression(n[PPI] / n[classical]),
-      color = "Unlabeled N"
+      color = "Unlabeled N", linetype = "Unlabeled N"
     ) +
     theme_validation()
 
@@ -394,8 +388,7 @@ if (exists("results_type1_error") && is.list(results_type1_error)) {
       facet_grid(N_label ~ rho_label) +
       scale_y_continuous(limits = c(0, 0.12), breaks = seq(0, 0.12, 0.02)) +
       labs(
-        title = "L. Type I Error Calibration (PPI++, Gaussian Mean, H0)",
-        subtitle = "Dashed = nominal 0.05; dotted = 95% MC CI",
+        title = "Type I Error Calibration",
         x = "Labeled Sample Size (n)", y = "Rejection Rate"
       ) +
       theme_validation()
@@ -411,26 +404,24 @@ if (exists("results_lambda_convergence") && is.data.frame(results_lambda_converg
   plot_data_M <- results_lambda_convergence
   plot_data_M$rho_label <- paste0("rho == ", plot_data_M$rho)
 
-  fig_M <- ggplot(plot_data_M, aes(x = n)) +
-    geom_ribbon(aes(ymin = lambda_hat_mean - lambda_hat_sd,
-                    ymax = lambda_hat_mean + lambda_hat_sd),
-                alpha = 0.2, fill = pppower_colors$ppi_pp) +
-    geom_line(aes(y = lambda_hat_mean, color = "Plugin mean"), linewidth = 1.8) +
-    geom_hline(aes(yintercept = lambda_oracle, color = "Oracle"),
-               linetype = "dashed", linewidth = 0.8,
-               data = plot_data_M[!duplicated(plot_data_M$rho), ]) +
-    facet_wrap(~rho_label, scales = "free_y",
-               labeller = labeller(rho_label = label_parsed)) +
-    scale_color_manual(values = c(
-      "Plugin mean" = pppower_colors$ppi_pp,
-      "Oracle"      = pppower_colors$classical
-    )) +
-    scale_x_log10() +
+  fig_M <- ggplot(plot_data_M, aes(x = lambda_oracle, y = lambda_hat_mean)) +
+    geom_abline(slope = 1, intercept = 0, linetype = "dashed",
+                color = "gray40", linewidth = 0.8) +
+    geom_point(aes(color = rho_label), size = 4) +
+    geom_errorbar(aes(ymin = lambda_hat_mean - lambda_hat_sd,
+                      ymax = lambda_hat_mean + lambda_hat_sd,
+                      color = rho_label),
+                  width = 0.01, linewidth = 0.6) +
+    scale_color_manual(
+      values = c(pppower_colors$ppi_pp, pppower_colors$classical, pppower_colors$vanilla),
+      labels = function(x) parse(text = x)
+    ) +
+    coord_equal() +
     labs(
-      title = "M. Plugin Lambda Convergence to Oracle",
-      subtitle = "Ribbon = +/- 1 SD across R = 1000 replications",
-      x = "Labeled Sample Size (n, log scale)",
-      y = expression(lambda), color = ""
+      title = "Plugin Lambda Convergence",
+      x = expression(paste("Oracle ", lambda, "*")),
+      y = expression(paste("Plugin ", hat(lambda))),
+      color = ""
     ) +
     theme_validation()
 
@@ -474,8 +465,7 @@ if (exists("results_plugin_lambda") && is.data.frame(results_plugin_lambda)) {
     )) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(
-      title = "N. Plugin vs Oracle Lambda Power",
-      subtitle = "Analytical power formula vs MC with oracle/plugin lambda",
+      title = "Plugin vs Oracle Lambda Power",
       x = "Labeled Sample Size (n)", y = "Power", color = ""
     ) +
     theme_validation()
@@ -503,9 +493,7 @@ if (exists("results_power_vs_delta") && is.data.frame(results_power_vs_delta)) {
     scale_color_manual(values = colors_val) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(
-      title = "O. Power vs Effect Size (Delta)",
-      subtitle = sprintf("PPI++ power: N = %d, varying delta",
-                         results_power_vs_delta$N[1]),
+      title = "Power vs Effect Size",
       x = expression(Delta), y = "Power", color = ""
     ) +
     theme_validation()
@@ -535,9 +523,7 @@ if (exists("results_small_n") && is.data.frame(results_small_n)) {
     scale_color_manual(values = colors_val) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(
-      title = "P. Small n Regime (CLT Breakdown)",
-      subtitle = sprintf("PPI++ power: Delta = %.1f, R = 2000 reps",
-                         results_small_n$delta[1]),
+      title = "Small n Regime",
       x = "Labeled Sample Size (n)", y = "Power", color = ""
     ) +
     theme_validation()
@@ -570,9 +556,7 @@ if (exists("results_Nn_ratio") && is.data.frame(results_Nn_ratio)) {
     )) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(
-      title = "Q. N/n Ratio Sensitivity",
-      subtitle = sprintf("n = %d fixed; dashed = classical power (no PPI)",
-                         results_Nn_ratio$n[1]),
+      title = "N/n Ratio Sensitivity",
       x = "N / n Ratio (log scale)", y = "Power", color = ""
     ) +
     theme_validation()
@@ -598,11 +582,7 @@ if (exists("results_unequal") && is.data.frame(results_unequal)) {
     scale_x_continuous(breaks = sort(unique(results_unequal$alloc_ratio)),
                        labels = sprintf("%.0f:1", sort(unique(results_unequal$alloc_ratio)))) +
     labs(
-      title = "R. Unequal Group Sizes (Two-Sample t-Test)",
-      subtitle = sprintf("n_total = %d, N_total = %d, Delta = %.1f",
-                         sum(results_unequal$n_A[1], results_unequal$n_B[1]),
-                         sum(results_unequal$N_A[1], results_unequal$N_B[1]),
-                         results_unequal$delta[1]),
+      title = "Unequal Group Sizes",
       x = expression(n[A]:n[B] ~ "Allocation Ratio"), y = "Power", color = ""
     ) +
     theme_validation()
@@ -629,9 +609,7 @@ if (exists("results_ols_regression") && is.data.frame(results_ols_regression)) {
     scale_color_manual(values = colors_val) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(
-      title = "S. OLS Regression Contrast",
-      subtitle = sprintf("PPI++ power: a = (1,-1), Delta = %.1f, R = %d",
-                         results_ols_regression$delta[1], R),
+      title = "OLS Regression Contrast",
       x = "Labeled Sample Size (n)", y = "Power", color = ""
     ) +
     theme_validation()
@@ -658,9 +636,7 @@ if (exists("results_glm_logistic") && is.data.frame(results_glm_logistic)) {
     scale_color_manual(values = colors_val) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(
-      title = "T. GLM Logistic Regression Contrast",
-      subtitle = sprintf("PPI++ power: a = (1,-1), Delta = %.1f, R = %d",
-                         results_glm_logistic$delta[1], R),
+      title = "GLM Logistic Regression Contrast",
       x = "Labeled Sample Size (n)", y = "Power", color = ""
     ) +
     theme_validation()
@@ -673,9 +649,9 @@ if (exists("results_glm_logistic") && is.data.frame(results_glm_logistic)) {
 # =============================================================================
 if (exists("results_2x2_or") && is.data.frame(results_2x2_or)) {
   plot_data_U <- results_2x2_or %>%
-    mutate(p_exp_label = sprintf("p[exp] == %.2f", p_exp),
-           acc_label   = sprintf("Accuracy = %.0f%%", accuracy * 100),
-           N_label     = paste0("N == ", N))
+    filter(p_exp == 0.40) %>%
+    mutate(acc_label = sprintf("Accuracy = %.0f%%", accuracy * 100),
+           N_label  = paste0("N == ", N))
 
   fig_U <- ggplot(plot_data_U, aes(x = n)) +
     geom_line(aes(y = power_theo_classical, color = "Classical"),
@@ -688,9 +664,7 @@ if (exists("results_2x2_or") && is.data.frame(results_2x2_or)) {
     scale_color_manual(values = colors_val) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(
-      title = "U. 2x2 Table: Odds Ratio (PPI++ Logistic)",
-      subtitle = sprintf("p_ctrl = %.2f, prev_exp = %.1f, R = %d",
-                         results_2x2_or$p_ctrl[1], 0.5, 1000),
+      title = "2x2 Table: Odds Ratio",
       x = "Total Labeled Sample Size (n)", y = "Power", color = ""
     ) +
     theme_validation()
@@ -703,9 +677,9 @@ if (exists("results_2x2_or") && is.data.frame(results_2x2_or)) {
 # =============================================================================
 if (exists("results_2x2_rr") && is.data.frame(results_2x2_rr)) {
   plot_data_V <- results_2x2_rr %>%
-    mutate(p_exp_label = sprintf("p[exp] == %.2f", p_exp),
-           acc_label   = sprintf("Accuracy = %.0f%%", accuracy * 100),
-           N_label     = paste0("N == ", N))
+    filter(p_exp == 0.40) %>%
+    mutate(acc_label = sprintf("Accuracy = %.0f%%", accuracy * 100),
+           N_label  = paste0("N == ", N))
 
   fig_V <- ggplot(plot_data_V, aes(x = n)) +
     geom_line(aes(y = power_theo_classical, color = "Classical"),
@@ -718,9 +692,7 @@ if (exists("results_2x2_rr") && is.data.frame(results_2x2_rr)) {
     scale_color_manual(values = colors_val) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(
-      title = "V. 2x2 Table: Relative Risk (PPI++ Delta Method)",
-      subtitle = sprintf("p_ctrl = %.2f, prev_exp = %.1f, R = %d",
-                         results_2x2_rr$p_ctrl[1], 0.5, 1000),
+      title = "2x2 Table: Relative Risk",
       x = "Total Labeled Sample Size (n)", y = "Power", color = ""
     ) +
     theme_validation()
