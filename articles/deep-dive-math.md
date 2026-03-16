@@ -1,6 +1,6 @@
 # Detailed Dive: Variance Formulas and lambda-star
 
-## Mean estimator and PPI++
+## Mean estimator and `PPI++`
 
 For labeled size $n$ and unlabeled size $N$:
 

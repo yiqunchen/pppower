@@ -8,7 +8,7 @@ This helper wraps:
 
 - `compute_hessian_fisher` — model Hessian or Fisher information
 
-- `compute_sigma_blocks` — Σ-block covariance components
+- `compute_sigma_blocks` — Sigma-block covariance components
 
 and produces a unified object that can be passed directly to
 [`power_ppi_regression()`](https://yiqunchen.github.io/pppower/reference/power_ppi_regression.md)
@@ -38,7 +38,7 @@ compute_ppi_blocks(
 
 - X_l:
 
-  Matrix of labeled covariates (n × p).
+  Matrix of labeled covariates (n x p).
 
 - Y_l:
 
@@ -50,7 +50,7 @@ compute_ppi_blocks(
 
 - X_u:
 
-  Matrix of unlabeled covariates (N × p).
+  Matrix of unlabeled covariates (N x p).
 
 - f_u:
 
@@ -72,27 +72,27 @@ A named list of matrices:
 
 - H_L:
 
-  Labeled-data Hessian / Fisher information (p × p)
+  Labeled-data Hessian / Fisher information (p x p)
 
 - H_U:
 
-  Unlabeled-data Hessian / Fisher information (p × p)
+  Unlabeled-data Hessian / Fisher information (p x p)
 
 - Sigma_YY:
 
-  Covariance of labeled score (`Y − Xβ`) (p × p)
+  Covariance of labeled score (`Y - X beta`) (p x p)
 
 - Sigma_ff_l:
 
-  Covariance of prediction score on labeled data (p × p)
+  Covariance of prediction score on labeled data (p x p)
 
 - Sigma_ff_u:
 
-  Covariance of prediction score on unlabeled data (p × p)
+  Covariance of prediction score on unlabeled data (p x p)
 
 - Sigma_Yf:
 
-  Cross-covariance between labeled scores and prediction scores (p × p)
+  Cross-covariance between labeled scores and prediction scores (p x p)
 
 These matrices are exactly the inputs needed for
 [`power_ppi_regression()`](https://yiqunchen.github.io/pppower/reference/power_ppi_regression.md)

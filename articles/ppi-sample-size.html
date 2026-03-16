@@ -34,7 +34,6 @@
 <li class="nav-item"><a class="nav-link" href="../articles/intro-ppi.html">Basics</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/deep-dive-math.html">Variance &amp; Metrics</a></li>
 <li class="active nav-item"><a class="nav-link" href="../articles/ppi-sample-size.html">Sample Size</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/llm-judge-binary.html">LLM Judge (Binary)</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -74,6 +73,9 @@
 <li>How to feed prediction metrics (MSE,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>,
 sensitivity/specificity) instead of raw moments</li>
+<li>How to plan odds-ratio and relative-risk studies with
+<code><a href="../reference/power_ppi_2x2.html">power_ppi_2x2()</a></code>
+</li>
 <li>Short, focused code blocks you can copy/paste</li>
 </ul>
 </div>
@@ -199,7 +201,7 @@ finite-sample corrections keep the derived moments feasible.</p>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 43</span></span>
 <span></span>
-<span><span class="co"># PPI++ oracle-λ</span></span>
+<span><span class="co"># `PPI++` oracle-λ</span></span>
 <span><span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  delta       <span class="op">=</span> <span class="fl">0.15</span>,</span>
 <span>  N           <span class="op">=</span> <span class="fl">520</span>,</span>
@@ -215,18 +217,43 @@ prevalence from the confusion matrix and maps them to
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">V</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">r</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>f</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathrm{Var}(f)</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">v</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathrm{Cov}(Y,f)</annotation></semantics></math>.</p>
-<p>For LLM-as-a-judge binary surrogates and EIF-based power, see the
-“LLM Judge” article. - variance of residuals - covariance (
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">v</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathrm{Cov}(Y,f)</annotation></semantics></math>
-)</p>
-<p>using identities derived from the confusion matrix.</p>
+</div>
+<div class="section level2">
+<h2 id="x2-tables-odds-ratio-and-relative-risk">2x2 tables: odds ratio and relative risk<a class="anchor" aria-label="anchor" href="#x2-tables-odds-ratio-and-relative-risk"></a>
+</h2>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/power_ppi_2x2.html">power_ppi_2x2</a></span><span class="op">(</span></span>
+<span>  p_exp          <span class="op">=</span> <span class="fl">0.35</span>,</span>
+<span>  p_ctrl         <span class="op">=</span> <span class="fl">0.20</span>,</span>
+<span>  N              <span class="op">=</span> <span class="fl">500</span>,</span>
+<span>  power          <span class="op">=</span> <span class="fl">0.80</span>,</span>
+<span>  sens           <span class="op">=</span> <span class="fl">0.85</span>,</span>
+<span>  spec           <span class="op">=</span> <span class="fl">0.85</span>,</span>
+<span>  effect_measure <span class="op">=</span> <span class="st">"OR"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 203</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/power_ppi_2x2.html">power_ppi_2x2</a></span><span class="op">(</span></span>
+<span>  p_exp          <span class="op">=</span> <span class="fl">0.35</span>,</span>
+<span>  p_ctrl         <span class="op">=</span> <span class="fl">0.20</span>,</span>
+<span>  N              <span class="op">=</span> <span class="fl">500</span>,</span>
+<span>  power          <span class="op">=</span> <span class="fl">0.80</span>,</span>
+<span>  sens           <span class="op">=</span> <span class="fl">0.85</span>,</span>
+<span>  spec           <span class="op">=</span> <span class="fl">0.85</span>,</span>
+<span>  effect_measure <span class="op">=</span> <span class="st">"RR"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 210</span></span></code></pre></div>
+<p>Use <code>effect_measure = "OR"</code> for an odds-ratio design
+framed through a logistic contrast, or
+<code>effect_measure = "RR"</code> for a relative-risk design based on
+the delta method applied to the arm-specific PPI estimates.</p>
 </div>
 <div class="section level2">
 <h2 id="regression-mode-sample-size-ols">Regression-Mode Sample Size — OLS<a class="anchor" aria-label="anchor" href="#regression-mode-sample-size-ols"></a>
 </h2>
 <p>We now demonstrate the <strong>regression contrast</strong> mode.</p>
 <p>Generate Data:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span>    <span class="op">&lt;-</span> <span class="fl">4</span></span>
 <span><span class="va">n_l</span>  <span class="op">&lt;-</span> <span class="fl">400</span></span>
 <span><span class="va">n_u</span>  <span class="op">&lt;-</span> <span class="fl">3000</span></span>
@@ -238,8 +265,9 @@ and
 <span><span class="va">Y_l</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">X_l</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_l</span>, sd <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">f_l</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">X_l</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_l</span>, sd <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">f_u</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/drop.html" class="external-link">drop</a></span><span class="op">(</span><span class="va">X_u</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_u</span>, sd <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Construct PPI++ blocks for sandwich variance estimators:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<p>Construct <code>PPI++</code> blocks for sandwich variance
+estimators:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">blocks</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_ppi_blocks.html">compute_ppi_blocks</a></span><span class="op">(</span></span>
 <span>  model_type <span class="op">=</span> <span class="st">"ols"</span>,</span>
 <span>  X_l <span class="op">=</span> <span class="va">X_l</span>, Y_l <span class="op">=</span> <span class="va">Y_l</span>, f_l <span class="op">=</span> <span class="va">f_l</span>,</span>
@@ -248,7 +276,7 @@ and
 <span><span class="op">)</span></span></code></pre></div>
 <p>Solve sample size for contrast
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>c</mi><mi>⊤</mi></msup><mi>β</mi></mrow><annotation encoding="application/x-tex">c^\top \beta</annotation></semantics></math>:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">c_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="va">delta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">c_vec</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta</span><span class="op">)</span></span>
 <span></span>
@@ -288,7 +316,7 @@ and
 <h2 id="regression-mode-sample-size-glm-logistic-regression">Regression-Mode Sample Size — GLM: Logistic Regression<a class="anchor" aria-label="anchor" href="#regression-mode-sample-size-glm-logistic-regression"></a>
 </h2>
 <p>(We follow similar steps as described in OLS case above)</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span>    <span class="op">&lt;-</span> <span class="fl">3</span></span>
 <span><span class="va">n_l</span>  <span class="op">&lt;-</span> <span class="fl">500</span></span>
 <span><span class="va">n_u</span>  <span class="op">&lt;-</span> <span class="fl">2500</span></span>
@@ -307,9 +335,9 @@ and
 <span></span>
 <span><span class="va">f_l</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="va">eta_l</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_l</span>, sd <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">f_u</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="va">eta_u</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_u</span>, sd <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Construct PPI++ blocks for sandwich variance estimators similar to
-previous OLS case:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<p>Construct <code>PPI++</code> blocks for sandwich variance estimators
+similar to previous OLS case:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">blocks_glm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_ppi_blocks.html">compute_ppi_blocks</a></span><span class="op">(</span></span>
 <span>  model_type <span class="op">=</span> <span class="st">"glm"</span>,</span>
 <span>  family     <span class="op">=</span> <span class="st">"binomial"</span>,</span>
@@ -318,7 +346,7 @@ previous OLS case:</p>
 <span>  beta <span class="op">=</span> <span class="va">beta</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Then solve for sample size:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">c_vec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="va">delta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">c_vec</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="va">beta</span><span class="op">)</span></span>
 <span></span>
@@ -363,7 +391,7 @@ exceeds the unlabeled
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>),
 the function throws an error by default
 (<code>mode = "error"</code>):</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  delta <span class="op">=</span> <span class="fl">0.03</span>,</span>
 <span>  N     <span class="op">=</span> <span class="fl">1000</span>,</span>
@@ -378,7 +406,7 @@ the function throws an error by default
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Required n = 8710 exceeds N = 1000.</span></span></code></pre></div>
 <p>Switch to <code>mode = "cap"</code> to get an estimate of power at
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mi>N</mi></mrow><annotation encoding="application/x-tex">n = N</annotation></semantics></math>:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span></span>
 <span>  delta <span class="op">=</span> <span class="fl">0.03</span>,</span>
 <span>  N     <span class="op">=</span> <span class="fl">1000</span>,</span>
@@ -404,9 +432,9 @@ the function throws an error by default
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>)
 decreases as effect size grows, and how oracle
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
-for PPI++ estimator provides a clear reduction in sample size
-estimations over vanilla PPI:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+for <code>PPI++</code> estimator provides a clear reduction in sample
+size estimations over vanilla PPI:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">delta_grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.10</span>, <span class="fl">0.40</span>, length.out <span class="op">=</span> <span class="fl">40</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Shared parameters (mean-estimation case)</span></span>
@@ -488,8 +516,8 @@ estimations over vanilla PPI:</p>
 </h2>
 <p>This vignette demonstrated:</p>
 <ul>
-<li>How to compute PPI / PPI++ sample size for mean estimation and
-regression.</li>
+<li>How to compute PPI / <code>PPI++</code> sample size for mean
+estimation and regression.</li>
 <li>How to use direct moments or prediction metrics (continuous or
 classification).</li>
 <li>How to incorporate OLS or GLM models into contrast-based
@@ -499,8 +527,8 @@ inference.</li>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
 affects the required labeled sample size.</li>
 </ul>
-<p>PPI++ typically yields the smallest labeled sample size, especially
-when the prediction model is strong and the correlation (
+<p><code>PPI++</code> typically yields the smallest labeled sample size,
+especially when the prediction model is strong and the correlation (
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">C</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">v</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathrm{Cov}(Y,f(X))</annotation></semantics></math>
 ) is high.</p>
 </div>

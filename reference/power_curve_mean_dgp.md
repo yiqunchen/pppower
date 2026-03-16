@@ -91,7 +91,7 @@ A data frame with one row per `n` in `n_grid`, containing:
 
 - abs_diff:
 
-  Absolute difference \|empirical − analytical\|.
+  Absolute difference \|empirical - analytical\|.
 
 ## Examples
 

@@ -1,7 +1,7 @@
 # pppower
 
 **pppower** is an R package for power analysis and sample-size
-calculation under the Prediction-Powered Inference (PPI/PPI++)
+calculation under the Prediction-Powered Inference (PPI/`PPI++`)
 framework.
 
 ## Prevalence Estimation with PPI
@@ -10,9 +10,9 @@ For binary outcomes (prevalence), you can estimate required **labeled**
 sample size while leveraging model predictions on a large unlabeled set.
 This is exactly what PPI is for:
 
-- Inputs: target effect size $\Delta$, unlabeled size $N$, and model
-  quality (e.g., sensitivity/specificity)
-- Output: required labeled $n$ for your target power
+- Inputs: target effect size (), unlabeled size (N), and model quality
+  (e.g., sensitivity/specificity)
+- Output: required labeled (n) for your target power
 - Benefit: better predictions can reduce labeled annotation burden
 
 Use `power_ppi_mean(..., n = NULL)` for one-sample prevalence and
@@ -38,7 +38,7 @@ Many modern studies have access to:
   and abundant, with ML predictions
   $f\left( {\widetilde{X}}_{j} \right)$ available
 
-PPI combines both sources for valid, efficient inference. The PPI++
+PPI combines both sources for valid, efficient inference. The `PPI++`
 estimator for the population mean $\theta^{*} = E\lbrack Y\rbrack$ is:
 
 $${\widehat{\theta}}_{\lambda} = {\bar{Y}}_{L} + \lambda\left( {\bar{f}}_{U} - {\bar{f}}_{L} \right)$$
@@ -49,7 +49,7 @@ needed** for a given level of statistical power.
 
 ## Key Formulas
 
-The PPI++ variance under the oracle $\lambda^{*}$ is:
+The `PPI++` variance under the oracle $\lambda^{*}$ is:
 
 $$\text{Var}\left( {\widehat{\theta}}_{\lambda^{*}} \right) = \frac{\sigma_{Y}^{2}}{n} - \frac{\text{Cov}(Y,f)^{2}}{\sigma_{f}^{2}} \cdot \frac{N}{n(n + N)}$$
 
@@ -61,8 +61,8 @@ where
 $S^{2} = \left( \Delta/\left( z_{1 - \alpha/2} + z_{1 - \beta} \right) \right)^{2}$.
 
 **Rule of thumb:** The sample size ratio satisfies
-$n_{\text{PPI++}}/n_{\text{classical}} \approx 1 - R^{2}$, where $R^{2}$
-is the squared correlation between $Y$ and $f(X)$. A predictor
+$n_{\texttt{𝙿𝙿𝙸++}}/n_{\text{classical}} \approx 1 - R^{2}$, where
+$R^{2}$ is the squared correlation between $Y$ and $f(X)$. A predictor
 explaining 80% of the variance cuts labeled data needs by ~80%.
 
 ## Supported Designs
@@ -73,8 +73,8 @@ explaining 80% of the variance cuts labeled data needs by ~80%.
 | One-sample mean (binary)     | [`power_ppi_mean()`](https://yiqunchen.github.io/pppower/reference/power_ppi_mean.md)             | `simulate_ppi_vanilla_mean()`                                                                               |
 | Two-sample $t$-test          | [`power_ppi_ttest()`](https://yiqunchen.github.io/pppower/reference/power_ppi_ttest.md)           | [`simulate_ppi_ttest_binary()`](https://yiqunchen.github.io/pppower/reference/simulate_ppi_ttest_binary.md) |
 | Paired $t$-test              | [`power_ppi_paired()`](https://yiqunchen.github.io/pppower/reference/power_ppi_paired.md)         | —                                                                                                           |
+| 2x2 contingency table        | [`power_ppi_2x2()`](https://yiqunchen.github.io/pppower/reference/power_ppi_2x2.md)               | —                                                                                                           |
 | Regression contrast          | [`power_ppi_regression()`](https://yiqunchen.github.io/pppower/reference/power_ppi_regression.md) | —                                                                                                           |
-| EIF binary surrogate         | [`power_eif_binary()`](https://yiqunchen.github.io/pppower/reference/power_eif_binary.md)         | [`simulate_eif_binary()`](https://yiqunchen.github.io/pppower/reference/simulate_eif_binary.md)             |
 
 ## Installation
 
@@ -169,21 +169,19 @@ power_ppi_mean(delta = 0.05, N = 5000, n = 200,
   regression contrasts
   ([`vignette("ppi-sample-size")`](https://yiqunchen.github.io/pppower/articles/ppi-sample-size.md))
 - **Detailed Dive: Variance Formulas and lambda-star** — mathematical
-  derivations behind the PPI++ variance and oracle $\lambda^{*}$
+  derivations behind the `PPI++` variance and oracle $\lambda^{*}$
   ([`vignette("deep-dive-math")`](https://yiqunchen.github.io/pppower/articles/deep-dive-math.md))
-- **Real Data: LLM-as-a-Judge (Binary Surrogates)** — EIF-based power
-  analysis for binary surrogate evaluators
-  ([`vignette("llm-judge-binary")`](https://yiqunchen.github.io/pppower/articles/llm-judge-binary.md))
+- **2x2 Contingency Table Calculator** — odds-ratio and relative-risk
+  planning with binary surrogates
+  ([`vignette("calculator-2x2")`](https://yiqunchen.github.io/pppower/articles/calculator-2x2.md))
 
 ## Citation
 
 If you use `pppower` in your research, please cite:
 
-``` R
-@software{pppower,
-  title = {pppower: Prediction-Powered Inference Power Calculations},
-  author = {Guo, Moran and Chen, Yiqun},
-  url = {https://github.com/yiqunchen/pppower},
-  year = {2025}
-}
-```
+    @software{pppower,
+      title = {pppower: Prediction-Powered Inference Power Calculations},
+      author = {Guo, Moran and Chen, Yiqun},
+      url = {https://github.com/yiqunchen/pppower},
+      year = {2025}
+    }

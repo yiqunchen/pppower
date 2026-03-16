@@ -4,7 +4,7 @@ blocks used by Prediction-Powered Inference (PPI) and PPI++ for
 regression-based estimands (OLS or GLM contrasts).
 This helper wraps:
 compute_hessian_fisher — model Hessian or Fisher information
-compute_sigma_blocks   — Σ-block covariance components
+compute_sigma_blocks   — Sigma-block covariance components
 
 
 and produces a unified object that can be passed directly to
@@ -13,7 +13,7 @@ blocks used by Prediction-Powered Inference (PPI) and PPI++ for
 regression-based estimands (OLS or GLM contrasts).
 This helper wraps:
 compute_hessian_fisher — model Hessian or Fisher information
-compute_sigma_blocks   — Σ-block covariance components
+compute_sigma_blocks   — Sigma-block covariance components
 
 
 and produces a unified object that can be passed directly to
@@ -38,7 +38,6 @@ power_ppi_regression() for labeled sample size calculations."></head><body>
 <li class="nav-item"><a class="nav-link" href="../articles/intro-ppi.html">Basics</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/deep-dive-math.html">Variance &amp; Metrics</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/ppi-sample-size.html">Sample Size</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/llm-judge-binary.html">LLM Judge (Binary)</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -60,7 +59,7 @@ power_ppi_regression() for labeled sample size calculations."></head><body>
 blocks used by Prediction-Powered Inference (PPI) and PPI++ for
 regression-based estimands (OLS or GLM contrasts).</p>
 <p>This helper wraps:</p><ul><li><p><code>compute_hessian_fisher</code> — model Hessian or Fisher information</p></li>
-<li><p><code>compute_sigma_blocks</code>   — Σ-block covariance components</p></li>
+<li><p><code>compute_sigma_blocks</code>   — Sigma-block covariance components</p></li>
 </ul><p>and produces a unified object that can be passed directly to
 <code><a href="power_ppi_regression.html">power_ppi_regression()</a></code> for labeled sample size calculations.</p>
     </div>
@@ -89,7 +88,7 @@ Determines whether the estimator is linear regression (OLS) or a GLM.</p></dd>
 
 
 <dt id="arg-x-l">X_l<a class="anchor" aria-label="anchor" href="#arg-x-l"></a></dt>
-<dd><p>Matrix of labeled covariates (n × p).</p></dd>
+<dd><p>Matrix of labeled covariates (n x p).</p></dd>
 
 
 <dt id="arg-y-l">Y_l<a class="anchor" aria-label="anchor" href="#arg-y-l"></a></dt>
@@ -101,7 +100,7 @@ Determines whether the estimator is linear regression (OLS) or a GLM.</p></dd>
 
 
 <dt id="arg-x-u">X_u<a class="anchor" aria-label="anchor" href="#arg-x-u"></a></dt>
-<dd><p>Matrix of unlabeled covariates (N × p).</p></dd>
+<dd><p>Matrix of unlabeled covariates (N x p).</p></dd>
 
 
 <dt id="arg-f-u">f_u<a class="anchor" aria-label="anchor" href="#arg-f-u"></a></dt>
@@ -122,22 +121,22 @@ evaluation. Required for GLM; optional for OLS.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A named list of matrices:</p>
 <dl><dt>H_L</dt>
-<dd><p>Labeled-data Hessian / Fisher information (p × p)</p></dd>
+<dd><p>Labeled-data Hessian / Fisher information (p x p)</p></dd>
 
 <dt>H_U</dt>
-<dd><p>Unlabeled-data Hessian / Fisher information (p × p)</p></dd>
+<dd><p>Unlabeled-data Hessian / Fisher information (p x p)</p></dd>
 
 <dt>Sigma_YY</dt>
-<dd><p>Covariance of labeled score (<code>Y − Xβ</code>) (p × p)</p></dd>
+<dd><p>Covariance of labeled score (<code>Y - X beta</code>) (p x p)</p></dd>
 
 <dt>Sigma_ff_l</dt>
-<dd><p>Covariance of prediction score on labeled data (p × p)</p></dd>
+<dd><p>Covariance of prediction score on labeled data (p x p)</p></dd>
 
 <dt>Sigma_ff_u</dt>
-<dd><p>Covariance of prediction score on unlabeled data (p × p)</p></dd>
+<dd><p>Covariance of prediction score on unlabeled data (p x p)</p></dd>
 
 <dt>Sigma_Yf</dt>
-<dd><p>Cross-covariance between labeled scores and prediction scores (p × p)</p></dd>
+<dd><p>Cross-covariance between labeled scores and prediction scores (p x p)</p></dd>
 
 
 </dl><p>These matrices are exactly the inputs needed for
