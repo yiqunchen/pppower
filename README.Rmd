@@ -1,8 +1,6 @@
----
-output: github_document
----
-
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+Website: <https://yiqunchen.github.io/pppower/>
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
