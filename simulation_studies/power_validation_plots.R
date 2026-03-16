@@ -20,6 +20,16 @@ if (!exists("pppower_colors")) {
 }
 
 theme_validation <- theme_pppower
+theme_validation_focus <- function(base_size = 16) {
+  theme_validation(base_size = base_size) +
+    theme(
+      axis.text = element_text(face = "bold", size = base_size - 1),
+      axis.title = element_text(face = "bold", size = base_size),
+      legend.text = element_text(size = base_size - 1),
+      legend.title = element_text(face = "bold", size = base_size - 1),
+      strip.text = element_text(face = "bold", size = base_size - 1)
+    )
+}
 
 # Colors: PPI++ analytical/empirical + classical reference (mid-grey)
 colors_val <- c(
@@ -115,14 +125,26 @@ fig_A <- ggplot(plot_data_A, aes(x = n)) +
 # =============================================================================
 # Panel B: Mean (Binary)
 # =============================================================================
-plot_data_B <- results_bin_mean %>%
+plot_data_B <- results_bin_mean
+if (!"mc_se_emp_ppi" %in% names(plot_data_B)) {
+  mc_reps_B <- if ("mc_reps" %in% names(plot_data_B)) plot_data_B$mc_reps else 1000
+  plot_data_B$mc_se_emp_ppi <- sqrt(
+    pmax(plot_data_B$power_emp_ppi * (1 - plot_data_B$power_emp_ppi), 0) / mc_reps_B
+  )
+}
+
+plot_data_B <- plot_data_B %>%
   mutate(classifier_label = sprintf("Sens/Spec = %.0f%%", sens * 100),
-         N_label = paste0("N == ", N))
+         N_label = paste0("N == ", N),
+         power_emp_ppi_lo = pmax(0, power_emp_ppi - 1.96 * mc_se_emp_ppi),
+         power_emp_ppi_hi = pmin(1, power_emp_ppi + 1.96 * mc_se_emp_ppi))
 
 fig_B <- ggplot(plot_data_B, aes(x = n)) +
   geom_line(aes(y = power_theo_classical, color = "Classical"),
             linetype = "dashed", linewidth = 1.8) +
   geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
+  geom_errorbar(aes(ymin = power_emp_ppi_lo, ymax = power_emp_ppi_hi, color = "Empirical"),
+                width = 4, linewidth = 0.7, alpha = 0.8) +
   geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
   facet_grid(N_label ~ classifier_label, labeller = labeller(N_label = label_parsed)) +
   geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
@@ -283,89 +305,102 @@ save_fig(fig_G, "fig_validation_G_lognormal")
 save_fig(fig_H, "fig_validation_H_tdist")
 
 # =============================================================================
-# Panel I: EIF Binary Validation (Setting 9)
-# =============================================================================
-if (exists("results_eif_binary") && is.data.frame(results_eif_binary)) {
-  plot_data_I <- results_eif_binary
-  plot_data_I$clf_label <- sprintf("Sens/Spec = %.0f%%", plot_data_I$sens * 100)
-  plot_data_I$p_label <- paste0("p = ", plot_data_I$p)
-
-  fig_I <- ggplot(plot_data_I, aes(x = m_cal)) +
-    geom_line(aes(y = power_theo, color = "Analytical"), linewidth = 1.8) +
-    geom_point(aes(y = power_emp, color = "Empirical"), size = 3.5) +
-    facet_grid(p_label ~ clf_label) +
-    geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
-    scale_color_manual(values = colors_val) +
-    scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
-    labs(
-      title = "EIF Binary Surrogate",
-      x = "Calibration Sample Size (m_cal)", y = "Power", color = ""
-    ) +
-    theme_validation()
-
-  save_fig(fig_I, "fig_validation_I_eif_binary", height = 5)
-}
-
-# =============================================================================
 # Panel J: Sample Size Inversion (Setting 10)
 # =============================================================================
 if (exists("results_n_inversion") && is.data.frame(results_n_inversion)) {
-  plot_data_J <- results_n_inversion[!is.na(results_n_inversion$analytical_achieved), ]
+  supported_designs_J <- c(
+    "mean_continuous",
+    "mean_binary",
+    "ttest_continuous",
+    "paired_continuous"
+  )
 
-  fig_J <- ggplot(plot_data_J, aes(x = target_power, y = analytical_achieved)) +
-    geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = pppower_colors$reference) +
-    geom_point(aes(color = design, shape = design), size = 3.5) +
-    geom_point(aes(x = target_power, y = empirical_achieved, color = design),
-               shape = 1, size = 3,
-               data = plot_data_J[!is.na(plot_data_J$empirical_achieved), ]) +
+  plot_data_J <- results_n_inversion %>%
+    filter(!is.na(analytical_achieved), design %in% supported_designs_J) %>%
+    mutate(
+      design_label = recode(
+        design,
+        mean_continuous = "Mean (Continuous)",
+        mean_binary = "Mean (Binary)",
+        ttest_continuous = "Two-Sample (Continuous)",
+        paired_continuous = "Paired (Continuous)"
+      )
+    )
+
+  plot_data_J_long <- plot_data_J %>%
+    select(design_label, target_power, analytical_achieved, empirical_achieved) %>%
+    pivot_longer(
+      cols = c(analytical_achieved, empirical_achieved),
+      names_to = "method",
+      values_to = "achieved_power"
+    ) %>%
+    filter(!is.na(achieved_power)) %>%
+    mutate(
+      method = recode(
+        method,
+        analytical_achieved = "Analytical",
+        empirical_achieved = "Empirical"
+      ),
+      target_power_label = sprintf("%.2f", target_power),
+      deviation = achieved_power - target_power
+    )
+
+  fig_J <- ggplot(plot_data_J_long, aes(x = target_power_label, y = deviation, color = method)) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = pppower_colors$reference, linewidth = 0.9) +
+    geom_point(
+      position = position_jitterdodge(jitter.width = 0.08, dodge.width = 0.45),
+      size = 3.2,
+      alpha = 0.9
+    ) +
+    facet_wrap(~design_label, ncol = 2) +
     scale_color_manual(values = c(
-      mean_continuous   = pppower_colors$ppi_pp,
-      eif_binary        = pppower_colors$oracle,
-      paired_continuous = pppower_colors$vanilla
+      "Analytical" = pppower_colors$analytical,
+      "Empirical" = pppower_colors$empirical
     )) +
-    scale_x_continuous(limits = c(0.5, 1), breaks = seq(0.5, 1, 0.1)) +
-    scale_y_continuous(limits = c(0.5, 1), breaks = seq(0.5, 1, 0.1)) +
+    scale_y_continuous(breaks = seq(-0.10, 0.10, 0.05)) +
+    coord_cartesian(ylim = c(-0.10, 0.10)) +
     labs(
       title = "Sample Size Inversion",
-      x = "Target Power", y = "Achieved Power at n*",
-      color = "Design", shape = "Design"
+      x = "Target Power",
+      y = "Achieved Power - Target Power",
+      color = ""
     ) +
-    theme_validation()
+    theme_validation_focus()
 
-  save_fig(fig_J, "fig_validation_J_n_inversion", width = 7, height = 5)
+  save_fig(fig_J, "fig_validation_J_n_inversion", width = 9, height = 6)
 }
 
 # =============================================================================
 # Panel K: Rule-of-Thumb (Setting 11)
 # =============================================================================
 if (exists("results_rule_of_thumb") && is.data.frame(results_rule_of_thumb)) {
-  plot_data_K <- results_rule_of_thumb
-  plot_data_K$N_label <- factor(
-    paste0("N = ", formatC(plot_data_K$N, big.mark = ",")),
-    levels = paste0("N = ", formatC(sort(unique(plot_data_K$N)), big.mark = ","))
-  )
+  plot_data_K <- results_rule_of_thumb %>%
+    mutate(
+      N_label = factor(
+        paste0("N = ", formatC(N, big.mark = ",")),
+        levels = paste0("N = ", formatC(sort(unique(N)), big.mark = ","))
+      ),
+      rule_gap = ratio - theoretical_ratio
+    )
 
   n_colors <- c("#E69F00", "#56B4E9", "#009E73", "#CC79A7")
-  n_linetypes <- c("solid", "longdash", "twodash", "dotted")
 
-  fig_K <- ggplot(plot_data_K, aes(x = rho_sq)) +
-    geom_line(aes(y = theoretical_ratio), linetype = "solid",
-              color = "black", linewidth = 1.5) +
-    geom_line(aes(y = ratio, color = N_label, linetype = N_label),
-              linewidth = 1.2) +
+  fig_K <- ggplot(plot_data_K, aes(x = rho_sq, y = rule_gap, color = N_label)) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = pppower_colors$reference, linewidth = 0.9) +
+    geom_line(linewidth = 1.3) +
+    geom_point(size = 2.6) +
     scale_color_manual(values = n_colors) +
-    scale_linetype_manual(values = n_linetypes) +
-    scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
+    scale_y_continuous(breaks = seq(-0.12, 0.12, 0.04)) +
     scale_x_continuous(breaks = seq(0, 1, 0.2)) +
     labs(
-      title = expression(paste("Rule of Thumb: ", n[PPI] / n[classical], " vs. 1 - ", rho^2)),
+      title = "Rule-of-Thumb Error",
       x = expression(rho^2),
-      y = expression(n[PPI] / n[classical]),
-      color = "Unlabeled N", linetype = "Unlabeled N"
+      y = expression(frac(n[PPI], n[classical]) - (1 - rho^2)),
+      color = "Unlabeled N"
     ) +
-    theme_validation()
+    theme_validation_focus()
 
-  save_fig(fig_K, "fig_validation_K_rule_of_thumb", width = 7, height = 5)
+  save_fig(fig_K, "fig_validation_K_rule_of_thumb", width = 8, height = 5.5)
 }
 
 # =============================================================================
@@ -401,31 +436,28 @@ if (exists("results_type1_error") && is.list(results_type1_error)) {
 # Panel M: Lambda Convergence (Setting 13)
 # =============================================================================
 if (exists("results_lambda_convergence") && is.data.frame(results_lambda_convergence)) {
-  plot_data_M <- results_lambda_convergence
-  plot_data_M$rho_label <- paste0("rho == ", plot_data_M$rho)
+  plot_data_M <- results_lambda_convergence %>%
+    mutate(rho_label = factor(paste0("rho = ", rho),
+                              levels = paste0("rho = ", sort(unique(rho)))))
 
-  fig_M <- ggplot(plot_data_M, aes(x = lambda_oracle, y = lambda_hat_mean)) +
-    geom_abline(slope = 1, intercept = 0, linetype = "dashed",
-                color = "gray40", linewidth = 0.8) +
-    geom_point(aes(color = rho_label), size = 4) +
-    geom_errorbar(aes(ymin = lambda_hat_mean - lambda_hat_sd,
-                      ymax = lambda_hat_mean + lambda_hat_sd,
-                      color = rho_label),
-                  width = 0.01, linewidth = 0.6) +
+  fig_M <- ggplot(plot_data_M, aes(x = n, y = rmse, color = rho_label, group = rho_label)) +
+    geom_hline(yintercept = 0, linetype = "dashed",
+               color = pppower_colors$reference, linewidth = 0.8) +
+    geom_line(linewidth = 1.4) +
+    geom_point(size = 3.6) +
     scale_color_manual(
-      values = c(pppower_colors$ppi_pp, pppower_colors$classical, pppower_colors$vanilla),
-      labels = function(x) parse(text = x)
+      values = c(pppower_colors$ppi_pp, pppower_colors$classical, pppower_colors$vanilla)
     ) +
-    coord_equal() +
+    scale_x_continuous(breaks = sort(unique(plot_data_M$n))) +
     labs(
       title = "Plugin Lambda Convergence",
-      x = expression(paste("Oracle ", lambda, "*")),
-      y = expression(paste("Plugin ", hat(lambda))),
+      x = "Labeled Sample Size (n)",
+      y = "RMSE Relative to Oracle Lambda",
       color = ""
     ) +
-    theme_validation()
+    theme_validation_focus()
 
-  save_fig(fig_M, "fig_validation_M_lambda_convergence")
+  save_fig(fig_M, "fig_validation_M_lambda_convergence", width = 8, height = 5)
 }
 
 # =============================================================================
@@ -485,7 +517,7 @@ if (exists("results_power_vs_delta") && is.data.frame(results_power_vs_delta)) {
     geom_line(aes(y = power_theo_classical, color = "Classical"),
               linetype = "dashed", linewidth = 1.8) +
     geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.5) +
+    geom_line(aes(y = power_emp_ppi, color = "Empirical"), linewidth = 1.0, alpha = 0.85) +
     facet_grid(n_label ~ rho_label,
                labeller = labeller(rho_label = label_parsed, n_label = label_parsed)) +
     geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
@@ -569,25 +601,68 @@ if (exists("results_Nn_ratio") && is.data.frame(results_Nn_ratio)) {
 # =============================================================================
 if (exists("results_unequal") && is.data.frame(results_unequal)) {
   plot_data_R <- results_unequal %>%
-    mutate(rho_label = paste0("rho == ", rho),
-           alloc_label = sprintf("n_A:n_B = %d:%d", n_A, n_B))
+    arrange(rho, alloc_ratio) %>%
+    mutate(
+      rho_label = paste0("rho == ", rho),
+      alloc_label = factor(
+        paste0(n_A, ":", n_B),
+        levels = unique(paste0(n_A, ":", n_B))
+      )
+    )
 
-  fig_R <- ggplot(plot_data_R, aes(x = alloc_ratio)) +
+  fig_R <- ggplot(plot_data_R, aes(x = alloc_label, group = 1)) +
+    geom_line(aes(y = power_emp_classical, color = "Classical"),
+              linetype = "dashed", linewidth = 1.4) +
     geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
     geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
     facet_wrap(~rho_label, labeller = labeller(rho_label = label_parsed)) +
-    geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
     scale_color_manual(values = colors_val) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
-    scale_x_continuous(breaks = sort(unique(results_unequal$alloc_ratio)),
-                       labels = sprintf("%.0f:1", sort(unique(results_unequal$alloc_ratio)))) +
     labs(
       title = "Unequal Group Sizes",
-      x = expression(n[A]:n[B] ~ "Allocation Ratio"), y = "Power", color = ""
+      x = expression(n[A]:n[B] ~ "allocation"),
+      y = "Power",
+      color = ""
     ) +
-    theme_validation()
+    theme_validation_focus()
 
   save_fig(fig_R, "fig_validation_R_unequal_groups", width = 10, height = 4)
+}
+
+# =============================================================================
+# Panel Setting 19: Misspecified Prediction Quality
+# =============================================================================
+if (exists("results_setting19") && is.data.frame(results_setting19)) {
+  plot_data_19 <- results_setting19 %>%
+    mutate(plan_label = paste0("rho[plan] == ", sprintf("%.2f", rho_planning)))
+
+  fig_19 <- ggplot(plot_data_19, aes(x = rho_true)) +
+    geom_line(aes(y = power_theo_true, color = "Analytical"), linewidth = 1.8) +
+    geom_point(aes(y = power_emp_true, color = "Empirical"), size = 3.4) +
+    geom_hline(yintercept = unique(plot_data_19$power_target),
+               linetype = "dashed", color = pppower_colors$reference, linewidth = 0.9) +
+    facet_wrap(~plan_label, labeller = labeller(plan_label = label_parsed), scales = "free_x") +
+    scale_color_manual(values = c(
+      "Analytical" = pppower_colors$analytical,
+      "Empirical" = pppower_colors$empirical
+    )) +
+    scale_x_continuous(
+      breaks = sort(unique(plot_data_19$rho_true)),
+      labels = function(x) sprintf("%.2f", x)
+    ) +
+    scale_y_continuous(limits = c(0.45, 1), breaks = seq(0.5, 1, 0.1)) +
+    labs(
+      title = "Misspecified Prediction Quality",
+      x = expression(rho[true]),
+      y = "Achieved Power at Planned n",
+      color = ""
+    ) +
+    theme_validation_focus() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+    )
+
+  save_fig(fig_19, "fig_validation_setting19_misspecified_rho", width = 10.5, height = 5.2)
 }
 
 # =============================================================================

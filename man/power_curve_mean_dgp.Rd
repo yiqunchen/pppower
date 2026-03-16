@@ -46,7 +46,7 @@ A data frame with one row per \code{n} in \code{n_grid}, containing:
 \item{n}{Labeled sample size.}
 \item{analytical}{Analytical power from the normal theory formula.}
 \item{empirical}{Monte Carlo power (rejection rate).}
-\item{abs_diff}{Absolute difference |empirical − analytical|.}
+\item{abs_diff}{Absolute difference |empirical - analytical|.}
 }
 }
 \description{

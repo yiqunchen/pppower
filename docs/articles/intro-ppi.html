@@ -34,7 +34,6 @@
 <li class="active nav-item"><a class="nav-link" href="../articles/intro-ppi.html">Basics</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/deep-dive-math.html">Variance &amp; Metrics</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/ppi-sample-size.html">Sample Size</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/llm-judge-binary.html">LLM Judge (Binary)</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -68,8 +67,10 @@
 </h2>
 <p>This is the <strong>basic-use</strong> guide for
 <code>pppower</code>. It shows the minimum calls you need for power,
-sample size, and paired designs. See the “Detailed Dive” and “Real Data”
-tabs on the pkgdown site for derivations and LLM-as-a-judge setups.</p>
+sample size, paired designs, and 2x2 contingency-table planning. See the
+“Detailed Dive” and “2x2 Calculator” tabs on the pkgdown site for
+derivations, regression contrasts, and odds-ratio / relative-risk
+setups.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://yiqunchen.github.io/pppower">pppower</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
@@ -77,11 +78,11 @@ tabs on the pkgdown site for derivations and LLM-as-a-judge setups.</p>
 </h3>
 <ul>
 <li>Drop-in power / sample-size calculators that leverage predictions on
-unlabeled data (PPI++).</li>
+unlabeled data (<code>PPI++</code>).</li>
 <li>Same spirit as <code><a href="https://rdrr.io/pkg/pwr/man/pwr.t.test.html" class="external-link">pwr::pwr.t.test</a></code>, but variance comes from
 predictions + residuals.</li>
-<li>Works for means / paired differences and binary surrogates (LLM
-judge).</li>
+<li>Works for means, paired differences, regression contrasts, and 2x2
+contingency tables.</li>
 </ul>
 </div>
 <div class="section level3">
@@ -131,6 +132,21 @@ vignette.</p>
 <span><span class="co">#&gt; [1] 0.8276133</span></span></code></pre></div>
 </div>
 <div class="section level3">
+<h3 id="x2-designs-in-one-line">4. 2x2 designs in one line<a class="anchor" aria-label="anchor" href="#x2-designs-in-one-line"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/power_ppi_2x2.html">power_ppi_2x2</a></span><span class="op">(</span></span>
+<span>  p_exp          <span class="op">=</span> <span class="fl">0.40</span>,</span>
+<span>  p_ctrl         <span class="op">=</span> <span class="fl">0.20</span>,</span>
+<span>  N              <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  power          <span class="op">=</span> <span class="fl">0.80</span>,</span>
+<span>  sens           <span class="op">=</span> <span class="fl">0.85</span>,</span>
+<span>  spec           <span class="op">=</span> <span class="fl">0.85</span>,</span>
+<span>  effect_measure <span class="op">=</span> <span class="st">"OR"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 108</span></span></code></pre></div>
+</div>
+<div class="section level3">
 <h3 id="where-next">Where next?<a class="anchor" aria-label="anchor" href="#where-next"></a>
 </h3>
 <ul>
@@ -138,8 +154,8 @@ vignette.</p>
 <strong>Detailed Dive:</strong> formulas, metrics-to-moments
 mapping, regression contrasts.</li>
 <li>
-<strong>Real Data:</strong> LLM-as-a-judge binary surrogates (EIF),
-required calibration size.</li>
+<strong>2x2 Calculator:</strong> odds-ratio and relative-risk
+planning from contingency tables.</li>
 </ul>
 </div>
 </div>

@@ -1,6 +1,6 @@
 # Interactive PPI Sample Size Calculator
 
-This calculator uses **prediction-powered inference (PPI/PPI++)**
+This calculator uses **prediction-powered inference (PPI/`PPI++`)**
 formulas from this package for quick study planning examples. It is
 designed for planning and intuition; for final protocol numbers, confirm
 assumptions with your statistician.

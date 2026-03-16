@@ -9,6 +9,8 @@ This is the **detailed dive** behind the quickstart:
   works for mean estimation
 - How to feed prediction metrics (MSE, $`R^2`$, sensitivity/specificity)
   instead of raw moments
+- How to plan odds-ratio and relative-risk studies with
+  [`power_ppi_2x2()`](https://yiqunchen.github.io/pppower/reference/power_ppi_2x2.md)
 - Short, focused code blocks you can copy/paste
 
 ## Core call shape (reference)
@@ -137,7 +139,7 @@ power_ppi_mean(
 )
 #> [1] 43
 
-# PPI++ oracle-λ
+# `PPI++` oracle-λ
 power_ppi_mean(
   delta       = 0.15,
   N           = 520,
@@ -154,11 +156,36 @@ For binary outcomes, the helper computes prevalence and prediction
 prevalence from the confusion matrix and maps them to
 $`\mathrm{Var}(f)`$ and $`\mathrm{Cov}(Y,f)`$.
 
-For LLM-as-a-judge binary surrogates and EIF-based power, see the “LLM
-Judge” article. - variance of residuals - covariance (
-$`\mathrm{Cov}(Y,f)`$ )
+## 2x2 tables: odds ratio and relative risk
 
-using identities derived from the confusion matrix.
+``` r
+
+power_ppi_2x2(
+  p_exp          = 0.35,
+  p_ctrl         = 0.20,
+  N              = 500,
+  power          = 0.80,
+  sens           = 0.85,
+  spec           = 0.85,
+  effect_measure = "OR"
+)
+#> [1] 203
+
+power_ppi_2x2(
+  p_exp          = 0.35,
+  p_ctrl         = 0.20,
+  N              = 500,
+  power          = 0.80,
+  sens           = 0.85,
+  spec           = 0.85,
+  effect_measure = "RR"
+)
+#> [1] 210
+```
+
+Use `effect_measure = "OR"` for an odds-ratio design framed through a
+logistic contrast, or `effect_measure = "RR"` for a relative-risk design
+based on the delta method applied to the arm-specific PPI estimates.
 
 ## Regression-Mode Sample Size — OLS
 
@@ -181,7 +208,7 @@ f_l <- drop(X_l %*% beta + rnorm(n_l, sd = 0.6))
 f_u <- drop(X_u %*% beta + rnorm(n_u, sd = 0.6))
 ```
 
-Construct PPI++ blocks for sandwich variance estimators:
+Construct `PPI++` blocks for sandwich variance estimators:
 
 ``` r
 
@@ -259,7 +286,7 @@ f_l <- plogis(eta_l + rnorm(n_l, sd = 1.5))
 f_u <- plogis(eta_u + rnorm(n_u, sd = 1.5))
 ```
 
-Construct PPI++ blocks for sandwich variance estimators similar to
+Construct `PPI++` blocks for sandwich variance estimators similar to
 previous OLS case:
 
 ``` r
@@ -360,7 +387,7 @@ attr(out, "achieved_power")
 ## Power Curve Visualization
 
 This chunk visualizes how required ($`n`$) decreases as effect size
-grows, and how oracle $`\lambda`$ for PPI++ estimator provides a clear
+grows, and how oracle $`\lambda`$ for `PPI++` estimator provides a clear
 reduction in sample size estimations over vanilla PPI:
 
 ``` r
@@ -447,7 +474,7 @@ ggplot(df, aes(delta, n, color = mode)) +
 
 This vignette demonstrated:
 
-- How to compute PPI / PPI++ sample size for mean estimation and
+- How to compute PPI / `PPI++` sample size for mean estimation and
   regression.
 - How to use direct moments or prediction metrics (continuous or
   classification).
@@ -455,6 +482,6 @@ This vignette demonstrated:
 - When sample sizes become infeasible and how to handle caps.
 - How $`\lambda`$ affects the required labeled sample size.
 
-PPI++ typically yields the smallest labeled sample size, especially when
-the prediction model is strong and the correlation (
+`PPI++` typically yields the smallest labeled sample size, especially
+when the prediction model is strong and the correlation (
 $`\mathrm{Cov}(Y,f(X))`$ ) is high.

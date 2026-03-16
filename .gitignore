@@ -26,5 +26,24 @@ data/
 write-up/PPI_Power_Analysis/
 write-up/PPI_Power_Analysis.zip
 
+# Local agent guidance
+AGENTS.md
+skills/
+
 # Legacy local plot outputs
 plots/
+
+# Local data / caches
+real_data_cache/
+
+# Package build artifacts
+pppower.Rcheck/
+pppower_*.tar.gz
+
+# Generated documentation previews
+README.html
+vignettes/*.html
+
+# Simulation scratch outputs
+simulation_studies/outputs/
+simulation_studies/*.log

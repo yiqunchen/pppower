@@ -2,9 +2,16 @@
 % Please edit documentation in R/palette.R
 \name{save_pppower_figure}
 \alias{save_pppower_figure}
-\title{Save a ggplot figure in both PDF and PNG formats}
+\title{Save a ggplot figure in PDF and/or PNG formats}
 \usage{
-save_pppower_figure(plot, path, width = 10, height = 5, dpi = 400)
+save_pppower_figure(
+  plot,
+  path,
+  width = 10,
+  height = 5,
+  dpi = 400,
+  formats = c("pdf", "png")
+)
 }
 \arguments{
 \item{plot}{A ggplot2 object.}
@@ -16,12 +23,15 @@ save_pppower_figure(plot, path, width = 10, height = 5, dpi = 400)
 \item{height}{Figure height in inches (default 5).}
 
 \item{dpi}{DPI for PNG output (default 400).}
+
+\item{formats}{Character vector containing any of \code{"pdf"} and
+\code{"png"}.}
 }
 \value{
-Invisible NULL. Side effect: writes \code{path.pdf} and
-\code{path.png}.
+Invisible NULL. Side effect: writes the requested files.
 }
 \description{
 Follows figures4papers conventions: vector PDF with TrueType font
-embedding, plus raster PNG at 400 DPI. White background, tight crop.
+embedding and optional raster PNG at 400 DPI. White background,
+tight crop.
 }

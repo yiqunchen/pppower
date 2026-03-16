@@ -48,12 +48,6 @@ whichever of power or sample size is left `NULL`).
   [`power_ppi_paired()`](https://yiqunchen.github.io/pppower/reference/power_ppi_paired.md)
   with `n = NULL`.
 
-- `n_required_eif_binary`:
-
-  Use
-  [`power_eif_binary()`](https://yiqunchen.github.io/pppower/reference/power_eif_binary.md)
-  with `m_cal = NULL`.
-
 - `simulate_power_ppiplus_mean`:
 
   Use
@@ -66,12 +60,6 @@ whichever of power or sample size is left `NULL`).
   [`simulate_ppi_ttest_binary()`](https://yiqunchen.github.io/pppower/reference/simulate_ppi_ttest_binary.md)
   instead.
 
-- `simulate_power_eif_binary`:
-
-  Use
-  [`simulate_eif_binary()`](https://yiqunchen.github.io/pppower/reference/simulate_eif_binary.md)
-  instead.
-
 - `simulate_power_ppi_mean`:
 
   Use `simulate_ppi_vanilla_mean()` or
@@ -80,21 +68,6 @@ whichever of power or sample size is left `NULL`).
 ## Usage
 
 ``` r
-n_required_eif_binary(
-  delta,
-  N,
-  power = 0.8,
-  alpha = 0.05,
-  mu0 = NULL,
-  mu1 = NULL,
-  p_hat = NULL,
-  p = NULL,
-  sens = NULL,
-  spec = NULL
-)
-
-simulate_power_eif_binary(...)
-
 simulate_power_ppi_mean(...)
 
 power_ppi_pp_mean(delta, N, n, ...)

@@ -37,12 +37,6 @@ cat("Setting 8: Mean (t-dist df=5, Heavy-Tailed) - Max |Theoretical - Empirical|
 max_diff_8 <- max(abs(results_tdist$power_theo_ppi - results_tdist$power_emp_ppi))
 cat(sprintf("  %.4f\n\n", max_diff_8))
 
-if (exists("results_eif_binary") && is.data.frame(results_eif_binary)) {
-  cat("Setting 9: EIF Binary - Max |Theoretical - Empirical|:\n")
-  max_diff_9 <- max(abs(results_eif_binary$power_theo - results_eif_binary$power_emp), na.rm = TRUE)
-  cat(sprintf("  %.4f\n\n", max_diff_9))
-}
-
 if (exists("results_n_inversion") && is.data.frame(results_n_inversion)) {
   cat("Setting 10: Sample Size Inversion - Achieved vs. Target Power:\n")
   valid_10 <- results_n_inversion[!is.na(results_n_inversion$analytical_achieved), ]
@@ -115,6 +109,12 @@ if (exists("results_unequal") && is.data.frame(results_unequal)) {
   cat("Setting 18: Unequal Groups - Max |theo - emp| PPI++:\n")
   cat(sprintf("  %.4f\n\n",
               max(abs(results_unequal$power_theo_ppi - results_unequal$power_emp_ppi))))
+}
+
+if (exists("results_setting19") && is.data.frame(results_setting19)) {
+  cat("Setting 19: Misspecified Rho - Max |theo - emp| PPI++:\n")
+  cat(sprintf("  %.4f\n\n",
+              max(abs(results_setting19$power_theo_true - results_setting19$power_emp_true))))
 }
 
 if (exists("results_ols_regression") && is.data.frame(results_ols_regression)) {

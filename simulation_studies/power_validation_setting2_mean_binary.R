@@ -16,7 +16,7 @@ classifier_settings <- list(
   c(sens = 0.95, spec = 0.95)
 )
 alpha <- 0.05
-R <- 1000  # Monte Carlo replications
+R <- 5000  # Monte Carlo replications
 
 # Calculate total iterations for progress
 total_configs_2 <- length(classifier_settings) * length(n_values_bin) * length(N_bin_values)
@@ -84,6 +84,8 @@ for (classifier in classifier_settings) {
 
       power_emp_ppi <- rejections_ppi / R
       power_emp_classical <- rejections_classical / R
+      mc_se_emp_ppi <- sqrt(power_emp_ppi * (1 - power_emp_ppi) / R)
+      mc_se_emp_classical <- sqrt(power_emp_classical * (1 - power_emp_classical) / R)
 
       results_bin_mean <- rbind(results_bin_mean, data.frame(
         setting = "Mean (Binary)",
@@ -95,8 +97,11 @@ for (classifier in classifier_settings) {
         rho = rho,
         power_theo_ppi = power_theo_ppi,
         power_emp_ppi = power_emp_ppi,
+        mc_se_emp_ppi = mc_se_emp_ppi,
         power_theo_classical = power_theo_classical,
-        power_emp_classical = power_emp_classical
+        power_emp_classical = power_emp_classical,
+        mc_se_emp_classical = mc_se_emp_classical,
+        mc_reps = R
       ))
     }
   }

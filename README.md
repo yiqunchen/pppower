@@ -1,11 +1,15 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+
 
 # pppower
 
 **pppower** is an R package for power analysis and sample-size
-calculation under the Prediction-Powered Inference (PPI/PPI++)
-framework.
+calculation under the Prediction-Powered Inference (PPI/`PPI++`) framework.
 
 ## Prevalence Estimation with PPI
 
@@ -13,9 +17,9 @@ For binary outcomes (prevalence), you can estimate required **labeled**
 sample size while leveraging model predictions on a large unlabeled set.
 This is exactly what PPI is for:
 
-- Inputs: target effect size $\Delta$, unlabeled size $N$, and model
-  quality (e.g., sensitivity/specificity)
-- Output: required labeled $n$ for your target power
+- Inputs: target effect size \(\Delta\), unlabeled size \(N\), and model quality
+  (e.g., sensitivity/specificity)
+- Output: required labeled \(n\) for your target power
 - Benefit: better predictions can reduce labeled annotation burden
 
 Use `power_ppi_mean(..., n = NULL)` for one-sample prevalence and
@@ -24,17 +28,12 @@ Use `power_ppi_mean(..., n = NULL)` for one-sample prevalence and
 ## Interactive Calculator
 
 <div style="margin: 1rem 0 1.4rem; padding: 1.0rem; border: 2px solid #d9e7df; border-radius: 12px; text-align: center; background: #f8fbf9;">
-
-<a href="https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html" style="display: inline-block; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;">
+  <a href="https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html" style="display: inline-block; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;">
     Open Interactive PPI Sample Size Calculator
-</a>
-
-<div style="margin-top: 0.55rem; font-size: 0.92rem; color: #3f4d4a;">
-
+  </a>
+  <div style="margin-top: 0.55rem; font-size: 0.92rem; color: #3f4d4a;">
     Direct link to the live calculator page.
-
-</div>
-
+  </div>
 </div>
 
 ## What is Prediction-Powered Inference?
@@ -46,7 +45,7 @@ Many modern studies have access to:
 - **Unlabeled data** $\tilde{X}_j$ for $j = 1, \ldots, N$ — cheap and
   abundant, with ML predictions $f(\tilde{X}_j)$ available
 
-PPI combines both sources for valid, efficient inference. The PPI++
+PPI combines both sources for valid, efficient inference.  The `PPI++`
 estimator for the population mean $\theta^* = E[Y]$ is:
 
 $$\hat{\theta}_\lambda = \bar{Y}_L + \lambda(\bar{f}_U - \bar{f}_L)$$
@@ -57,7 +56,7 @@ needed** for a given level of statistical power.
 
 ## Key Formulas
 
-The PPI++ variance under the oracle $\lambda^*$ is:
+The `PPI++` variance under the oracle $\lambda^*$ is:
 
 $$\text{Var}(\hat{\theta}_{\lambda^*}) = \frac{\sigma_Y^2}{n} - \frac{\text{Cov}(Y,f)^2}{\sigma_f^2} \cdot \frac{N}{n(n+N)}$$
 
@@ -68,20 +67,20 @@ $$n \geq \frac{\sigma_Y^2 - S^2 N + \sqrt{(\sigma_Y^2 - S^2 N)^2 + 4 S^2 N \sigm
 where $S^2 = (\Delta / (z_{1-\alpha/2} + z_{1-\beta}))^2$.
 
 **Rule of thumb:** The sample size ratio satisfies
-$n_{\text{PPI++}} / n_{\text{classical}} \approx 1 - R^2$, where $R^2$
-is the squared correlation between $Y$ and $f(X)$. A predictor
+$n_{\texttt{PPI++}} / n_{\text{classical}} \approx 1 - R^2$, where $R^2$
+is the squared correlation between $Y$ and $f(X)$.  A predictor
 explaining 80% of the variance cuts labeled data needs by ~80%.
 
 ## Supported Designs
 
 | Design | Power / Sample Size | Simulation |
-|----|----|----|
+|--------|---------------------|------------|
 | One-sample mean (continuous) | `power_ppi_mean()` | `simulate_ppi_mean()` |
 | One-sample mean (binary) | `power_ppi_mean()` | `simulate_ppi_vanilla_mean()` |
 | Two-sample $t$-test | `power_ppi_ttest()` | `simulate_ppi_ttest_binary()` |
 | Paired $t$-test | `power_ppi_paired()` | — |
+| 2x2 contingency table | `power_ppi_2x2()` | — |
 | Regression contrast | `power_ppi_regression()` | — |
-| EIF binary surrogate | `power_eif_binary()` | `simulate_eif_binary()` |
 
 ## Installation
 
@@ -97,6 +96,7 @@ devtools::install_github("yiqunchen/pppower")
 
 A three-step workflow: compute power → solve for required $n$ → verify
 with Monte Carlo.
+
 
 ``` r
 library(pppower)
@@ -143,7 +143,7 @@ simulate_ppi_mean(
 **1. Direct moments** — supply $\sigma_Y^2$, $\sigma_f^2$, and
 $\text{Cov}(Y, f)$ directly:
 
-``` r
+```r
 power_ppi_mean(delta = 0.2, N = 5000, n = 200,
                   sigma_y2 = 1.0, sigma_f2 = 0.49, cov_y_f = 0.63)
 ```
@@ -151,7 +151,7 @@ power_ppi_mean(delta = 0.2, N = 5000, n = 200,
 **2. Prediction variance / residual variance** — decompose outcome
 variance via `var_f` and `var_res`:
 
-``` r
+```r
 power_ppi_mean(delta = 0.2, N = 5000, n = 200,
                   var_f = 0.49, var_res = 0.51, cov_y_f = 0.49)
 ```
@@ -159,7 +159,7 @@ power_ppi_mean(delta = 0.2, N = 5000, n = 200,
 **3. Metrics interface** — supply sensitivity/specificity (binary) or
 MSE/$R^2$ (continuous):
 
-``` r
+```r
 power_ppi_mean(delta = 0.05, N = 5000, n = 200,
                   metrics = list(sensitivity = 0.85, specificity = 0.90,
                                  p_y = 0.3, m_obs = 200),
@@ -175,19 +175,20 @@ power_ppi_mean(delta = 0.05, N = 5000, n = 200,
   `power_ppi_mean(..., n = NULL)` works across input modes, including
   regression contrasts (`vignette("ppi-sample-size")`)
 - **Detailed Dive: Variance Formulas and lambda-star** — mathematical
-  derivations behind the PPI++ variance and oracle $\lambda^*$
+  derivations behind the `PPI++` variance and oracle $\lambda^*$
   (`vignette("deep-dive-math")`)
-- **Real Data: LLM-as-a-Judge (Binary Surrogates)** — EIF-based power
-  analysis for binary surrogate evaluators
-  (`vignette("llm-judge-binary")`)
+- **2x2 Contingency Table Calculator** — odds-ratio and relative-risk
+  planning with binary surrogates (`vignette("calculator-2x2")`)
 
 ## Citation
 
 If you use `pppower` in your research, please cite:
 
-    @software{pppower,
-      title = {pppower: Prediction-Powered Inference Power Calculations},
-      author = {Guo, Moran and Chen, Yiqun},
-      url = {https://github.com/yiqunchen/pppower},
-      year = {2025}
-    }
+```
+@software{pppower,
+  title = {pppower: Prediction-Powered Inference Power Calculations},
+  author = {Guo, Moran and Chen, Yiqun},
+  url = {https://github.com/yiqunchen/pppower},
+  year = {2025}
+}
+```

@@ -6,7 +6,7 @@
 # (or exceed) the target power, both analytically and via Monte Carlo.
 #
 # Covers: mean (continuous), mean (binary), t-test (via mean per-group),
-#         paired (continuous), EIF binary.
+#         paired (continuous).
 
 cat("Setting 10: Sample Size Inversion Validation\n")
 cat("-----------------------------------------------\n")
@@ -26,8 +26,7 @@ total_10 <- length(target_powers) * (
   3 +   # mean_continuous: 3 rho values
   3 +   # mean_binary: 3 sens/spec combos
   3 +   # ttest_continuous: 3 rho values
-  1 +   # paired_continuous: 1 rho_D
-  1     # eif_binary: 1 config
+  1     # paired_continuous: 1 rho_D
 )
 
 # =============================================================================
@@ -302,58 +301,6 @@ for (tp in target_powers) {
     n_star = n_star,
     analytical_achieved = analytical_power,
     empirical_achieved = rej_mc / R_10,
-    stringsAsFactors = FALSE
-  )
-}
-
-# =============================================================================
-# EIF Binary
-# =============================================================================
-p_10     <- 0.5
-sens_10  <- 0.85
-spec_10  <- 0.85
-N_eif_10 <- 500
-delta_eif_10 <- 0.05
-
-for (tp in target_powers) {
-  counter <- counter + 1
-  progress_bar(counter, total_10, "Setting 10",
-               sprintf("eif-binary target=%.2f: ", tp),
-               start_time = setting10_start)
-
-  m_star <- tryCatch(
-    power_eif_binary(
-      delta = delta_eif_10, N = N_eif_10, m_cal = NULL, power = tp, alpha = alpha_10,
-      p = p_10, sens = sens_10, spec = spec_10
-    ),
-    error = function(e) NA_integer_
-  )
-
-  if (is.na(m_star)) {
-    results_10[[counter]] <- data.frame(
-      design = "eif_binary", rho = NA, target_power = tp,
-      n_star = NA, analytical_achieved = NA, empirical_achieved = NA,
-      stringsAsFactors = FALSE
-    )
-    next
-  }
-
-  analytical_power <- power_eif_binary(
-    delta = delta_eif_10, N = N_eif_10, m_cal = m_star, alpha = alpha_10,
-    p = p_10, sens = sens_10, spec = spec_10
-  )
-
-  sim <- simulate_eif_binary(
-    R = R_10, delta = delta_eif_10, N = N_eif_10, m_cal = m_star,
-    alpha = alpha_10, p = p_10, sens = sens_10, spec = spec_10,
-    seed = 10500 + counter
-  )
-
-  results_10[[counter]] <- data.frame(
-    design = "eif_binary", rho = NA, target_power = tp,
-    n_star = m_star,
-    analytical_achieved = as.numeric(analytical_power),
-    empirical_achieved = sim$empirical_power,
     stringsAsFactors = FALSE
   )
 }

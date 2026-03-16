@@ -1,12 +1,20 @@
-# Save a ggplot figure in both PDF and PNG formats
+# Save a ggplot figure in PDF and/or PNG formats
 
 Follows figures4papers conventions: vector PDF with TrueType font
-embedding, plus raster PNG at 400 DPI. White background, tight crop.
+embedding and optional raster PNG at 400 DPI. White background, tight
+crop.
 
 ## Usage
 
 ``` r
-save_pppower_figure(plot, path, width = 10, height = 5, dpi = 400)
+save_pppower_figure(
+  plot,
+  path,
+  width = 10,
+  height = 5,
+  dpi = 400,
+  formats = c("pdf", "png")
+)
 ```
 
 ## Arguments
@@ -31,6 +39,10 @@ save_pppower_figure(plot, path, width = 10, height = 5, dpi = 400)
 
   DPI for PNG output (default 400).
 
+- formats:
+
+  Character vector containing any of `"pdf"` and `"png"`.
+
 ## Value
 
-Invisible NULL. Side effect: writes `path.pdf` and `path.png`.
+Invisible NULL. Side effect: writes the requested files.

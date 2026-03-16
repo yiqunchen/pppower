@@ -77,8 +77,6 @@ if (figures_only) {
                 c("results_lognorm"))
   run_and_cache(file.path(script_dir, "power_validation_setting8_tdist.R"),
                 c("results_tdist"))
-  run_and_cache(file.path(script_dir, "power_validation_setting9_eif_binary.R"),
-                c("results_eif_binary"))
   run_and_cache(file.path(script_dir, "power_validation_setting10_n_inversion.R"),
                 c("results_n_inversion"))
   run_and_cache(file.path(script_dir, "power_validation_setting11_rule_of_thumb.R"),

@@ -3,9 +3,10 @@
 ## What this vignette covers
 
 This is the **basic-use** guide for `pppower`. It shows the minimum
-calls you need for power, sample size, and paired designs. See the
-“Detailed Dive” and “Real Data” tabs on the pkgdown site for derivations
-and LLM-as-a-judge setups.
+calls you need for power, sample size, paired designs, and 2x2
+contingency-table planning. See the “Detailed Dive” and “2x2 Calculator”
+tabs on the pkgdown site for derivations, regression contrasts, and
+odds-ratio / relative-risk setups.
 
 ``` r
 
@@ -15,12 +16,12 @@ library(pppower)
 ### What it does (analogy to `pwr`)
 
 - Drop-in power / sample-size calculators that leverage predictions on
-  unlabeled data (PPI++).
+  unlabeled data (`PPI++`).
 - Same spirit as
   [`pwr::pwr.t.test`](https://rdrr.io/pkg/pwr/man/pwr.t.test.html), but
   variance comes from predictions + residuals.
-- Works for means / paired differences and binary surrogates (LLM
-  judge).
+- Works for means, paired differences, regression contrasts, and 2x2
+  contingency tables.
 
 ### 1. Power for a prediction-powered mean test
 
@@ -71,9 +72,25 @@ power_ppi_paired(
 #> [1] 0.8276133
 ```
 
+### 4. 2x2 designs in one line
+
+``` r
+
+power_ppi_2x2(
+  p_exp          = 0.40,
+  p_ctrl         = 0.20,
+  N              = 1000,
+  power          = 0.80,
+  sens           = 0.85,
+  spec           = 0.85,
+  effect_measure = "OR"
+)
+#> [1] 108
+```
+
 ### Where next?
 
 - **Detailed Dive:** formulas, metrics-to-moments mapping, regression
   contrasts.
-- **Real Data:** LLM-as-a-judge binary surrogates (EIF), required
-  calibration size.
+- **2x2 Calculator:** odds-ratio and relative-risk planning from
+  contingency tables.

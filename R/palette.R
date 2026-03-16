@@ -137,42 +137,50 @@ theme_pppower <- function(base_size = 14) {
 }
 
 # ---------------------------------------------------------------------------
-# Dual-format figure saver (PDF vector + PNG raster)
+# Flexible figure saver
 # ---------------------------------------------------------------------------
 
-#' Save a ggplot figure in both PDF and PNG formats
+#' Save a ggplot figure in PDF and/or PNG formats
 #'
 #' Follows figures4papers conventions: vector PDF with TrueType font
-#' embedding, plus raster PNG at 400 DPI. White background, tight crop.
+#' embedding and optional raster PNG at 400 DPI. White background,
+#' tight crop.
 #'
 #' @param plot A ggplot2 object.
 #' @param path Base path without extension (e.g., "figures/power_curve").
 #' @param width Figure width in inches (default 10).
 #' @param height Figure height in inches (default 5).
 #' @param dpi DPI for PNG output (default 400).
-#' @return Invisible NULL. Side effect: writes \code{path.pdf} and
-#'   \code{path.png}.
+#' @param formats Character vector containing any of \code{"pdf"} and
+#'   \code{"png"}.
+#' @return Invisible NULL. Side effect: writes the requested files.
 #' @export
-save_pppower_figure <- function(plot, path, width = 10, height = 5, dpi = 400) {
+save_pppower_figure <- function(plot, path, width = 10, height = 5, dpi = 400,
+                                formats = c("pdf", "png")) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("ggplot2 is required for save_pppower_figure().", call. = FALSE)
   }
-  # Try cairo_pdf for TrueType embedding; fall back to default pdf device
-  pdf_ok <- tryCatch({ grDevices::cairo_pdf(tempfile()); grDevices::dev.off(); TRUE },
-                     error = function(e) FALSE, warning = function(w) FALSE)
-  if (pdf_ok) {
+  formats <- unique(formats)
+  if ("pdf" %in% formats) {
+    # Try cairo_pdf for TrueType embedding; fall back to default pdf device
+    pdf_ok <- tryCatch({ grDevices::cairo_pdf(tempfile()); grDevices::dev.off(); TRUE },
+                       error = function(e) FALSE, warning = function(w) FALSE)
+    if (pdf_ok) {
+      ggplot2::ggsave(
+        paste0(path, ".pdf"), plot, width = width, height = height,
+        device = grDevices::cairo_pdf
+      )
+    } else {
+      ggplot2::ggsave(
+        paste0(path, ".pdf"), plot, width = width, height = height
+      )
+    }
+  }
+  if ("png" %in% formats) {
     ggplot2::ggsave(
-      paste0(path, ".pdf"), plot, width = width, height = height,
-      device = grDevices::cairo_pdf
-    )
-  } else {
-    ggplot2::ggsave(
-      paste0(path, ".pdf"), plot, width = width, height = height
+      paste0(path, ".png"), plot, width = width, height = height, dpi = dpi,
+      bg = "white"
     )
   }
-  ggplot2::ggsave(
-    paste0(path, ".png"), plot, width = width, height = height, dpi = dpi,
-    bg = "white"
-  )
   invisible(NULL)
 }

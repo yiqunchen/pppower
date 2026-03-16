@@ -5,7 +5,7 @@ template:
 
 navbar:
   structure:
-    left: [home, calculator, calculator2x2, basics, variance, samplesize, llmjudge, reference]
+    left: [home, calculator, calculator2x2, basics, variance, samplesize, reference]
   components:
     basics:
       text: "Basics"
@@ -22,10 +22,6 @@ navbar:
     calculator2x2:
       text: "2x2 Calculator"
       href: articles/calculator-2x2.html
-    llmjudge:
-      text: "LLM Judge (Binary)"
-      href: articles/llm-judge-binary.html
-
 reference:
   - title: "Core power & sample size"
     contents:
@@ -36,12 +32,10 @@ reference:
       - power_ppi_paired_binary
       - power_ppi_regression
       - power_ppi_2x2
-      - power_eif_binary
   - title: "Simulation helpers"
     contents:
       - simulate_ppi_mean
       - simulate_ppi_ttest_binary
-      - simulate_eif_binary
       - simulate_crossfit_data
   - title: "Curves & plotting"
     contents:
@@ -53,7 +47,6 @@ reference:
   - title: "Utilities"
     contents:
       - binary_moments_from_sens_spec
-      - resolve_eif_binary_inputs
       - resolve_ppi_variances
       - compute_ppi_blocks
       - theme_pppower
@@ -71,9 +64,7 @@ reference:
       - power_ppi_pp_paired_binary
       - n_required_ppi_pp
       - n_required_ppi_pp_paired
-      - n_required_eif_binary
       - simulate_power
       - simulate_power_ppi_mean
       - simulate_power_ppiplus_mean
       - simulate_power_ppi_pp_ttest_binary
-      - simulate_power_eif_binary

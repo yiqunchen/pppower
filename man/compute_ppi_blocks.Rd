@@ -19,13 +19,13 @@ compute_ppi_blocks(
 \item{model_type}{Character string: \code{"ols"} or \code{"glm"}.
 Determines whether the estimator is linear regression (OLS) or a GLM.}
 
-\item{X_l}{Matrix of labeled covariates (n × p).}
+\item{X_l}{Matrix of labeled covariates (n x p).}
 
 \item{Y_l}{Vector of labeled responses (required for OLS and GLM).}
 
 \item{f_l}{Vector of model predictions on labeled data.}
 
-\item{X_u}{Matrix of unlabeled covariates (N × p).}
+\item{X_u}{Matrix of unlabeled covariates (N x p).}
 
 \item{f_u}{Vector of model predictions on unlabeled data.}
 
@@ -39,12 +39,12 @@ evaluation. Required for GLM; optional for OLS.}
 A named list of matrices:
 
 \describe{
-\item{H_L}{Labeled-data Hessian / Fisher information (p × p)}
-\item{H_U}{Unlabeled-data Hessian / Fisher information (p × p)}
-\item{Sigma_YY}{Covariance of labeled score (\verb{Y − Xβ}) (p × p)}
-\item{Sigma_ff_l}{Covariance of prediction score on labeled data (p × p)}
-\item{Sigma_ff_u}{Covariance of prediction score on unlabeled data (p × p)}
-\item{Sigma_Yf}{Cross-covariance between labeled scores and prediction scores (p × p)}
+\item{H_L}{Labeled-data Hessian / Fisher information (p x p)}
+\item{H_U}{Unlabeled-data Hessian / Fisher information (p x p)}
+\item{Sigma_YY}{Covariance of labeled score (\verb{Y - X beta}) (p x p)}
+\item{Sigma_ff_l}{Covariance of prediction score on labeled data (p x p)}
+\item{Sigma_ff_u}{Covariance of prediction score on unlabeled data (p x p)}
+\item{Sigma_Yf}{Cross-covariance between labeled scores and prediction scores (p x p)}
 }
 
 These matrices are exactly the inputs needed for
@@ -58,7 +58,7 @@ regression-based estimands (OLS or GLM contrasts).
 This helper wraps:
 \itemize{
 \item \code{compute_hessian_fisher} — model Hessian or Fisher information
-\item \code{compute_sigma_blocks}   — Σ-block covariance components
+\item \code{compute_sigma_blocks}   --- Sigma-block covariance components
 }
 
 and produces a unified object that can be passed directly to

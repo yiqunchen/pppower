@@ -72,8 +72,8 @@ simulate_power(
 
 - cov_y_f:
 
-  Optional covariance \\\Cov(Y, f(X))\\; when present, PP++ power is
-  returned.
+  Optional covariance \\\operatorname{Cov}(Y, f(X))\\; when present,
+  PP++ power is returned.
 
 - metrics:
 

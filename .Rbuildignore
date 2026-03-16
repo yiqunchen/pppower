@@ -15,3 +15,8 @@
 ^write-up$
 ^pppower\.Rcheck$
 ^pppower_.*\.tar\.gz$
+^README\.html$
+^vignettes/.*\.html$
+^real_data_cache$
+^AGENTS\.md$
+^skills$

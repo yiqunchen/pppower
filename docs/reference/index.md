@@ -17,9 +17,6 @@
   : Power or required sample size for PPI++ regression contrast
 - [`power_ppi_2x2()`](https://yiqunchen.github.io/pppower/reference/power_ppi_2x2.md)
   : Power or required sample size for a 2x2 table with PPI++ surrogates
-- [`power_eif_binary()`](https://yiqunchen.github.io/pppower/reference/power_eif_binary.md)
-  : Power or required calibration size for EIF estimator with binary
-  surrogates
 
 ## Simulation helpers
 
@@ -27,8 +24,6 @@
   : Monte Carlo power for the PPI++ mean estimator
 - [`simulate_ppi_ttest_binary()`](https://yiqunchen.github.io/pppower/reference/simulate_ppi_ttest_binary.md)
   : Monte Carlo power for binary two-sample PPI++ test
-- [`simulate_eif_binary()`](https://yiqunchen.github.io/pppower/reference/simulate_eif_binary.md)
-  : Monte Carlo power for the EIF binary estimator
 - [`simulate_crossfit_data()`](https://yiqunchen.github.io/pppower/reference/simulate_crossfit_data.md)
   : Simulate cross-fitted predictive data
 
@@ -50,8 +45,6 @@
 - [`binary_moments_from_sens_spec()`](https://yiqunchen.github.io/pppower/reference/binary_moments_from_sens_spec.md)
   : Moments for binary outcome/prediction pairs from
   sensitivity/specificity
-- [`resolve_eif_binary_inputs()`](https://yiqunchen.github.io/pppower/reference/resolve_eif_binary_inputs.md)
-  : Resolve EIF inputs for binary surrogates
 - [`resolve_ppi_variances()`](https://yiqunchen.github.io/pppower/reference/resolve_ppi_variances.md)
   : Resolve PP variance components from metrics
 - [`compute_ppi_blocks()`](https://yiqunchen.github.io/pppower/reference/compute_ppi_blocks.md)
@@ -60,7 +53,7 @@
 - [`theme_pppower()`](https://yiqunchen.github.io/pppower/reference/theme_pppower.md)
   : Publication-ready ggplot2 theme for pppower
 - [`save_pppower_figure()`](https://yiqunchen.github.io/pppower/reference/save_pppower_figure.md)
-  : Save a ggplot figure in both PDF and PNG formats
+  : Save a ggplot figure in PDF and/or PNG formats
 - [`ppi_mean_test()`](https://yiqunchen.github.io/pppower/reference/ppi_mean_test.md)
   : PPI++ One-Sample Mean Test
 - [`ppi_paired_test()`](https://yiqunchen.github.io/pppower/reference/ppi_paired_test.md)
@@ -72,9 +65,7 @@
 
 Soft-deprecated shims; use the renamed functions above.
 
-- [`n_required_eif_binary()`](https://yiqunchen.github.io/pppower/reference/deprecated.md)
-  [`simulate_power_eif_binary()`](https://yiqunchen.github.io/pppower/reference/deprecated.md)
-  [`simulate_power_ppi_mean()`](https://yiqunchen.github.io/pppower/reference/deprecated.md)
+- [`simulate_power_ppi_mean()`](https://yiqunchen.github.io/pppower/reference/deprecated.md)
   [`power_ppi_pp_mean()`](https://yiqunchen.github.io/pppower/reference/deprecated.md)
   [`power_ppi_pp_paired()`](https://yiqunchen.github.io/pppower/reference/deprecated.md)
   [`power_ppi_pp_paired_binary()`](https://yiqunchen.github.io/pppower/reference/deprecated.md)

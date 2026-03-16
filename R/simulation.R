@@ -16,7 +16,8 @@
 #' @param var_res Variance of residuals \eqn{Y - f(X)}.
 #' @param sigma_y2 Optional outcome variance (needed for PP++ if `cov_y_f` is supplied).
 #' @param sigma_f2 Optional prediction variance (needed for PP++ if `cov_y_f` is supplied).
-#' @param cov_y_f Optional covariance \eqn{\Cov(Y, f(X))}; when present, PP++ power is returned.
+#' @param cov_y_f Optional covariance
+#'   \eqn{\operatorname{Cov}(Y, f(X))}; when present, PP++ power is returned.
 #' @param metrics Optional predictive summaries to recover missing moments.
 #' @param metric_type Character string describing `metrics`.
 #' @param m_labeled Labeled sample size associated with `metrics` (defaults to `n`).

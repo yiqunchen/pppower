@@ -1,6 +1,6 @@
 # 2x2 Contingency Table Calculator
 
-This calculator uses **prediction-powered inference (PPI/PPI++)**
+This calculator uses **prediction-powered inference (PPI/`PPI++`)**
 formulas from this package for planning studies that compare two groups
 via a 2x2 contingency table. It supports both **odds ratio** (OR) and
 **relative risk** (RR) effect measures.
