@@ -1,5 +1,7 @@
 # pppower
 
+Website: <https://yiqunchen.github.io/pppower/>
+
 **pppower** is an R package for power analysis and sample-size
 calculation under the Prediction-Powered Inference (PPI/`PPI++`)
 framework.
@@ -10,9 +12,9 @@ For binary outcomes (prevalence), you can estimate required **labeled**
 sample size while leveraging model predictions on a large unlabeled set.
 This is exactly what PPI is for:
 
-- Inputs: target effect size (), unlabeled size (N), and model quality
-  (e.g., sensitivity/specificity)
-- Output: required labeled (n) for your target power
+- Inputs: target effect size $\Delta$, unlabeled size $N$, and model
+  quality (e.g., sensitivity/specificity)
+- Output: required labeled $n$ for your target power
 - Benefit: better predictions can reduce labeled annotation burden
 
 Use `power_ppi_mean(..., n = NULL)` for one-sample prevalence and
@@ -179,12 +181,14 @@ power_ppi_mean(delta = 0.05, N = 5000, n = 200,
 
 If you use `pppower` in your research, please cite:
 
-    @software{pppower,
-      title = {pppower: Prediction-Powered Inference Power Calculations},
-      author = {Guo, Moran and Chen, Yiqun},
-      url = {https://github.com/yiqunchen/pppower},
-      year = {2025}
-    }
+``` R
+@software{pppower,
+  title = {pppower: Prediction-Powered Inference Power Calculations},
+  author = {Guo, Moran and Chen, Yiqun},
+  url = {https://github.com/yiqunchen/pppower},
+  year = {2025}
+}
+```
 
 # Package index
 

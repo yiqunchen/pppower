@@ -49,7 +49,8 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><div class="section level1">
+  <main id="main" class="col-md-9"><p>Website: <a href="https://yiqunchen.github.io/pppower/" class="uri">https://yiqunchen.github.io/pppower/</a></p>
+<div class="section level1">
 <div class="page-header"><h1 id="pppower">pppower<a class="anchor" aria-label="anchor" href="#pppower"></a>
 </h1></div>
 <p><strong>pppower</strong> is an R package for power analysis and sample-size calculation under the Prediction-Powered Inference (PPI/<code>PPI++</code>) framework.</p>
@@ -58,8 +59,8 @@
 </h2>
 <p>For binary outcomes (prevalence), you can estimate required <strong>labeled</strong> sample size while leveraging model predictions on a large unlabeled set. This is exactly what PPI is for:</p>
 <ul>
-<li>Inputs: target effect size (), unlabeled size (N), and model quality (e.g., sensitivity/specificity)</li>
-<li>Output: required labeled (n) for your target power</li>
+<li>Inputs: target effect size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math>, unlabeled size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>, and model quality (e.g., sensitivity/specificity)</li>
+<li>Output: required labeled <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> for your target power</li>
 <li>Benefit: better predictions can reduce labeled annotation burden</li>
 </ul>
 <p>Use <code>power_ppi_mean(..., n = NULL)</code> for one-sample prevalence and <code><a href="reference/power_ppi_ttest_binary.html">power_ppi_ttest_binary()</a></code> for two-group prevalence differences.</p>
@@ -68,7 +69,7 @@
 <h2 id="interactive-calculator">Interactive Calculator<a class="anchor" aria-label="anchor" href="#interactive-calculator"></a>
 </h2>
 <div style="margin: 1rem 0 1.4rem; padding: 1.0rem; border: 2px solid #d9e7df; border-radius: 12px; text-align: center; background: #f8fbf9;">
-<a href="https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html" style="display: inline-block; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;"> Open Interactive PPI Sample Size Calculator </a>
+<p><a href="https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html" style="display: inline-block; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;"> Open Interactive PPI Sample Size Calculator </a></p>
 <div style="margin-top: 0.55rem; font-size: 0.92rem; color: #3f4d4a;">
 <div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>Direct link to the live calculator page.</span></code></pre></div>
 </div>
@@ -103,9 +104,9 @@
 </h2>
 <table class="table">
 <colgroup>
-<col width="19%">
-<col width="51%">
-<col width="29%">
+<col width="33%">
+<col width="33%">
+<col width="33%">
 </colgroup>
 <thead><tr class="header">
 <th>Design</th>
@@ -232,14 +233,15 @@
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <p>If you use <code>pppower</code> in your research, please cite:</p>
-<pre><code>@software{pppower,
-  title = {pppower: Prediction-Powered Inference Power Calculations},
-  author = {Guo, Moran and Chen, Yiqun},
-  url = {https://github.com/yiqunchen/pppower},
-  year = {2025}
-}</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="sc">@</span>software{pppower,</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  title <span class="ot">=</span> {pppower<span class="sc">:</span> Prediction<span class="sc">-</span>Powered Inference Power Calculations},</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  author <span class="ot">=</span> {Guo, Moran and Chen, Yiqun},</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  url <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>yiqunchen<span class="sc">/</span>pppower},</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  year <span class="ot">=</span> {<span class="dv">2025</span>}</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 </div>
+
   </main><aside class="col-md-3"><div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
