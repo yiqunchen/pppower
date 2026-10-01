@@ -12,6 +12,11 @@ source(file.path(script_dir, "sim_utils.R"))
 rds_dir <- file.path(script_dir, "rds_cache")
 
 settings <- list(
+  "2"  = list(file = "power_validation_setting2_mean_binary.R",      objs = c("results_bin_mean")),
+  "13" = list(file = "power_validation_setting13_lambda_convergence.R", objs = c("results_lambda_convergence")),
+  "15" = list(file = "power_validation_setting15_power_vs_delta.R",  objs = c("results_power_vs_delta")),
+  "17" = list(file = "power_validation_setting17_Nn_ratio.R",        objs = c("results_Nn_ratio")),
+  "18" = list(file = "power_validation_setting18_unequal_groups.R",  objs = c("results_unequal")),
   "1"  = list(file = "power_validation_setting1_mean_continuous.R",  objs = c("results_cont_mean", "settings_cont_mean")),
   "3"  = list(file = "power_validation_setting3_ttest_continuous.R", objs = c("results_cont_ttest")),
   "4"  = list(file = "power_validation_setting4_ttest_binary.R",     objs = c("results_bin_ttest")),
