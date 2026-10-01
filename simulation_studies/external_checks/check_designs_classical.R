@@ -71,6 +71,19 @@ for (s in list(c(0.40, 0.20, 0.80, 1000, 0.5), c(0.30, 0.20, 0.90, 2000, 0.3))) 
   }
 }
 
+# 5. PROCOVA (Schuler et al. 2022; EMA handbook): randomized trial, 1:1, every
+#    participant has the outcome and a prognostic score, nu^2 = (2 sigma)^2 (1 - R^2) / n.
+#    This is the two-sample PPI++ design with N -> infinity.
+for (s in list(c(0.5, 100), c(0.8, 300))) {
+  R <- s[1]; n <- s[2]; nu <- sqrt(4 * (1 - R^2) / n)
+  p_cl <- pnorm(qnorm(0.025) + 0.3 / nu) + pnorm(qnorm(0.025) - 0.3 / nu)
+  p_pp <- power_ppi_ttest(delta = 0.3, n_A = n / 2, n_B = n / 2, N_A = 1e9, N_B = 1e9,
+                          sigma_y2_A = 1, sigma_f2_A = 1, cov_yf_A = R,
+                          sigma_y2_B = 1, sigma_f2_B = 1, cov_yf_B = R)
+  out[[length(out) + 1]] <- data.frame(design = "PROCOVA (N -> inf)", setting = sprintf("R=%.1f n=%d", R, n),
+                                       quantity = "power", pppower = p_pp, classical = p_cl)
+}
+
 res <- do.call(rbind, out)
 res$difference <- res$pppower - res$classical
 print(res, digits = 4, row.names = FALSE)
