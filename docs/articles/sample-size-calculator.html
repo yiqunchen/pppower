@@ -55,7 +55,7 @@
 
       <h1>Interactive PPI Sample Size Calculator</h1>
             <h3 data-toc-skip class="subtitle">Prediction-powered
-one-sample mean/prevalence and difference in prevalence</h3>
+one-sample, two-sample, and paired designs</h3>
             
       
 
@@ -355,11 +355,20 @@ final protocol numbers, confirm assumptions with your statistician.</p>
     <button class="sscalc-tab" id="tab-diff" type="button" data-panel="panel-diff" role="tab" aria-selected="false">
       PPI difference in prevalence
     </button>
+    <button class="sscalc-tab" id="tab-diffmean" type="button" data-panel="panel-diffmean" role="tab" aria-selected="false">
+      PPI difference in means
+    </button>
+    <button class="sscalc-tab" id="tab-paired" type="button" data-panel="panel-paired" role="tab" aria-selected="false">
+      PPI paired mean difference
+    </button>
+    <button class="sscalc-tab" id="tab-pairedbin" type="button" data-panel="panel-pairedbin" role="tab" aria-selected="false">
+      PPI paired proportions
+    </button>
   </div>
 
   <section class="sscalc-panel is-active" id="panel-single" role="tabpanel" aria-labelledby="tab-single"><div class="sscalc-grid">
       <div class="sscalc-inputs">
-        <h3>Inputs</h3>
+        <h3 data-toc-skip>Inputs</h3>
 
         <div class="sscalc-form-row">
           <div class="sscalc-field">
@@ -450,7 +459,7 @@ final protocol numbers, confirm assumptions with your statistician.</p>
       </div>
 
       <div class="sscalc-results">
-        <h3>Results</h3>
+        <h3 data-toc-skip>Results</h3>
         <p class="sscalc-msg" id="single_message"></p>
         <div class="sscalc-result-grid">
           <div class="sscalc-stat">
@@ -494,7 +503,7 @@ final protocol numbers, confirm assumptions with your statistician.</p>
     </div>
   </section><section class="sscalc-panel" id="panel-diff" role="tabpanel" aria-labelledby="tab-diff"><div class="sscalc-grid">
       <div class="sscalc-inputs">
-        <h3>Inputs</h3>
+        <h3 data-toc-skip>Inputs</h3>
 
         <div class="sscalc-form-row">
           <div class="sscalc-field">
@@ -566,7 +575,7 @@ final protocol numbers, confirm assumptions with your statistician.</p>
       </div>
 
       <div class="sscalc-results">
-        <h3>Results</h3>
+        <h3 data-toc-skip>Results</h3>
         <p class="sscalc-msg" id="diff_message"></p>
         <div class="sscalc-result-grid">
           <div class="sscalc-stat">
@@ -606,6 +615,299 @@ final protocol numbers, confirm assumptions with your statistician.</p>
         </div>
 
         <div class="sscalc-footnote" id="diff_formula_note">Formula note will appear here.</div>
+      </div>
+    </div>
+  </section><section class="sscalc-panel" id="panel-diffmean" role="tabpanel" aria-labelledby="tab-diffmean"><div class="sscalc-grid">
+      <div class="sscalc-inputs">
+        <h3 data-toc-skip>Inputs</h3>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="dm_delta">Difference in means to detect</label>
+            <input id="dm_delta" type="number" step="0.01" value="0.3">
+</div>
+          <div class="sscalc-field">
+            <label for="dm_nonresponse">Expected non-response (%)</label>
+            <input id="dm_nonresponse" type="number" min="0" max="80" step="1" value="10">
+</div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="dm_sd_A">Outcome SD, group A</label>
+            <input id="dm_sd_A" type="number" min="0.0001" step="0.01" value="1">
+</div>
+          <div class="sscalc-field">
+            <label for="dm_sd_B">Outcome SD, group B</label>
+            <input id="dm_sd_B" type="number" min="0.0001" step="0.01" value="1">
+</div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="dm_r2_A">Prediction R² in group A</label>
+            <input id="dm_r2_A" type="number" min="0" max="0.99" step="0.01" value="0.5">
+</div>
+          <div class="sscalc-field">
+            <label for="dm_r2_B">Prediction R² in group B</label>
+            <input id="dm_r2_B" type="number" min="0" max="0.99" step="0.01" value="0.5">
+</div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="dm_N_A">Unlabeled N_A</label>
+            <input id="dm_N_A" type="number" min="10" step="1" value="1000">
+</div>
+          <div class="sscalc-field">
+            <label for="dm_N_B">Unlabeled N_B</label>
+            <input id="dm_N_B" type="number" min="10" step="1" value="1000">
+</div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="dm_alpha">Alpha (two-sided)</label>
+            <input id="dm_alpha" type="number" min="0.001" max="0.2" step="0.001" value="0.05">
+</div>
+          <div class="sscalc-field">
+            <label for="dm_power">Target power (%)</label>
+            <input id="dm_power" type="number" min="50" max="99.9" step="0.1" value="80">
+</div>
+        </div>
+
+      </div>
+
+      <div class="sscalc-results">
+        <h3 data-toc-skip>Results</h3>
+        <p class="sscalc-msg" id="dm_message"></p>
+        <div class="sscalc-result-grid">
+          <div class="sscalc-stat">
+            <span>PPI n per group (base)</span>
+            <strong id="dm_n_ppi">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>PPI recruitment n per group (adj.)</span>
+            <strong id="dm_n_ppi_adj">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Classical n per group</span>
+            <strong id="dm_n_classic">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Labeled saving vs classical</span>
+            <strong id="dm_saving">-</strong>
+          </div>
+        </div>
+
+        <div class="sscalc-bars">
+          <div class="sscalc-bar-row">
+            <span>Classic</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="dm_bar_classic"></div></div>
+            <span id="dm_bar_classic_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="dm_bar_ppi"></div></div>
+            <span id="dm_bar_ppi_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI adj.</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="dm_bar_ppi_adj"></div></div>
+            <span id="dm_bar_ppi_adj_label">-</span>
+          </div>
+        </div>
+
+        <div class="sscalc-footnote" id="dm_formula_note">Formula note will appear here.</div>
+      </div>
+    </div>
+  </section><section class="sscalc-panel" id="panel-paired" role="tabpanel" aria-labelledby="tab-paired"><div class="sscalc-grid">
+      <div class="sscalc-inputs">
+        <h3 data-toc-skip>Inputs</h3>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="pm_delta">Mean within-pair difference to detect</label>
+            <input id="pm_delta" type="number" step="0.01" value="0.3">
+</div>
+          <div class="sscalc-field">
+            <label for="pm_sd_d">SD of the within-pair difference</label>
+            <input id="pm_sd_d" type="number" min="0.0001" step="0.01" value="1">
+</div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="pm_r2_d">R² of predicted vs true differences</label>
+            <input id="pm_r2_d" type="number" min="0" max="0.99" step="0.01" value="0.25">
+</div>
+          <div class="sscalc-field">
+            <label for="pm_N">Unlabeled pairs N</label>
+            <input id="pm_N" type="number" min="10" step="1" value="500">
+</div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="pm_alpha">Alpha (two-sided)</label>
+            <input id="pm_alpha" type="number" min="0.001" max="0.2" step="0.001" value="0.05">
+</div>
+          <div class="sscalc-field">
+            <label for="pm_power">Target power (%)</label>
+            <input id="pm_power" type="number" min="50" max="99.9" step="0.1" value="80">
+</div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="pm_nonresponse">Expected non-response (%)</label>
+            <input id="pm_nonresponse" type="number" min="0" max="80" step="1" value="10">
+</div>
+        </div>
+
+      </div>
+
+      <div class="sscalc-results">
+        <h3 data-toc-skip>Results</h3>
+        <p class="sscalc-msg" id="pm_message"></p>
+        <div class="sscalc-result-grid">
+          <div class="sscalc-stat">
+            <span>PPI pairs (base)</span>
+            <strong id="pm_n_ppi">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>PPI recruitment pairs (adj.)</span>
+            <strong id="pm_n_ppi_adj">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Classical pairs</span>
+            <strong id="pm_n_classic">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Labeled saving vs classical</span>
+            <strong id="pm_saving">-</strong>
+          </div>
+        </div>
+
+        <div class="sscalc-bars">
+          <div class="sscalc-bar-row">
+            <span>Classic</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="pm_bar_classic"></div></div>
+            <span id="pm_bar_classic_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="pm_bar_ppi"></div></div>
+            <span id="pm_bar_ppi_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI adj.</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="pm_bar_ppi_adj"></div></div>
+            <span id="pm_bar_ppi_adj_label">-</span>
+          </div>
+        </div>
+
+        <div class="sscalc-footnote" id="pm_formula_note">Formula note will appear here.</div>
+      </div>
+    </div>
+  </section><section class="sscalc-panel" id="panel-pairedbin" role="tabpanel" aria-labelledby="tab-pairedbin"><div class="sscalc-grid">
+      <div class="sscalc-inputs">
+        <h3 data-toc-skip>Inputs</h3>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="pb_pA">Prevalence under condition A (%)</label>
+            <input id="pb_pA" type="number" min="0.1" max="99.9" step="0.1" value="40">
+</div>
+          <div class="sscalc-field">
+            <label for="pb_pB">Prevalence under condition B (%)</label>
+            <input id="pb_pB" type="number" min="0.1" max="99.9" step="0.1" value="30">
+</div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="pb_rho">Within-pair correlation of true outcomes</label>
+            <input id="pb_rho" type="number" min="-0.99" max="0.99" step="0.01" value="0.3">
+</div>
+          <div class="sscalc-field">
+            <label for="pb_N">Unlabeled pairs N</label>
+            <input id="pb_N" type="number" min="10" step="1" value="1000">
+</div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="pb_sens">Classifier sensitivity</label>
+            <input id="pb_sens" type="number" min="0" max="1" step="0.01" value="0.85">
+</div>
+          <div class="sscalc-field">
+            <label for="pb_spec">Classifier specificity</label>
+            <input id="pb_spec" type="number" min="0" max="1" step="0.01" value="0.85">
+</div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="pb_alpha">Alpha (two-sided)</label>
+            <input id="pb_alpha" type="number" min="0.001" max="0.2" step="0.001" value="0.05">
+</div>
+          <div class="sscalc-field">
+            <label for="pb_power">Target power (%)</label>
+            <input id="pb_power" type="number" min="50" max="99.9" step="0.1" value="80">
+</div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
+            <label for="pb_nonresponse">Expected non-response (%)</label>
+            <input id="pb_nonresponse" type="number" min="0" max="80" step="1" value="10">
+</div>
+        </div>
+
+      </div>
+
+      <div class="sscalc-results">
+        <h3 data-toc-skip>Results</h3>
+        <p class="sscalc-msg" id="pb_message"></p>
+        <div class="sscalc-result-grid">
+          <div class="sscalc-stat">
+            <span>PPI pairs (base)</span>
+            <strong id="pb_n_ppi">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>PPI recruitment pairs (adj.)</span>
+            <strong id="pb_n_ppi_adj">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Classical pairs</span>
+            <strong id="pb_n_classic">-</strong>
+          </div>
+          <div class="sscalc-stat">
+            <span>Labeled saving vs classical</span>
+            <strong id="pb_saving">-</strong>
+          </div>
+        </div>
+
+        <div class="sscalc-bars">
+          <div class="sscalc-bar-row">
+            <span>Classic</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="pb_bar_classic"></div></div>
+            <span id="pb_bar_classic_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="pb_bar_ppi"></div></div>
+            <span id="pb_bar_ppi_label">-</span>
+          </div>
+          <div class="sscalc-bar-row">
+            <span>PPI adj.</span>
+            <div class="sscalc-bar-shell"><div class="sscalc-bar-fill" id="pb_bar_ppi_adj"></div></div>
+            <span id="pb_bar_ppi_adj_label">-</span>
+          </div>
+        </div>
+
+        <div class="sscalc-footnote" id="pb_formula_note">Formula note will appear here.</div>
       </div>
     </div>
   </section><div class="sscalc-footnote">
@@ -1047,6 +1349,234 @@ final protocol numbers, confirm assumptions with your statistician.</p>
     }
   }
 
+  // Shared helpers for the two-sample and paired panels.
+  function checkCommon(alpha, targetPower, nonresponse) {
+    if (!(alpha > 0 && alpha < 0.5)) {
+      throw new Error("alpha must be in (0,0.5).");
+    }
+    if (!(targetPower > 0.5 && targetPower < 0.999)) {
+      throw new Error("Power should be between 50% and 99.9%.");
+    }
+    if (!(nonresponse >= 0 && nonresponse < 0.9)) {
+      throw new Error("Expected non-response must be in [0%, 90%).");
+    }
+  }
+
+  function checkR2(r2, label) {
+    if (!(r2 >= 0 && r2 < 1)) {
+      throw new Error(label + " must be in [0, 1).");
+    }
+  }
+
+  function showResult(p, nPpi, nClassic, nonresponse, unitLabel) {
+    var nPpiAdj = Math.ceil(nPpi / (1 - nonresponse));
+    var saving = 1 - (nPpi / nClassic);
+    setError(p + "_message", "");
+    setText(p + "_n_ppi", fmtInt(nPpi));
+    setText(p + "_n_ppi_adj", fmtInt(nPpiAdj));
+    setText(p + "_n_classic", fmtInt(nClassic));
+    setText(p + "_saving", fmtPct(saving));
+    var maxBar = Math.max(nClassic, nPpi, nPpiAdj);
+    setBar(p + "_bar_classic", nClassic, maxBar);
+    setBar(p + "_bar_ppi", nPpi, maxBar);
+    setBar(p + "_bar_ppi_adj", nPpiAdj, maxBar);
+    setText(p + "_bar_classic_label", fmtInt(nClassic));
+    setText(p + "_bar_ppi_label", fmtInt(nPpi));
+    setText(p + "_bar_ppi_adj_label", fmtInt(nPpiAdj));
+    var note = "Base n is the required number of completed labeled " + unitLabel + ". " +
+      "Adjusted n inflates for non-response: n_adj = n_base / (1 - non-response).";
+    if (saving < 0) {
+      note += " With these inputs, prediction quality is weak and PPI needs more labels than classical.";
+      setText(p + "_message", "PPI is not improving label efficiency under the current assumptions.");
+    } else {
+      note += " With these inputs, PPI reduces the labeled sample size versus classical.";
+    }
+    setText(p + "_formula_note", note);
+  }
+
+  function clearResult(p, err) {
+    setError(p + "_message", err.message);
+    ["_n_ppi", "_n_ppi_adj", "_n_classic", "_saving",
+     "_bar_classic_label", "_bar_ppi_label", "_bar_ppi_adj_label"].forEach(function (suffix) {
+      setText(p + suffix, "-");
+    });
+    setBar(p + "_bar_classic", NaN, NaN);
+    setBar(p + "_bar_ppi", NaN, NaN);
+    setBar(p + "_bar_ppi_adj", NaN, NaN);
+    setText(p + "_formula_note", "Please adjust inputs and try again.");
+  }
+
+  // Moments of the within-pair difference D = Y_A - Y_B and of its prediction
+  // fD = f_A - f_B, as in pppower::power_ppi_paired_binary().
+  function pairedBinaryMoments(pA, pB, rho, sens, spec) {
+    var denom = Math.sqrt(pA * (1 - pA) * pB * (1 - pB));
+    var p11 = denom === 0 ? Math.min(pA, pB) : pA * pB + rho * denom;
+    p11 = Math.min(Math.max(p11, Math.max(0, pA + pB - 1)), Math.min(pA, pB));
+    var p10 = pA - p11;
+    var p01 = pB - p11;
+    var p00 = 1 - p11 - p10 - p01;
+    var probs = [p11, p10, p01, p00].map(function (x) { return Math.max(x, 0); });
+    var total = probs.reduce(function (a, b) { return a + b; }, 0);
+    probs = probs.map(function (x) { return x / total; });
+    p11 = probs[0]; p10 = probs[1]; p01 = probs[2]; p00 = probs[3];
+
+    var meanD = p10 - p01;
+    var sigmaD2 = (p10 + p01) - meanD * meanD;
+    var q1 = sens;
+    var q0 = 1 - spec;
+    function fdMoments(yA, yB) {
+      var qA = yA === 1 ? q1 : q0;
+      var qB = yB === 1 ? q1 : q0;
+      var m = qA - qB;
+      var v = qA * (1 - qA) + qB * (1 - qB);
+      return { mean: m, mean2: v + m * m };
+    }
+    var m11 = fdMoments(1, 1), m10 = fdMoments(1, 0), m01 = fdMoments(0, 1), m00 = fdMoments(0, 0);
+    var meanF = p11 * m11.mean + p10 * m10.mean + p01 * m01.mean + p00 * m00.mean;
+    var meanF2 = p11 * m11.mean2 + p10 * m10.mean2 + p01 * m01.mean2 + p00 * m00.mean2;
+    var sigmaF2 = meanF2 - meanF * meanF;
+    var covDF = (p10 * m10.mean - p01 * m01.mean) - meanD * meanF;
+    if (!(sigmaD2 > 1e-12) || !(sigmaF2 > 1e-12)) {
+      throw new Error("Degenerate within-pair differences; adjust the inputs.");
+    }
+    return { sigmaY2: sigmaD2, sigmaF2: sigmaF2, covYf: covDF };
+  }
+
+  // Difference in means, continuous outcome, equal labeled n per group.
+  function updateDiffMean() {
+    try {
+      var delta = readNum("dm_delta");
+      var sdA = readNum("dm_sd_A");
+      var sdB = readNum("dm_sd_B");
+      var r2A = readNum("dm_r2_A");
+      var r2B = readNum("dm_r2_B");
+      var NA = readNum("dm_N_A");
+      var NB = readNum("dm_N_B");
+      var alpha = readNum("dm_alpha");
+      var targetPower = readNum("dm_power") / 100;
+      var nonresponse = readNum("dm_nonresponse") / 100;
+
+      if (!(Math.abs(delta) > 0)) {
+        throw new Error("The difference in means must be nonzero.");
+      }
+      if (!(sdA > 0 && sdB > 0)) {
+        throw new Error("Outcome SDs must be positive.");
+      }
+      checkR2(r2A, "R² in group A");
+      checkR2(r2B, "R² in group B");
+      if (!(NA > 0 && NB > 0)) {
+        throw new Error("N_A and N_B must be positive.");
+      }
+      checkCommon(alpha, targetPower, nonresponse);
+
+      var s2A = sdA * sdA, s2B = sdB * sdB;
+      var ppiPower = function (n) {
+        var v = varOneSample(n, NA, s2A, s2A, Math.sqrt(r2A) * s2A, "oracle") +
+          varOneSample(n, NB, s2B, s2B, Math.sqrt(r2B) * s2B, "oracle");
+        return powerFromVariance(delta, alpha, v);
+      };
+      var classicPower = function (n) {
+        return powerFromVariance(delta, alpha, (s2A + s2B) / n);
+      };
+      var nPpi = solveNByPower(ppiPower, targetPower, 2, 10000000);
+      var nClassic = solveNByPower(classicPower, targetPower, 2, 10000000);
+      if (!Number.isFinite(nPpi) || !Number.isFinite(nClassic)) {
+        throw new Error("Infeasible under current assumptions: no finite n found.");
+      }
+      showResult("dm", nPpi, nClassic, nonresponse, "outcomes per group");
+    } catch (err) {
+      clearResult("dm", err);
+    }
+  }
+
+  // Paired mean difference, continuous outcome.
+  function updatePaired() {
+    try {
+      var delta = readNum("pm_delta");
+      var sdD = readNum("pm_sd_d");
+      var r2D = readNum("pm_r2_d");
+      var N = readNum("pm_N");
+      var alpha = readNum("pm_alpha");
+      var targetPower = readNum("pm_power") / 100;
+      var nonresponse = readNum("pm_nonresponse") / 100;
+
+      if (!(Math.abs(delta) > 0)) {
+        throw new Error("The mean difference must be nonzero.");
+      }
+      if (!(sdD > 0)) {
+        throw new Error("The SD of the within-pair difference must be positive.");
+      }
+      checkR2(r2D, "R² of the predicted differences");
+      if (!(N > 0)) {
+        throw new Error("The number of unlabeled pairs must be positive.");
+      }
+      checkCommon(alpha, targetPower, nonresponse);
+
+      var s2 = sdD * sdD;
+      var zAlpha = inverseNormal(1 - alpha / 2);
+      var zBeta = inverseNormal(targetPower);
+      var targetVar = Math.pow(delta / (zAlpha + zBeta), 2);
+      var nPpi = solveNByVariance(function (n) {
+        return varOneSample(n, N, s2, s2, Math.sqrt(r2D) * s2, "oracle");
+      }, targetVar, 2, 10000000);
+      var nClassic = Math.max(1, Math.ceil(s2 / targetVar));
+      if (!Number.isFinite(nPpi)) {
+        throw new Error("Infeasible under current assumptions: no finite n found.");
+      }
+      showResult("pm", nPpi, nClassic, nonresponse, "pairs");
+    } catch (err) {
+      clearResult("pm", err);
+    }
+  }
+
+  // Paired proportions with a binary classifier applied to both conditions.
+  function updatePairedBinary() {
+    try {
+      var pA = readNum("pb_pA") / 100;
+      var pB = readNum("pb_pB") / 100;
+      var rho = readNum("pb_rho");
+      var sens = readNum("pb_sens");
+      var spec = readNum("pb_spec");
+      var N = readNum("pb_N");
+      var alpha = readNum("pb_alpha");
+      var targetPower = readNum("pb_power") / 100;
+      var nonresponse = readNum("pb_nonresponse") / 100;
+
+      if (!(pA > 0 && pA < 1 && pB > 0 && pB < 1)) {
+        throw new Error("Prevalences must be in (0%, 100%).");
+      }
+      if (Math.abs(pA - pB) < 1e-8) {
+        throw new Error("The two prevalences must differ to define an effect.");
+      }
+      if (!(rho > -1 && rho < 1)) {
+        throw new Error("The within-pair correlation must be in (-1, 1).");
+      }
+      if (!(sens >= 0 && sens <= 1 && spec >= 0 && spec <= 1)) {
+        throw new Error("Sensitivity and specificity must be in [0, 1].");
+      }
+      if (!(N > 0)) {
+        throw new Error("The number of unlabeled pairs must be positive.");
+      }
+      checkCommon(alpha, targetPower, nonresponse);
+
+      var m = pairedBinaryMoments(pA, pB, rho, sens, spec);
+      var delta = pA - pB;
+      var zAlpha = inverseNormal(1 - alpha / 2);
+      var zBeta = inverseNormal(targetPower);
+      var targetVar = Math.pow(delta / (zAlpha + zBeta), 2);
+      var nPpi = solveNByVariance(function (n) {
+        return varOneSample(n, N, m.sigmaY2, m.sigmaF2, m.covYf, "oracle");
+      }, targetVar, 2, 10000000);
+      var nClassic = Math.max(1, Math.ceil(m.sigmaY2 / targetVar));
+      if (!Number.isFinite(nPpi)) {
+        throw new Error("Infeasible under current assumptions: no finite n found.");
+      }
+      showResult("pb", nPpi, nClassic, nonresponse, "pairs");
+    } catch (err) {
+      clearResult("pb", err);
+    }
+  }
+
   function setActivePanel(targetPanelId) {
     var tabs = document.querySelectorAll(".sscalc-tab");
     var panels = document.querySelectorAll(".sscalc-panel");
@@ -1095,9 +1625,23 @@ final protocol numbers, confirm assumptions with your statistician.</p>
       id(field).addEventListener("change", updateDiff);
     });
 
+    [
+      ["dm", ["delta", "sd_A", "sd_B", "r2_A", "r2_B", "N_A", "N_B", "alpha", "power", "nonresponse"], updateDiffMean],
+      ["pm", ["delta", "sd_d", "r2_d", "N", "alpha", "power", "nonresponse"], updatePaired],
+      ["pb", ["pA", "pB", "rho", "sens", "spec", "N", "alpha", "power", "nonresponse"], updatePairedBinary]
+    ].forEach(function (spec) {
+      spec[1].forEach(function (field) {
+        id(spec[0] + "_" + field).addEventListener("input", spec[2]);
+        id(spec[0] + "_" + field).addEventListener("change", spec[2]);
+      });
+    });
+
     updateSingleModeUI();
     updateSingle();
     updateDiff();
+    updateDiffMean();
+    updatePaired();
+    updatePairedBinary();
   }
 
   if (document.readyState === "loading") {
