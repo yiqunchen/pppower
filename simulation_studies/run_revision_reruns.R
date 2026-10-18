@@ -26,7 +26,8 @@ settings <- list(
   "8"  = list(file = "power_validation_setting8_tdist.R",            objs = c("results_tdist")),
   "14" = list(file = "power_validation_setting14_plugin_lambda.R",   objs = c("results_plugin_lambda", "settings_plugin_lambda")),
   "20" = list(file = "power_validation_setting20_ols_regression.R",  objs = c("results_ols_regression")),
-  "21" = list(file = "power_validation_setting21_glm_logistic.R",    objs = c("results_glm_logistic"))
+  "21" = list(file = "power_validation_setting21_glm_logistic.R",    objs = c("results_glm_logistic")),
+  "10" = list(file = "power_validation_setting10_n_inversion.R",     objs = c("results_n_inversion"))
 )
 
 ids <- commandArgs(trailingOnly = TRUE)
