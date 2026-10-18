@@ -25,7 +25,9 @@ power_ppi_mean(
   lambda_user = NULL,
   mode = c("error", "cap"),
   warn_smallN = TRUE,
-  smallN_threshold = 500
+  smallN_threshold = 500,
+  plugin_correction = FALSE,
+  kappa = 1
 )
 }
 \arguments{
@@ -78,6 +80,17 @@ required sample size exceeds \code{N}. Only used when solving for \code{n}.}
 \item{warn_smallN}{Logical. Warn when \code{N < smallN_threshold} (default \code{TRUE}).}
 
 \item{smallN_threshold}{Numeric. Default \code{500}.}
+
+\item{plugin_correction}{Logical (default \code{FALSE}). If \code{TRUE}, the variance
+used for planning adds the second-order term
+\eqn{c\,\sigma_\varepsilon^2\kappa/\{n(n-3)\}} for a tuning parameter that is
+estimated from the study data, where \eqn{c = N/(n+N)} and
+\eqn{\sigma_\varepsilon^2 = \sigma_Y^2(1-\rho_{Yf}^2)}. For Gaussian data
+(\code{kappa = 1}) this adds about one label to the planned sample size. Only
+used with the oracle (closed-form) \eqn{\lambda}.}
+
+\item{kappa}{Moment factor \eqn{\kappa} for \code{plugin_correction} (default 1,
+the Gaussian value). Values below 1 are replaced by 1.}
 }
 \value{
 When computing power: scalar in [0, 1].

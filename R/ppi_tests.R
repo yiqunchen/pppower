@@ -10,12 +10,20 @@
 #' @param theta0 Null hypothesis value (default 0).
 #' @param alpha Significance level (default 0.05).
 #' @param lambda Optional user-specified lambda. If NULL, uses EIF-optimal lambda.
+#' @param se_type `"standard"` (default) uses the usual plug-in standard error
+#'   and a normal reference. `"corrected"` adds the second-order term
+#'   \eqn{c\,\hat\sigma_\varepsilon^2\hat\kappa/\{n(n-3)\}} for the estimated
+#'   \eqn{\lambda}, with \eqn{\hat\kappa} bounded below by 1, and uses a
+#'   \eqn{t_{n-2}} reference. It is meant for small `n`; it is ignored when
+#'   `lambda` is supplied, because a fixed \eqn{\lambda} needs no correction.
 #'
 #' @return A list with components:
 #' \describe{
 #'   \item{estimate}{The PPI++ point estimate of the mean.}
 #'   \item{se}{Standard error of the estimate.}
-#'   \item{z_stat}{Z test statistic.}
+#'   \item{z_stat}{Test statistic (compared with a \eqn{t_{n-2}} distribution
+#'     when `se_type = "corrected"`).}
+#'   \item{df}{Degrees of freedom of the reference distribution (`Inf` for normal).}
 #'   \item{p_value}{Two-sided p-value.}
 #'   \item{reject}{Logical indicating whether null is rejected at level alpha.}
 #'   \item{lambda}{The lambda value used.}
@@ -31,7 +39,10 @@
 #' ppi_mean_test(Y_L, f_L, f_U, theta0 = 0)
 #'
 #' @export
-ppi_mean_test <- function(Y_L, f_L, f_U, theta0 = 0, alpha = 0.05, lambda = NULL) {
+ppi_mean_test <- function(Y_L, f_L, f_U, theta0 = 0, alpha = 0.05, lambda = NULL,
+                          se_type = c("standard", "corrected")) {
+  se_type <- match.arg(se_type)
+  estimated_lambda <- is.null(lambda)
   n <- length(Y_L)
   N <- length(f_U)
 
@@ -59,22 +70,30 @@ ppi_mean_test <- function(Y_L, f_L, f_U, theta0 = 0, alpha = 0.05, lambda = NULL
     lambda^2 * sigma_f2_hat * (1 / N + 1 / n) -
     2 * lambda * cov_Yf_hat / n
   var_hat <- max(var_hat, 1e-10)
+  df <- Inf
+  if (se_type == "corrected" && estimated_lambda) {
+    if (n <= 3) stop("se_type = \"corrected\" needs n > 3.", call. = FALSE)
+    s_eps2 <- max(sigma_Y2_hat - cov_Yf_hat^2 / sigma_f2_hat, 0) * (n - 1) / (n - 2)
+    var_hat <- var_hat + N / (n + N) * s_eps2 * kappa_hat(Y_L, f_L) / (n * (n - 3))
+    df <- n - 2
+  }
   se <- sqrt(var_hat)
 
   # Test statistic and p-value
   z_stat <- (theta_hat - theta0) / se
-  p_value <- 2 * stats::pnorm(-abs(z_stat))
+  p_value <- 2 * stats::pt(-abs(z_stat), df)
   reject <- p_value < alpha
 
 
   # Confidence interval
-  z_alpha <- stats::qnorm(1 - alpha / 2)
+  z_alpha <- stats::qt(1 - alpha / 2, df)
   ci <- c(theta_hat - z_alpha * se, theta_hat + z_alpha * se)
 
   list(
     estimate = theta_hat,
     se = se,
     z_stat = z_stat,
+    df = df,
     p_value = p_value,
     reject = reject,
     lambda = lambda,
@@ -220,4 +239,19 @@ ppi_paired_test <- function(D_L, fD_L, fD_U, delta0 = 0, alpha = 0.05, lambda = 
   # Paired test is just a one-sample test on differences
   ppi_mean_test(Y_L = D_L, f_L = fD_L, f_U = fD_U,
                 theta0 = delta0, alpha = alpha, lambda = lambda)
+}
+
+# Sample estimate of the moment factor kappa for the estimated tuning parameter,
+# bounded to [1, 50] (the formula assumes a linear E[Y | f]).
+kappa_hat <- function(Y, f) {
+  fc <- f - mean(f)
+  sf2 <- mean(fc^2)
+  if (sf2 <= 0) return(1)
+  b <- sum((Y - mean(Y)) * fc) / sum(fc^2)
+  e <- Y - mean(Y) - b * fc
+  se2 <- mean(e^2)
+  if (se2 <= 0) return(1)
+  k <- 2 - mean(fc^2 * e^2) / (sf2 * se2) + 2 * mean(fc * (e^2 - se2)) * mean(fc^3) / (sf2^2 * se2)
+  if (!is.finite(k)) return(1)
+  min(max(k, 1), 50)
 }

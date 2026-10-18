@@ -177,6 +177,15 @@ resolve_ppi_pp_moments <- function(sigma_y2 = NULL,
 #'   required sample size exceeds `N`. Only used when solving for `n`.
 #' @param warn_smallN Logical. Warn when `N < smallN_threshold` (default `TRUE`).
 #' @param smallN_threshold Numeric. Default `500`.
+#' @param plugin_correction Logical (default `FALSE`). If `TRUE`, the variance
+#'   used for planning adds the second-order term
+#'   \eqn{c\,\sigma_\varepsilon^2\kappa/\{n(n-3)\}} for a tuning parameter that is
+#'   estimated from the study data, where \eqn{c = N/(n+N)} and
+#'   \eqn{\sigma_\varepsilon^2 = \sigma_Y^2(1-\rho_{Yf}^2)}. For Gaussian data
+#'   (`kappa = 1`) this adds about one label to the planned sample size. Only
+#'   used with the oracle (closed-form) \eqn{\lambda}.
+#' @param kappa Moment factor \eqn{\kappa} for `plugin_correction` (default 1,
+#'   the Gaussian value). Values below 1 are replaced by 1.
 #'
 #' @return When computing power: scalar in \[0, 1\].
 #'   When computing sample size: integer `n` required, possibly with
@@ -212,7 +221,9 @@ power_ppi_mean <- function(delta,
                            lambda_user = NULL,
                            mode = c("error", "cap"),
                            warn_smallN = TRUE,
-                           smallN_threshold = 500) {
+                           smallN_threshold = 500,
+                           plugin_correction = FALSE,
+                           kappa = 1) {
   # Validate: exactly one of n, power must be NULL
   if (is.null(n) && is.null(power)) {
     stop("Exactly one of 'n' and 'power' must be NULL. Both are NULL.", call. = FALSE)
@@ -245,6 +256,10 @@ power_ppi_mean <- function(delta,
       lambda = lambda,
       lambda_type = lambda_type
     )
+    if (isTRUE(plugin_correction) && lambda_type == "oracle") {
+      v <- v + plugin_variance_term(n, N, moments$sigma_y2, moments$sigma_f2,
+                                    moments$cov_y_f, kappa)
+    }
     se <- sqrt(v)
     z_alpha <- stats::qnorm(1 - alpha / 2)
     mu <- abs(delta) / se
@@ -261,7 +276,7 @@ power_ppi_mean <- function(delta,
       lm <- "oracle"
     }
 
-    n_required_ppi_pp_mean_internal(
+    n_req <- n_required_ppi_pp_mean_internal(
       delta = delta,
       N = N,
       alpha = alpha,
@@ -281,7 +296,27 @@ power_ppi_mean <- function(delta,
       smallN_threshold = smallN_threshold,
       mode = match.arg(mode)
     )
+    if (!isTRUE(plugin_correction) || lm != "oracle") return(n_req)
+    # The correction only increases the variance, so step up from the
+    # uncorrected solution to the first n that reaches the target power.
+    pow_at <- function(nn) power_ppi_mean(
+      delta = delta, N = N, n = nn, alpha = alpha,
+      sigma_y2 = sigma_y2, sigma_f2 = sigma_f2, cov_y_f = cov_y_f,
+      var_f = var_f, var_res = var_res, metrics = metrics,
+      metric_type = metric_type, m_labeled = m_labeled %||% nn,
+      correction = correction, plugin_correction = TRUE, kappa = kappa)
+    nn <- max(as.numeric(n_req), 4)
+    while (pow_at(nn) < power) nn <- nn + 1
+    nn
   }
+}
+
+# Second-order variance term for an estimated tuning parameter:
+# c * sigma_eps^2 * kappa / (n (n - 3)), with c = N / (n + N).
+plugin_variance_term <- function(n, N, sigma_y2, sigma_f2, cov_y_f, kappa = 1) {
+  if (n <= 3) stop("plugin_correction needs n > 3.", call. = FALSE)
+  s_eps2 <- max(sigma_y2 - cov_y_f^2 / sigma_f2, 0)
+  N / (n + N) * s_eps2 * max(kappa, 1) / (n * (n - 3))
 }
 
 
