@@ -54,6 +54,12 @@ reference:
       - ppi_mean_test
       - ppi_paired_test
       - ppi_ttest
+  - title: "Agent tools"
+    desc: "Design assistant and MCP server for AI agents."
+    contents:
+      - ppi_design
+      - pppower_mcp_server
+      - pppower_mcp_tools
   - title: "Deprecated"
     desc: "Soft-deprecated shims; use the renamed functions above."
     contents:
