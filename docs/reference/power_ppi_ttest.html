@@ -57,7 +57,10 @@ the difference in means between two independent groups.</p>
 <span>  <span class="va">cov_yf_A</span>,</span>
 <span>  <span class="va">sigma_y2_B</span>,</span>
 <span>  <span class="va">sigma_f2_B</span>,</span>
-<span>  <span class="va">cov_yf_B</span></span>
+<span>  <span class="va">cov_yf_B</span>,</span>
+<span>  pilot_n_A <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  pilot_n_B <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  confidence <span class="op">=</span> <span class="fl">0.9</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -111,6 +114,17 @@ the difference in means between two independent groups.</p>
 
 <dt id="arg-cov-yf-b">cov_yf_B<a class="anchor" aria-label="anchor" href="#arg-cov-yf-b"></a></dt>
 <dd><p>Covariance between Y and f in group B.</p></dd>
+
+
+<dt id="arg-pilot-n-a-pilot-n-b">pilot_n_A, pilot_n_B<a class="anchor" aria-label="anchor" href="#arg-pilot-n-a-pilot-n-b"></a></dt>
+<dd><p>Optional numbers of labeled pairs in the pilots
+that gave the moments of groups A and B. If given, that group's
+covariance is replaced by its value at the lower confidence bound for
+the correlation from <code><a href="rho_lower_bound.html">rho_lower_bound()</a></code>.</p></dd>
+
+
+<dt id="arg-confidence">confidence<a class="anchor" aria-label="anchor" href="#arg-confidence"></a></dt>
+<dd><p>One-sided confidence level for the bound (default 0.9).</p></dd>
 
 </dl></div>
     <div class="section level2">

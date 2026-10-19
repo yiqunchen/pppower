@@ -27,7 +27,9 @@ power_ppi_mean(
   warn_smallN = TRUE,
   smallN_threshold = 500,
   plugin_correction = FALSE,
-  kappa = 1
+  kappa = 1,
+  pilot_n = NULL,
+  confidence = 0.9
 )
 }
 \arguments{
@@ -91,6 +93,15 @@ used with the oracle (closed-form) \eqn{\lambda}.}
 
 \item{kappa}{Moment factor \eqn{\kappa} for \code{plugin_correction} (default 1,
 the Gaussian value). Values below 1 are replaced by 1.}
+
+\item{pilot_n}{Optional number of labeled pairs in the pilot that gave the
+moments. If given, the moments are treated as pilot estimates, and the
+calculation uses the one-sided lower confidence bound for
+\eqn{\rho_{Yf}} from \code{\link[=rho_lower_bound]{rho_lower_bound()}} instead of the point estimate.
+This protects against an optimistic pilot at the cost of a few more labels.}
+
+\item{confidence}{One-sided confidence level for the bound (default 0.9).
+Only used with \code{pilot_n}.}
 }
 \value{
 When computing power: scalar in [0, 1].
@@ -118,5 +129,9 @@ power_ppi_mean(delta = 0.3, N = 5000, n = 200,
 # Compute required n given target power:
 power_ppi_mean(delta = 0.3, N = 5000, power = 0.8,
                sigma_y2 = 1, sigma_f2 = 0.5, cov_y_f = 0.4)
+
+# Same, planning at the 90\% lower bound for rho from a pilot of 50 pairs:
+power_ppi_mean(delta = 0.3, N = 5000, power = 0.8,
+               sigma_y2 = 1, sigma_f2 = 0.5, cov_y_f = 0.4, pilot_n = 50)
 
 }

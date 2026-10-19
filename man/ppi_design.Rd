@@ -18,13 +18,15 @@ ppi_design(
 \describe{
 \item{\code{"mean"}}{\code{delta}, \code{N}, and either \code{r2} (with optional \code{sigma_y2})
 or \code{prevalence}, \code{sensitivity}, \code{specificity}; optional \code{n}, \code{power},
-\code{alpha}.}
+\code{alpha}, and \code{pilot_n} with \code{confidence} to plan at the lower
+confidence bound for a pilot \code{r2} (\code{\link[=rho_lower_bound]{rho_lower_bound()}}).}
 \item{\code{"two_sample"}}{\code{delta}, \code{N_per_group}, \code{r2_A}, optional \code{r2_B},
-\code{sigma_y2_A}, \code{sigma_y2_B}, \code{n_per_group}, \code{power}, \code{alpha}.}
+\code{sigma_y2_A}, \code{sigma_y2_B}, \code{n_per_group}, \code{power}, \code{alpha},
+\code{pilot_n}, \code{confidence}.}
 \item{\code{"two_proportion"}}{\code{p_A}, \code{p_B}, \code{N_per_group}, \code{sensitivity},
 \code{specificity}, optional \code{n_per_group}, \code{power}, \code{alpha}.}
 \item{\code{"paired"}}{\code{delta}, \code{N}, \code{sigma_d2}, \code{r2_d}, optional \code{n},
-\code{power}, \code{alpha}.}
+\code{power}, \code{alpha}, \code{pilot_n}, \code{confidence}.}
 \item{\code{"2x2"}}{\code{p_exposed}, \code{p_control}, \code{N}, \code{sensitivity},
 \code{specificity}, optional \code{effect_measure} (\code{"OR"} or \code{"RR"}),
 \code{prev_exposed}, \code{n}, \code{power}, \code{alpha}.}
@@ -48,6 +50,7 @@ solve for it, or give it to compute power.
 }
 \examples{
 ppi_design("mean", delta = 0.2, N = 1000, r2 = 0.49)
+ppi_design("mean", delta = 0.2, N = 1000, r2 = 0.49, pilot_n = 50)
 ppi_design("mean", delta = 0.05, N = 1000, prevalence = 0.3,
            sensitivity = 0.85, specificity = 0.85)
 ppi_design("2x2", p_exposed = 0.4, p_control = 0.2, N = 1000,

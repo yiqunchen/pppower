@@ -186,6 +186,13 @@ resolve_ppi_pp_moments <- function(sigma_y2 = NULL,
 #'   used with the oracle (closed-form) \eqn{\lambda}.
 #' @param kappa Moment factor \eqn{\kappa} for `plugin_correction` (default 1,
 #'   the Gaussian value). Values below 1 are replaced by 1.
+#' @param pilot_n Optional number of labeled pairs in the pilot that gave the
+#'   moments. If given, the moments are treated as pilot estimates, and the
+#'   calculation uses the one-sided lower confidence bound for
+#'   \eqn{\rho_{Yf}} from [rho_lower_bound()] instead of the point estimate.
+#'   This protects against an optimistic pilot at the cost of a few more labels.
+#' @param confidence One-sided confidence level for the bound (default 0.9).
+#'   Only used with `pilot_n`.
 #'
 #' @return When computing power: scalar in \[0, 1\].
 #'   When computing sample size: integer `n` required, possibly with
@@ -200,6 +207,10 @@ resolve_ppi_pp_moments <- function(sigma_y2 = NULL,
 #' # Compute required n given target power:
 #' power_ppi_mean(delta = 0.3, N = 5000, power = 0.8,
 #'                sigma_y2 = 1, sigma_f2 = 0.5, cov_y_f = 0.4)
+#'
+#' # Same, planning at the 90% lower bound for rho from a pilot of 50 pairs:
+#' power_ppi_mean(delta = 0.3, N = 5000, power = 0.8,
+#'                sigma_y2 = 1, sigma_f2 = 0.5, cov_y_f = 0.4, pilot_n = 50)
 #'
 power_ppi_mean <- function(delta,
                            N,
@@ -223,13 +234,29 @@ power_ppi_mean <- function(delta,
                            warn_smallN = TRUE,
                            smallN_threshold = 500,
                            plugin_correction = FALSE,
-                           kappa = 1) {
+                           kappa = 1,
+                           pilot_n = NULL,
+                           confidence = 0.9) {
   # Validate: exactly one of n, power must be NULL
   if (is.null(n) && is.null(power)) {
     stop("Exactly one of 'n' and 'power' must be NULL. Both are NULL.", call. = FALSE)
   }
   if (!is.null(n) && !is.null(power)) {
     stop("Exactly one of 'n' and 'power' must be NULL. Neither is NULL.", call. = FALSE)
+  }
+  if (!is.null(pilot_n)) {
+    # Treat the moments as pilot estimates and plan at the lower bound for rho
+    moments <- resolve_ppi_pp_moments(
+      sigma_y2 = sigma_y2, sigma_f2 = sigma_f2, cov_y_f = cov_y_f,
+      var_f = var_f, var_res = var_res, metrics = metrics,
+      metric_type = metric_type, m_labeled = m_labeled %||% pilot_n,
+      correction = correction
+    )
+    sigma_y2 <- moments$sigma_y2
+    sigma_f2 <- moments$sigma_f2
+    cov_y_f <- cov_at_lower_bound(sigma_y2, sigma_f2, moments$cov_y_f,
+                                  pilot_n, confidence)
+    var_f <- var_res <- metrics <- metric_type <- NULL
   }
 
   if (!is.null(n)) {
@@ -482,6 +509,10 @@ simulate_ppi_mean <- function(R,
 #' @param rho_D Correlation between \eqn{D} and \eqn{f^D}.
 #' @param sigma_fD2 Optional variance of predicted differences. If NULL,
 #'   assumed equal to \code{sigma_D2}.
+#' @param pilot_n Optional number of labeled pairs in the pilot that estimated
+#'   `rho_D`. If given, the calculation uses the lower confidence bound for
+#'   `rho_D` from [rho_lower_bound()] instead of the point estimate.
+#' @param confidence One-sided confidence level for the bound (default 0.9).
 #'
 #' @return When `power = NULL`: scalar power in \eqn{[0, 1]}.
 #'   When `n = NULL`: required number of labeled pairs (integer).
@@ -520,7 +551,9 @@ power_ppi_paired <- function(delta,
                               alpha = 0.05,
                               sigma_D2,
                               rho_D,
-                              sigma_fD2 = NULL) {
+                              sigma_fD2 = NULL,
+                              pilot_n = NULL,
+                              confidence = 0.9) {
   if (is.null(sigma_fD2)) {
     sigma_fD2 <- sigma_D2
   }
@@ -537,7 +570,9 @@ power_ppi_paired <- function(delta,
     alpha = alpha,
     sigma_y2 = sigma_D2,
     sigma_f2 = sigma_fD2,
-    cov_y_f = cov_D_fD
+    cov_y_f = cov_D_fD,
+    pilot_n = pilot_n,
+    confidence = confidence
   )
 }
 
@@ -673,6 +708,11 @@ power_ppi_paired_binary <- function(delta,
 #' @param sigma_y2_B Variance of outcomes in group B.
 #' @param sigma_f2_B Variance of predictions in group B.
 #' @param cov_yf_B Covariance between Y and f in group B.
+#' @param pilot_n_A,pilot_n_B Optional numbers of labeled pairs in the pilots
+#'   that gave the moments of groups A and B. If given, that group's
+#'   covariance is replaced by its value at the lower confidence bound for
+#'   the correlation from [rho_lower_bound()].
+#' @param confidence One-sided confidence level for the bound (default 0.9).
 #'
 #' @return Scalar power in \eqn{[0, 1]}.
 #'
@@ -697,7 +737,15 @@ power_ppi_ttest <- function(delta,
                              N_A, N_B,
                              alpha = 0.05,
                              sigma_y2_A, sigma_f2_A, cov_yf_A,
-                             sigma_y2_B, sigma_f2_B, cov_yf_B) {
+                             sigma_y2_B, sigma_f2_B, cov_yf_B,
+                             pilot_n_A = NULL, pilot_n_B = NULL,
+                             confidence = 0.9) {
+  if (!is.null(pilot_n_A)) {
+    cov_yf_A <- cov_at_lower_bound(sigma_y2_A, sigma_f2_A, cov_yf_A, pilot_n_A, confidence)
+  }
+  if (!is.null(pilot_n_B)) {
+    cov_yf_B <- cov_at_lower_bound(sigma_y2_B, sigma_f2_B, cov_yf_B, pilot_n_B, confidence)
+  }
   # Oracle lambda for each group
   lambda_A <- cov_yf_A / ((1 + n_A / N_A) * sigma_f2_A)
   lambda_B <- cov_yf_B / ((1 + n_B / N_B) * sigma_f2_B)

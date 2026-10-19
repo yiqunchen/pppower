@@ -187,6 +187,12 @@ final protocol numbers, confirm assumptions with your statistician.</p>
   color: #343434;
 }
 
+.sscalc-field small {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
 .sscalc-field input,
 .sscalc-field select {
   width: 100%;
@@ -455,6 +461,12 @@ final protocol numbers, confirm assumptions with your statistician.</p>
               <input id="single_nonresponse_cont" type="number" min="0" max="80" step="1" value="10">
 </div>
           </div>
+          <div class="sscalc-form-row">
+            <div class="sscalc-field">
+              <label for="single_pilot_n">Pilot size m (optional)</label>
+              <input id="single_pilot_n" type="number" min="4" step="1" placeholder="blank = use the value as is"><small>If the correlation implied by these moments came from a pilot of m labeled units, plan at its one-sided 90% lower confidence bound.</small>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -656,6 +668,13 @@ final protocol numbers, confirm assumptions with your statistician.</p>
 
         <div class="sscalc-form-row">
           <div class="sscalc-field">
+            <label for="dm_pilot_n">Pilot size m (optional)</label>
+            <input id="dm_pilot_n" type="number" min="4" step="1" placeholder="blank = use the value as is"><small>If the R² in each group came from a pilot of m labeled units, plan at its one-sided 90% lower confidence bound.</small>
+          </div>
+        </div>
+
+        <div class="sscalc-form-row">
+          <div class="sscalc-field">
             <label for="dm_N_A">Unlabeled N_A</label>
             <input id="dm_N_A" type="number" min="10" step="1" value="1000">
 </div>
@@ -763,6 +782,10 @@ final protocol numbers, confirm assumptions with your statistician.</p>
             <label for="pm_nonresponse">Expected non-response (%)</label>
             <input id="pm_nonresponse" type="number" min="0" max="80" step="1" value="10">
 </div>
+          <div class="sscalc-field">
+            <label for="pm_pilot_n">Pilot size m (optional)</label>
+            <input id="pm_pilot_n" type="number" min="4" step="1" placeholder="blank = use the value as is"><small>If the R² came from a pilot of m labeled units, plan at its one-sided 90% lower confidence bound.</small>
+          </div>
         </div>
 
       </div>
@@ -925,6 +948,34 @@ final protocol numbers, confirm assumptions with your statistician.</p>
   function readNum(name) {
     var v = parseFloat(id(name).value);
     return Number.isFinite(v) ? v : NaN;
+  }
+
+  // Optional pilot size: null when blank, otherwise an integer above 3.
+  function readPilot(name) {
+    var raw = id(name).value;
+    if (raw === "" || raw === null) {
+      return null;
+    }
+    var m = parseFloat(raw);
+    if (!(Number.isFinite(m) && m > 3)) {
+      throw new Error("Pilot size m must be greater than 3, or blank.");
+    }
+    return m;
+  }
+
+  // One-sided Fisher z lower bound for a correlation, as rho_lower_bound() in pppower.
+  function rhoLowerBound(rho, m, confidence) {
+    var r = Math.min(Math.abs(rho), 1 - 1e-12);
+    var lower = Math.tanh(Math.atanh(r) - inverseNormal(confidence) / Math.sqrt(m - 3));
+    return (rho < 0 ? -1 : 1) * Math.max(lower, 0);
+  }
+
+  function pilotNote(m, r2Point, r2Used) {
+    if (m === null) {
+      return "";
+    }
+    return " Planned at the 90% lower confidence bound for R² from a pilot of " + fmtInt(m) +
+      " units: R² = " + r2Used.toFixed(3) + " instead of " + r2Point.toFixed(3) + ".";
   }
 
   function fmtInt(x) {
@@ -1136,7 +1187,7 @@ final protocol numbers, confirm assumptions with your statistician.</p>
         throw new Error("Power should be between 50% and 99.9%.");
       }
 
-      var sigmaY2, sigmaF2, covYf, nonresponse;
+      var sigmaY2, sigmaF2, covYf, nonresponse, pilotM = null, r2Point = NaN;
       if (outcome === "binary") {
         var p = readNum("single_prev") / 100;
         var sens = readNum("single_sens");
@@ -1151,6 +1202,7 @@ final protocol numbers, confirm assumptions with your statistician.</p>
         sigmaF2 = readNum("single_sigma_f2");
         covYf = readNum("single_cov_yf");
         nonresponse = readNum("single_nonresponse_cont") / 100;
+        pilotM = readPilot("single_pilot_n");
       }
 
       if (!(nonresponse >= 0 && nonresponse < 0.9)) {
@@ -1167,6 +1219,10 @@ final protocol numbers, confirm assumptions with your statistician.</p>
       }
       if (!(covYf * covYf <= sigmaY2 * sigmaF2 + 1e-10)) {
         throw new Error("Infeasible moments: |cov_yf| > sqrt(sigma_y2*sigma_f2).");
+      }
+      if (pilotM !== null) {
+        r2Point = covYf * covYf / (sigmaY2 * sigmaF2);
+        covYf = rhoLowerBound(covYf / Math.sqrt(sigmaY2 * sigmaF2), pilotM, 0.9) * Math.sqrt(sigmaY2 * sigmaF2);
       }
 
       var zAlpha = inverseNormal(1 - alpha / 2);
@@ -1214,6 +1270,7 @@ final protocol numbers, confirm assumptions with your statistician.</p>
       } else {
         singleNote += " With these inputs, PPI reduces labeled sample size versus classical.";
       }
+      singleNote += pilotNote(pilotM, r2Point, covYf * covYf / (sigmaY2 * sigmaF2));
       setText(
         "single_formula_note",
         singleNote
@@ -1368,7 +1425,7 @@ final protocol numbers, confirm assumptions with your statistician.</p>
     }
   }
 
-  function showResult(p, nPpi, nClassic, nonresponse, unitLabel) {
+  function showResult(p, nPpi, nClassic, nonresponse, unitLabel, extraNote) {
     var nPpiAdj = Math.ceil(nPpi / (1 - nonresponse));
     var saving = 1 - (nPpi / nClassic);
     setError(p + "_message", "");
@@ -1391,7 +1448,7 @@ final protocol numbers, confirm assumptions with your statistician.</p>
     } else {
       note += " With these inputs, PPI reduces the labeled sample size versus classical.";
     }
-    setText(p + "_formula_note", note);
+    setText(p + "_formula_note", note + (extraNote || ""));
   }
 
   function clearResult(p, err) {
@@ -1468,6 +1525,12 @@ final protocol numbers, confirm assumptions with your statistician.</p>
         throw new Error("N_A and N_B must be positive.");
       }
       checkCommon(alpha, targetPower, nonresponse);
+      var pilotM = readPilot("dm_pilot_n");
+      var r2APoint = r2A, r2BPoint = r2B;
+      if (pilotM !== null) {
+        r2A = Math.pow(rhoLowerBound(Math.sqrt(r2A), pilotM, 0.9), 2);
+        r2B = Math.pow(rhoLowerBound(Math.sqrt(r2B), pilotM, 0.9), 2);
+      }
 
       var s2A = sdA * sdA, s2B = sdB * sdB;
       var ppiPower = function (n) {
@@ -1483,7 +1546,9 @@ final protocol numbers, confirm assumptions with your statistician.</p>
       if (!Number.isFinite(nPpi) || !Number.isFinite(nClassic)) {
         throw new Error("Infeasible under current assumptions: no finite n found.");
       }
-      showResult("dm", nPpi, nClassic, nonresponse, "outcomes per group");
+      var dmNote = pilotM === null ? "" : pilotNote(pilotM, r2APoint, r2A).replace("R² =", "R² in group A =") +
+        (r2BPoint === r2APoint ? "" : pilotNote(pilotM, r2BPoint, r2B).replace("R² =", "R² in group B ="));
+      showResult("dm", nPpi, nClassic, nonresponse, "outcomes per group", dmNote);
     } catch (err) {
       clearResult("dm", err);
     }
@@ -1511,6 +1576,11 @@ final protocol numbers, confirm assumptions with your statistician.</p>
         throw new Error("The number of unlabeled pairs must be positive.");
       }
       checkCommon(alpha, targetPower, nonresponse);
+      var pilotM = readPilot("pm_pilot_n");
+      var r2DPoint = r2D;
+      if (pilotM !== null) {
+        r2D = Math.pow(rhoLowerBound(Math.sqrt(r2D), pilotM, 0.9), 2);
+      }
 
       var s2 = sdD * sdD;
       var zAlpha = inverseNormal(1 - alpha / 2);
@@ -1523,7 +1593,7 @@ final protocol numbers, confirm assumptions with your statistician.</p>
       if (!Number.isFinite(nPpi)) {
         throw new Error("Infeasible under current assumptions: no finite n found.");
       }
-      showResult("pm", nPpi, nClassic, nonresponse, "pairs");
+      showResult("pm", nPpi, nClassic, nonresponse, "pairs", pilotNote(pilotM, r2DPoint, r2D));
     } catch (err) {
       clearResult("pm", err);
     }
@@ -1601,7 +1671,7 @@ final protocol numbers, confirm assumptions with your statistician.</p>
       "single_outcome", "single_lambda_mode", "single_delta", "single_unlabeled_N",
       "single_alpha", "single_power", "single_prev", "single_sens", "single_spec",
       "single_nonresponse", "single_sigma_y2", "single_sigma_f2", "single_cov_yf",
-      "single_nonresponse_cont"
+      "single_nonresponse_cont", "single_pilot_n"
     ].forEach(function (field) {
       id(field).addEventListener("input", function () {
         if (field === "single_outcome") {
@@ -1626,8 +1696,8 @@ final protocol numbers, confirm assumptions with your statistician.</p>
     });
 
     [
-      ["dm", ["delta", "sd_A", "sd_B", "r2_A", "r2_B", "N_A", "N_B", "alpha", "power", "nonresponse"], updateDiffMean],
-      ["pm", ["delta", "sd_d", "r2_d", "N", "alpha", "power", "nonresponse"], updatePaired],
+      ["dm", ["delta", "sd_A", "sd_B", "r2_A", "r2_B", "pilot_n", "N_A", "N_B", "alpha", "power", "nonresponse"], updateDiffMean],
+      ["pm", ["delta", "sd_d", "r2_d", "pilot_n", "N", "alpha", "power", "nonresponse"], updatePaired],
       ["pb", ["pA", "pB", "rho", "sens", "spec", "N", "alpha", "power", "nonresponse"], updatePairedBinary]
     ].forEach(function (spec) {
       spec[1].forEach(function (field) {

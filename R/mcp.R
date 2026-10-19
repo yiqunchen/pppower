@@ -38,13 +38,20 @@
   }
 }
 
+# R^2 to plan with: the pilot value, or its lower confidence bound if pilot_n is given
+.mcp_plan_r2 <- function(r2, pilot_n = NULL, confidence = 0.9) {
+  .mcp_check_r2(r2)
+  if (is.null(pilot_n)) return(r2)
+  rho_lower_bound(sqrt(r2), pilot_n, confidence)^2
+}
+
 # ---------------------------------------------------------------------------
 # Tool functions
 # ---------------------------------------------------------------------------
 
 .mcp_mean <- function(delta, N, r2 = NULL, sigma_y2 = 1, prevalence = NULL,
                       sensitivity = NULL, specificity = NULL, n = NULL,
-                      power = 0.8, alpha = 0.05) {
+                      power = 0.8, alpha = 0.05, pilot_n = NULL, confidence = 0.9) {
   if (!is.null(prevalence)) {
     if (is.null(sensitivity) || is.null(specificity)) {
       stop("For a binary outcome, give prevalence, sensitivity, and specificity.", call. = FALSE)
@@ -54,7 +61,7 @@
     outcome <- "binary"
   } else {
     if (is.null(r2)) stop("Give r2 (continuous outcome) or prevalence with sensitivity and specificity (binary outcome).", call. = FALSE)
-    .mcp_check_r2(r2)
+    r2 <- .mcp_plan_r2(r2, pilot_n, confidence)
     s_y2 <- sigma_y2; s_f2 <- sigma_y2; cv <- sqrt(r2) * sigma_y2
     outcome <- "continuous"
   }
@@ -80,10 +87,12 @@
 }
 
 .mcp_two_sample <- function(delta, N_per_group, r2_A, r2_B = NULL, sigma_y2_A = 1,
-                            sigma_y2_B = NULL, n_per_group = NULL, power = 0.8, alpha = 0.05) {
+                            sigma_y2_B = NULL, n_per_group = NULL, power = 0.8, alpha = 0.05,
+                            pilot_n = NULL, confidence = 0.9) {
   if (is.null(r2_B)) r2_B <- r2_A
   if (is.null(sigma_y2_B)) sigma_y2_B <- sigma_y2_A
-  .mcp_check_r2(r2_A); .mcp_check_r2(r2_B)
+  r2_A <- .mcp_plan_r2(r2_A, pilot_n, confidence)
+  r2_B <- .mcp_plan_r2(r2_B, pilot_n, confidence)
   pw <- function(nn, rA, rB) power_ppi_ttest(
     delta = delta, n_A = nn, n_B = nn, N_A = N_per_group, N_B = N_per_group, alpha = alpha,
     sigma_y2_A = sigma_y2_A, sigma_f2_A = sigma_y2_A, cov_yf_A = sqrt(rA) * sigma_y2_A,
@@ -95,6 +104,7 @@
     list(design = "two-sample difference in means", target_power = power, alpha = alpha,
          labeled_n_per_group = n_ppi, classical_n_per_group = n_cl,
          label_reduction_percent = .mcp_reduction(n_ppi, n_cl),
+         r2_A = round(r2_A, 4), r2_B = round(r2_B, 4),
          unlabeled_N_per_group = N_per_group, notes = .mcp_notes())
   } else {
     list(design = "two-sample difference in means", labeled_n_per_group = n_per_group,
@@ -126,8 +136,9 @@
   }
 }
 
-.mcp_paired <- function(delta, N, sigma_d2, r2_d, n = NULL, power = 0.8, alpha = 0.05) {
-  .mcp_check_r2(r2_d)
+.mcp_paired <- function(delta, N, sigma_d2, r2_d, n = NULL, power = 0.8, alpha = 0.05,
+                        pilot_n = NULL, confidence = 0.9) {
+  r2_d <- .mcp_plan_r2(r2_d, pilot_n, confidence)
   ppi_pow <- function(nn) suppressWarnings(power_ppi_paired(delta = delta, N = N, n = nn, alpha = alpha,
                                                            sigma_D2 = sigma_d2, rho_D = sqrt(r2_d)))
   cl_pow <- function(nn) {
@@ -138,7 +149,7 @@
     n_ppi <- .mcp_solve_n(ppi_pow, power); n_cl <- .mcp_solve_n(cl_pow, power)
     list(design = "paired mean difference", target_power = power, alpha = alpha,
          labeled_pairs_required = n_ppi, classical_pairs_required = n_cl,
-         label_reduction_percent = .mcp_reduction(n_ppi, n_cl), unlabeled_N = N,
+         label_reduction_percent = .mcp_reduction(n_ppi, n_cl), r2_d = round(r2_d, 4), unlabeled_N = N,
          notes = .mcp_notes())
   } else {
     list(design = "paired mean difference", labeled_pairs = n, unlabeled_N = N,
@@ -186,9 +197,8 @@
   }
   if (!is.null(pilot_r)) {
     if (is.null(pilot_n) || pilot_n <= 3) stop("Give pilot_n > 3 together with pilot_r.", call. = FALSE)
-    lower <- tanh(atanh(pilot_r) - stats::qnorm(confidence) / sqrt(pilot_n - 3))
     out$r2_point <- pilot_r^2
-    out$r2_lower_bound <- max(0, lower)^2
+    out$r2_lower_bound <- rho_lower_bound(pilot_r, pilot_n, confidence)^2
     out$confidence <- confidence
     out$pilot_note <- "Plan with r2_lower_bound (one-sided Fisher z bound) to protect against an optimistic pilot."
   }
@@ -214,13 +224,15 @@
 #'   \describe{
 #'     \item{`"mean"`}{`delta`, `N`, and either `r2` (with optional `sigma_y2`)
 #'       or `prevalence`, `sensitivity`, `specificity`; optional `n`, `power`,
-#'       `alpha`.}
+#'       `alpha`, and `pilot_n` with `confidence` to plan at the lower
+#'       confidence bound for a pilot `r2` ([rho_lower_bound()]).}
 #'     \item{`"two_sample"`}{`delta`, `N_per_group`, `r2_A`, optional `r2_B`,
-#'       `sigma_y2_A`, `sigma_y2_B`, `n_per_group`, `power`, `alpha`.}
+#'       `sigma_y2_A`, `sigma_y2_B`, `n_per_group`, `power`, `alpha`,
+#'       `pilot_n`, `confidence`.}
 #'     \item{`"two_proportion"`}{`p_A`, `p_B`, `N_per_group`, `sensitivity`,
 #'       `specificity`, optional `n_per_group`, `power`, `alpha`.}
 #'     \item{`"paired"`}{`delta`, `N`, `sigma_d2`, `r2_d`, optional `n`,
-#'       `power`, `alpha`.}
+#'       `power`, `alpha`, `pilot_n`, `confidence`.}
 #'     \item{`"2x2"`}{`p_exposed`, `p_control`, `N`, `sensitivity`,
 #'       `specificity`, optional `effect_measure` (`"OR"` or `"RR"`),
 #'       `prev_exposed`, `n`, `power`, `alpha`.}
@@ -233,6 +245,7 @@
 #'   assumptions.
 #' @examples
 #' ppi_design("mean", delta = 0.2, N = 1000, r2 = 0.49)
+#' ppi_design("mean", delta = 0.2, N = 1000, r2 = 0.49, pilot_n = 50)
 #' ppi_design("mean", delta = 0.05, N = 1000, prevalence = 0.3,
 #'            sensitivity = 0.85, specificity = 0.85)
 #' ppi_design("2x2", p_exposed = 0.4, p_control = 0.2, N = 1000,
@@ -327,6 +340,9 @@ pppower_mcp_tools <- function() {
         sensitivity = num("Binary outcome: sensitivity of the classifier.", required = FALSE),
         specificity = num("Binary outcome: specificity of the classifier.", required = FALSE),
         n = num("Labeled sample size. Give it to compute power; leave empty to solve for n.", required = FALSE),
+        pilot_n = num(paste("Number of labeled pairs in the pilot that estimated R^2. If given, the plan uses",
+                            "the one-sided lower confidence bound for R^2 instead of the pilot value."), required = FALSE),
+        confidence = num("One-sided confidence level for the bound. Default 0.9.", required = FALSE),
         power = power_arg, alpha = alpha_arg
       ),
       annotations = ellmer::tool_annotations(read_only_hint = TRUE, idempotent_hint = TRUE)
@@ -346,6 +362,9 @@ pppower_mcp_tools <- function() {
         sigma_y2_A = num("Outcome variance in group A. Default 1.", required = FALSE),
         sigma_y2_B = num("Outcome variance in group B. Defaults to sigma_y2_A.", required = FALSE),
         n_per_group = num("Labeled units per group. Give it to compute power.", required = FALSE),
+        pilot_n = num(paste("Number of labeled pairs in the pilot that estimated R^2. If given, the plan uses",
+                            "the one-sided lower confidence bound for R^2 instead of the pilot value."), required = FALSE),
+        confidence = num("One-sided confidence level for the bound. Default 0.9.", required = FALSE),
         power = power_arg, alpha = alpha_arg
       ),
       annotations = ellmer::tool_annotations(read_only_hint = TRUE, idempotent_hint = TRUE)
@@ -380,6 +399,9 @@ pppower_mcp_tools <- function() {
         sigma_d2 = num("Variance of the within-pair difference."),
         r2_d = num("R^2 between the predicted and true within-pair differences."),
         n = num("Labeled pairs. Give it to compute power.", required = FALSE),
+        pilot_n = num(paste("Number of labeled pairs in the pilot that estimated R^2. If given, the plan uses",
+                            "the one-sided lower confidence bound for R^2 instead of the pilot value."), required = FALSE),
+        confidence = num("One-sided confidence level for the bound. Default 0.9.", required = FALSE),
         power = power_arg, alpha = alpha_arg
       ),
       annotations = ellmer::tool_annotations(read_only_hint = TRUE, idempotent_hint = TRUE)

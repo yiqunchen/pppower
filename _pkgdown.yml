@@ -46,6 +46,7 @@ reference:
       - plot_type1_error_curve
   - title: "Utilities"
     contents:
+      - rho_lower_bound
       - binary_moments_from_sens_spec
       - resolve_ppi_variances
       - compute_ppi_blocks
