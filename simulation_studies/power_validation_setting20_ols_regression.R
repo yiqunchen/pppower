@@ -20,7 +20,7 @@ N_values <- c(200, 500)
 rho_values <- c(0.5, 0.7, 0.9)
 delta <- 0.3
 alpha <- 0.05
-R <- 1000
+R <- 2000  # R1 revision: was 1000
 
 beta_true <- c(delta, 0)   # a'beta = delta
 
@@ -131,7 +131,8 @@ for (rho in rho_values) {
         power_theo_ppi       = power_theo_ppi,
         power_emp_ppi        = rejections_ppi / R,
         power_theo_classical = power_theo_classical,
-        power_emp_classical  = rejections_classical / R
+        power_emp_classical  = rejections_classical / R,
+        mc_reps = R
       ))
     }
   }

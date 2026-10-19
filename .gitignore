@@ -22,9 +22,8 @@ simulation_studies/*.csv
 # Downloaded data
 data/
 
-# Local manuscript artifacts
-write-up/PPI_Power_Analysis/
-write-up/PPI_Power_Analysis.zip
+# Local manuscript artifacts (manuscript, revision, and response stay local)
+write-up/
 
 # Local agent guidance
 AGENTS.md
@@ -47,3 +46,9 @@ vignettes/*.html
 # Simulation scratch outputs
 simulation_studies/outputs/
 simulation_studies/*.log
+
+# Third-party file downloaded by external_checks/check_ppi_py.py
+simulation_studies/external_checks/ppi_power_analysis.py
+
+# Large pilot samples written by external_checks/make_regression_pilot.R
+simulation_studies/external_checks/pilot_*.csv

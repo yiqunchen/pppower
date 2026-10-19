@@ -10,9 +10,9 @@ n_values_ttest <- c(20, 40, 60, 80, 100)  # Per group
 N_ttest_values <- c(200, 500)  # Per group
 delta_ttest <- 0.3
 sigma_Y2 <- 1
-rho_values <- c(0.5, 0.7, 0.9)
+rho_values <- c(0.3, 0.45, 0.5, 0.7, 0.9)  # R1: added low R^2
 alpha <- 0.05
-R <- 1000  # Monte Carlo replications
+R <- 2000  # Monte Carlo replications (R1 revision: was 1000)
 
 # Calculate total iterations for progress
 total_configs_3 <- length(rho_values) * length(n_values_ttest) * length(N_ttest_values)
@@ -87,7 +87,8 @@ for (rho in rho_values) {
         power_theo_ppi = power_theo_ppi,
         power_emp_ppi = power_emp_ppi,
         power_theo_classical = power_theo_classical,
-        power_emp_classical = power_emp_classical
+        power_emp_classical = power_emp_classical,
+        mc_reps = R
       ))
     }
   }

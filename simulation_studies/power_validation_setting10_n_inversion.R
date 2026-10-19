@@ -182,25 +182,22 @@ for (rho in rho_values_10) {
                  sprintf("ttest-cont rho=%.1f, target=%.2f: ", rho, tp),
                  start_time = setting10_start)
 
-    # Approximate n per group: 2 * sigma_Y2 * (1 - rho^2) / S^2
-    z_alpha <- qnorm(1 - alpha_10 / 2)
-    z_beta  <- qnorm(tp)
-    S2_tt   <- (delta_tt_10 / (z_alpha + z_beta))^2
-    n_star  <- ceiling(2 * sigma_Y2_tt * (1 - rho^2) / S2_tt)
-    n_star  <- max(n_star, 10L)
+    # Smallest n per group whose power_ppi_ttest() power reaches the target.
+    # (The submitted version used the N -> Inf shortcut 2 sigma_Y2 (1 - rho^2) / S^2,
+    # which is too small at N = 500.)
+    power_tt <- function(n) power_ppi_ttest(
+      delta = delta_tt_10,
+      n_A = n, n_B = n,
+      N_A = N_tt_10, N_B = N_tt_10,
+      alpha = alpha_10,
+      sigma_y2_A = sigma_Y2_tt, sigma_f2_A = sigma_f2_tt, cov_yf_A = cov_tt,
+      sigma_y2_B = sigma_Y2_tt, sigma_f2_B = sigma_f2_tt, cov_yf_B = cov_tt
+    )
+    n_star <- 10L
+    while (power_tt(n_star) < tp) n_star <- n_star + 1L
 
     # Analytical check
-    analytical_power <- tryCatch(
-      power_ppi_ttest(
-        delta = delta_tt_10,
-        n_A = n_star, n_B = n_star,
-        N_A = N_tt_10, N_B = N_tt_10,
-        alpha = alpha_10,
-        sigma_y2_A = sigma_Y2_tt, sigma_f2_A = sigma_f2_tt, cov_yf_A = cov_tt,
-        sigma_y2_B = sigma_Y2_tt, sigma_f2_B = sigma_f2_tt, cov_yf_B = cov_tt
-      ),
-      error = function(e) NA_real_
-    )
+    analytical_power <- power_tt(n_star)
 
     # MC check
     Sigma_tt <- matrix(c(sigma_Y2_tt, cov_tt, cov_tt, sigma_f2_tt), 2, 2)

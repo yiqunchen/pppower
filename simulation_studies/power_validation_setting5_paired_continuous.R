@@ -10,9 +10,9 @@ n_values_paired <- c(20, 40, 60, 80, 100)
 N_paired_values <- c(200, 500)
 delta_paired <- 0.3
 sigma_D2 <- 1  # Variance of differences
-rho_D_values <- c(0.5, 0.7, 0.9)
+rho_D_values <- c(0.3, 0.45, 0.5, 0.7, 0.9)  # R1: added low R^2
 alpha <- 0.05
-R <- 1000  # Monte Carlo replications
+R <- 2000  # Monte Carlo replications (R1 revision: was 1000)
 
 # Calculate total iterations for progress
 total_configs_5 <- length(rho_D_values) * length(n_values_paired) * length(N_paired_values)
@@ -76,7 +76,8 @@ for (rho_D in rho_D_values) {
         power_theo_ppi = power_theo_ppi,
         power_emp_ppi = power_emp_ppi,
         power_theo_classical = power_theo_classical,
-        power_emp_classical = power_emp_classical
+        power_emp_classical = power_emp_classical,
+        mc_reps = R
       ))
     }
   }

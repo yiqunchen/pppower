@@ -15,8 +15,11 @@ Imports:
     stats
 Suggests:
     dplyr,
+    ellmer,
     ggplot2,
+    jsonlite,
     knitr,
+    mcptools,
     randomForest,
     ranger,
     rmarkdown,

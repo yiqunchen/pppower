@@ -19,7 +19,7 @@ classifier_settings <- list(
   c(sens = 0.95, spec = 0.95)
 )
 alpha <- 0.05
-R <- 1000  # Monte Carlo replications
+R <- 2000  # Monte Carlo replications (R1 revision: was 1000)
 
 # Calculate total iterations for progress
 total_configs_6 <- length(classifier_settings) * length(n_values_paired_bin) * length(N_paired_bin_values)
@@ -99,11 +99,14 @@ for (classifier in classifier_settings) {
 
         # PPI++ test (use plug-in lambda for paired binary since oracle is complex)
         test_ppi <- run_ppi_mean_test(D_L, fD_L, fD_U, theta0 = 0, alpha = alpha)
-        rejections_ppi <- rejections_ppi + test_ppi$reject
+        # R1 fix: a replicate with no discordant pairs has zero variance and an
+        # NA test result; count it as a non-rejection instead of losing the cell
+        rejections_ppi <- rejections_ppi + isTRUE(test_ppi$reject)
 
         # Classical test
-        test_classical <- classical_mean_test(D_L, theta0 = 0, alpha = alpha)
-        rejections_classical <- rejections_classical + test_classical$reject
+        test_classical <- tryCatch(classical_mean_test(D_L, theta0 = 0, alpha = alpha),
+                                   error = function(e) list(reject = FALSE))
+        rejections_classical <- rejections_classical + isTRUE(test_classical$reject)
       }
 
       power_emp_ppi <- rejections_ppi / R
@@ -120,7 +123,8 @@ for (classifier in classifier_settings) {
         power_theo_ppi = power_theo_ppi,
         power_emp_ppi = power_emp_ppi,
         power_theo_classical = power_theo_classical,
-        power_emp_classical = power_emp_classical
+        power_emp_classical = power_emp_classical,
+        mc_reps = R
       ))
     }
   }

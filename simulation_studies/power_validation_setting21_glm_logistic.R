@@ -6,7 +6,9 @@
 # DGP:  X ~ N(0, I_2),  P(Y=1|X) = expit(X'beta)
 #        beta_true = (delta, 0),  contrast a = (1, -1)
 #        Surrogate: noisy binary classifier with sens = spec = accuracy
-# Population blocks estimated from a large pilot via compute_ppi_blocks().
+# Population blocks estimated from a large pilot via compute_ppi_blocks()
+# for the analytical curve; empirical power uses a 2-fold cross-fitted
+# plug-in lambda estimated within each replicate.
 # =============================================================================
 cat("Setting 21: GLM Logistic Regression Contrast (a = (1,-1))\n")
 cat("-----------------------------------------------------------\n")
@@ -20,14 +22,75 @@ N_values <- c(200, 500)
 accuracy_values <- c(0.7, 0.8, 0.9)   # sens = spec = accuracy
 delta_log <- 0.5
 alpha <- 0.05
-R <- 1000
+R <- 2000  # R1 revision: was 1000
 M_pilot <- 100000   # pilot size for population blocks
 
 beta_true <- c(delta_log, 0)
 
+clip_prob <- function(x, eps = 1e-6) {
+  pmin(pmax(as.numeric(x), eps), 1 - eps)
+}
+
+safe_solve <- function(M, ridge = 1e-8) {
+  solve(M + diag(ridge, nrow(M)))
+}
+
+estimate_plugin_lambda_glm_cf <- function(X_L, Y_L, f_L, X_U, f_U, a, K = 2) {
+  n <- nrow(X_L)
+  N <- nrow(X_U)
+  fold_id <- sample(rep(seq_len(K), length.out = n))
+
+  mu_L_cf <- numeric(n)
+  mu_U_cf_mat <- matrix(NA_real_, N, K)
+
+  for (k in seq_len(K)) {
+    te <- which(fold_id == k)
+    tr <- setdiff(seq_len(n), te)
+
+    fit_k <- suppressWarnings(glm.fit(
+      x = X_L[tr, , drop = FALSE],
+      y = Y_L[tr],
+      family = binomial()
+    ))
+    beta_k <- fit_k$coefficients
+    if (any(!is.finite(beta_k))) {
+      return(0)
+    }
+
+    mu_L_cf[te] <- clip_prob(plogis(X_L[te, , drop = FALSE] %*% beta_k))
+    mu_U_cf_mat[, k] <- clip_prob(plogis(X_U %*% beta_k))
+  }
+
+  mu_U_cf <- rowMeans(mu_U_cf_mat)
+  w_U <- pmax(mu_U_cf * (1 - mu_U_cf), 1e-6)
+  H_U_hat <- crossprod(X_U * sqrt(w_U)) / N
+
+  res_Y_l <- Y_L - mu_L_cf
+  res_f_l <- f_L - mu_L_cf
+  res_f_u <- f_U - mu_U_cf
+
+  Sigma_ff_u_hat <- crossprod(X_U * res_f_u) / N
+  Sigma_Yf_hat <- crossprod(X_L * res_Y_l, X_L * res_f_l) / n
+
+  Hinv_hat <- tryCatch(safe_solve(H_U_hat), error = function(e) NULL)
+  if (is.null(Hinv_hat)) {
+    return(0)
+  }
+
+  A_hat <- as.numeric(t(a) %*% Hinv_hat %*% Sigma_ff_u_hat %*% Hinv_hat %*% a)
+  C_hat <- as.numeric(t(a) %*% Hinv_hat %*% Sigma_Yf_hat %*% Hinv_hat %*% a)
+
+  if (!is.finite(A_hat) || A_hat <= 1e-10 || !is.finite(C_hat)) {
+    return(0)
+  }
+
+  lambda_hat <- C_hat / ((1 + n / N) * A_hat)
+  max(0, min(1, lambda_hat))
+}
+
 # ---- Pre-compute population blocks from large pilot per accuracy level ----
 cat("  Pre-computing population blocks from pilot data...\n")
-rng_state <- .Random.seed   # preserve caller's RNG state
+rng_state <- if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) .Random.seed else NULL
 blocks_list <- list()
 
 for (acc in accuracy_values) {
@@ -55,7 +118,9 @@ for (acc in accuracy_values) {
   cat(sprintf("    accuracy = %.0f%%: blocks computed\n", acc * 100))
 }
 
-.Random.seed <- rng_state   # restore RNG
+if (!is.null(rng_state)) {
+  .Random.seed <- rng_state
+}
 
 # ---- Main simulation loop ----
 total_configs_21 <- length(accuracy_values) * length(n_values) * length(N_values)
@@ -103,6 +168,7 @@ for (acc in accuracy_values) {
       rejections_classical <- 0
       valid_ppi <- 0
       valid_cl  <- 0
+      lambda_plugin_sum <- 0
 
       for (r in 1:R) {
         X_L <- matrix(rnorm(n * p), n, p)
@@ -116,6 +182,11 @@ for (acc in accuracy_values) {
         f_L <- ifelse(Y_L == 1,        rbinom(n, 1, acc), rbinom(n, 1, 1 - acc))
         f_U <- ifelse(Y_U_latent == 1, rbinom(N, 1, acc), rbinom(N, 1, 1 - acc))
 
+        lambda_plugin <- estimate_plugin_lambda_glm_cf(
+          X_L = X_L, Y_L = Y_L, f_L = f_L,
+          X_U = X_U, f_U = f_U, a = a, K = 2
+        )
+
         # ---- PPI++ GLM logistic (Newton-Raphson) ----
         ppi_ok <- tryCatch({
           theta <- suppressWarnings(glm.fit(X_L, Y_L, family = binomial())$coefficients)
@@ -128,11 +199,11 @@ for (acc in accuracy_values) {
             w_U <- as.vector(mu_hat_U * (1 - mu_hat_U))
 
             g <- crossprod(X_L, Y_L - mu_hat_L) / n -
-                 lambda_oracle * (crossprod(X_L, f_L - mu_hat_L) / n -
+                 lambda_plugin * (crossprod(X_L, f_L - mu_hat_L) / n -
                                   crossprod(X_U, f_U - mu_hat_U) / N)
 
-            H_mix <- (1 - lambda_oracle) * crossprod(X_L * sqrt(w_L)) / n +
-                      lambda_oracle      * crossprod(X_U * sqrt(w_U)) / N
+            H_mix <- (1 - lambda_plugin) * crossprod(X_L * sqrt(w_L)) / n +
+                      lambda_plugin      * crossprod(X_U * sqrt(w_U)) / N
 
             d_theta <- solve(H_mix, g)
             theta   <- theta + d_theta
@@ -144,13 +215,13 @@ for (acc in accuracy_values) {
           w_L <- as.vector(mu_hat_L * (1 - mu_hat_L))
           w_U <- as.vector(mu_hat_U * (1 - mu_hat_U))
 
-          H_mix <- (1 - lambda_oracle) * crossprod(X_L * sqrt(w_L)) / n +
-                    lambda_oracle      * crossprod(X_U * sqrt(w_U)) / N
+          H_mix <- (1 - lambda_plugin) * crossprod(X_L * sqrt(w_L)) / n +
+                    lambda_plugin      * crossprod(X_U * sqrt(w_U)) / N
           H_mix_inv <- solve(H_mix)
 
           phi_L <- X_L * (as.vector(Y_L - mu_hat_L) -
-                           lambda_oracle * as.vector(f_L - mu_hat_L))
-          psi_U <- lambda_oracle * X_U * as.vector(f_U - mu_hat_U)
+                           lambda_plugin * as.vector(f_L - mu_hat_L))
+          psi_U <- lambda_plugin * X_U * as.vector(f_U - mu_hat_U)
 
           V_ppi <- H_mix_inv %*%
             (crossprod(phi_L) / n^2 + crossprod(psi_U) / N^2) %*%
@@ -164,6 +235,7 @@ for (acc in accuracy_values) {
         if (!is.null(ppi_ok)) {
           valid_ppi <- valid_ppi + 1
           rejections_ppi <- rejections_ppi + ppi_ok$reject
+          lambda_plugin_sum <- lambda_plugin_sum + lambda_plugin
         }
 
         # ---- Classical GLM (Fisher-based SE) ----
@@ -189,10 +261,12 @@ for (acc in accuracy_values) {
         setting  = "GLM Logistic",
         accuracy = acc, n = n, N = N, delta = delta_log,
         lambda_oracle        = lambda_oracle,
+        lambda_plugin_mean   = lambda_plugin_sum / max(valid_ppi, 1),
         power_theo_ppi       = power_theo_ppi,
         power_emp_ppi        = rejections_ppi / max(valid_ppi, 1),
         power_theo_classical = power_theo_classical,
-        power_emp_classical  = rejections_classical / max(valid_cl, 1)
+        power_emp_classical  = rejections_classical / max(valid_cl, 1),
+        mc_reps = max(valid_ppi, 1)
       ))
     }
   }
