@@ -59,7 +59,7 @@ ppi_mean_test <- function(Y_L, f_L, f_U, theta0 = 0, alpha = 0.05, lambda = NULL
 
   # Use provided lambda or compute EIF-optimal
   if (is.null(lambda)) {
-    lambda <- cov_Yf_hat / ((1 + n / N) * sigma_f2_hat)
+    lambda <- plugin_lambda(cov_Yf_hat, sigma_f2_hat, n, N)
   }
 
   # PPI++ estimator
@@ -159,7 +159,7 @@ ppi_ttest <- function(Y_A, f_A_L, f_A_U, Y_B, f_B_L, f_B_U,
   cov_A <- stats::cov(Y_A, f_A_L)
 
   if (is.null(lambda_A)) {
-    lambda_A <- cov_A / ((1 + n_A / N_A) * sigma_fA2)
+    lambda_A <- plugin_lambda(cov_A, sigma_fA2, n_A, N_A)
   }
   theta_A <- Y_A_bar + lambda_A * (f_A_U_bar - f_A_L_bar)
 
@@ -174,7 +174,7 @@ ppi_ttest <- function(Y_A, f_A_L, f_A_U, Y_B, f_B_L, f_B_U,
   cov_B <- stats::cov(Y_B, f_B_L)
 
   if (is.null(lambda_B)) {
-    lambda_B <- cov_B / ((1 + n_B / N_B) * sigma_fB2)
+    lambda_B <- plugin_lambda(cov_B, sigma_fB2, n_B, N_B)
   }
   theta_B <- Y_B_bar + lambda_B * (f_B_U_bar - f_B_L_bar)
 
@@ -243,6 +243,13 @@ ppi_paired_test <- function(D_L, fD_L, fD_U, delta0 = 0, alpha = 0.05, lambda = 
 
 # Sample estimate of the moment factor kappa for the estimated tuning parameter,
 # bounded to [1, 50] (the formula assumes a linear E[Y | f]).
+# Plug-in lambda = c * slope; the slope is undefined when all labeled
+# predictions are equal (e.g., a binary f with one class), so use lambda = 0.
+plugin_lambda <- function(cov_yf, sigma_f2, n, N) {
+  if (!is.finite(sigma_f2) || sigma_f2 <= 0) return(0)
+  cov_yf / ((1 + n / N) * sigma_f2)
+}
+
 kappa_hat <- function(Y, f) {
   fc <- f - mean(f)
   sf2 <- mean(fc^2)

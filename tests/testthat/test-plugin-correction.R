@@ -34,3 +34,10 @@ test_that("corrected standard error is larger and uses a t reference", {
   c0 <- ppi_mean_test(y, f, fu, lambda = 0.5)
   expect_equal(c1$se, c0$se)
 })
+
+test_that("plug-in lambda is 0 when all labeled predictions are equal", {
+  set.seed(3)
+  out <- ppi_mean_test(Y_L = rbinom(15, 1, 0.3), f_L = rep(1, 15), f_U = rbinom(500, 1, 0.3))
+  expect_equal(out$lambda, 0)
+  expect_true(is.finite(out$estimate))
+})

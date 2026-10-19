@@ -215,6 +215,8 @@ fig_R1_var <- ggplot(vr, aes(n, ratio, color = method_label, shape = method_labe
   scale_x_continuous(trans = "log10", breaks = c(15, 30, 50, 100, 200, 400)) +
   scale_color_manual(values = method_colors) +
   scale_shape_manual(values = method_shapes) +
+  scale_y_continuous(breaks = seq(0.75, 1.25, 0.05)) +
+  coord_cartesian(ylim = c(0.75, 1.25)) +
   labs(x = "Labeled sample size n", y = "Estimated / true variance", color = NULL, shape = NULL) +
   theme_fig + guides(color = guide_legend(nrow = 1))
 
