@@ -26,6 +26,12 @@ PPI one-sample mean / prevalence
 
 PPI difference in prevalence
 
+PPI difference in means
+
+PPI paired mean difference
+
+PPI paired proportions
+
 ### Inputs
 
 Outcome type Prevalence (binary) Mean (continuous)
@@ -61,6 +67,10 @@ Var(f) = sigma_f2
 Cov(Y,f) = cov_y_f
 
 Expected non-response (%)
+
+Pilot size m (optional) If the correlation implied by these moments came
+from a pilot of m labeled units, plan at its one-sided 90% lower
+confidence bound.
 
 ### Results
 
@@ -121,6 +131,142 @@ PPI n per group (base) **-**
 PPI recruitment n (adj A / B) **-**
 
 Classical n per group **-**
+
+Labeled saving vs classical **-**
+
+Classic
+
+-
+
+PPI
+
+-
+
+PPI adj.
+
+-
+
+Formula note will appear here.
+
+### Inputs
+
+Difference in means to detect
+
+Expected non-response (%)
+
+Outcome SD, group A
+
+Outcome SD, group B
+
+Prediction R² in group A
+
+Prediction R² in group B
+
+Pilot size m (optional) If the R² in each group came from a pilot of m
+labeled units, plan at its one-sided 90% lower confidence bound.
+
+Unlabeled N_A
+
+Unlabeled N_B
+
+Alpha (two-sided)
+
+Target power (%)
+
+### Results
+
+PPI n per group (base) **-**
+
+PPI recruitment n per group (adj.) **-**
+
+Classical n per group **-**
+
+Labeled saving vs classical **-**
+
+Classic
+
+-
+
+PPI
+
+-
+
+PPI adj.
+
+-
+
+Formula note will appear here.
+
+### Inputs
+
+Mean within-pair difference to detect
+
+SD of the within-pair difference
+
+R² of predicted vs true differences
+
+Unlabeled pairs N
+
+Alpha (two-sided)
+
+Target power (%)
+
+Expected non-response (%)
+
+Pilot size m (optional) If the R² came from a pilot of m labeled units,
+plan at its one-sided 90% lower confidence bound.
+
+### Results
+
+PPI pairs (base) **-**
+
+PPI recruitment pairs (adj.) **-**
+
+Classical pairs **-**
+
+Labeled saving vs classical **-**
+
+Classic
+
+-
+
+PPI
+
+-
+
+PPI adj.
+
+-
+
+Formula note will appear here.
+
+### Inputs
+
+Prevalence under condition A (%)
+
+Prevalence under condition B (%)
+
+Within-pair correlation of true outcomes
+
+Unlabeled pairs N
+
+Classifier sensitivity
+
+Classifier specificity
+
+Alpha (two-sided)
+
+Target power (%)
+
+Expected non-response (%)
+
+### Results
+
+PPI pairs (base) **-**
+
+PPI recruitment pairs (adj.) **-**
+
+Classical pairs **-**
 
 Labeled saving vs classical **-**
 

@@ -7,7 +7,15 @@ lambda.
 ## Usage
 
 ``` r
-ppi_mean_test(Y_L, f_L, f_U, theta0 = 0, alpha = 0.05, lambda = NULL)
+ppi_mean_test(
+  Y_L,
+  f_L,
+  f_U,
+  theta0 = 0,
+  alpha = 0.05,
+  lambda = NULL,
+  se_type = c("standard", "corrected")
+)
 ```
 
 ## Arguments
@@ -36,6 +44,16 @@ ppi_mean_test(Y_L, f_L, f_U, theta0 = 0, alpha = 0.05, lambda = NULL)
 
   Optional user-specified lambda. If NULL, uses EIF-optimal lambda.
 
+- se_type:
+
+  `"standard"` (default) uses the usual plug-in standard error and a
+  normal reference. `"corrected"` adds the second-order term
+  \\c\\\hat\sigma\_\varepsilon^2\hat\kappa/\\n(n-3)\\\\ for the
+  estimated \\\lambda\\, with \\\hat\kappa\\ bounded below by 1, and
+  uses a \\t\_{n-2}\\ reference. It is meant for small `n`; it is
+  ignored when `lambda` is supplied, because a fixed \\\lambda\\ needs
+  no correction.
+
 ## Value
 
 A list with components:
@@ -50,7 +68,12 @@ A list with components:
 
 - z_stat:
 
-  Z test statistic.
+  Test statistic (compared with a \\t\_{n-2}\\ distribution when
+  `se_type = "corrected"`).
+
+- df:
+
+  Degrees of freedom of the reference distribution (`Inf` for normal).
 
 - p_value:
 
@@ -85,6 +108,9 @@ ppi_mean_test(Y_L, f_L, f_U, theta0 = 0)
 #> 
 #> $z_stat
 #> [1] 11.77326
+#> 
+#> $df
+#> [1] Inf
 #> 
 #> $p_value
 #> [1] 5.361031e-32

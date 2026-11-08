@@ -1,5 +1,5 @@
-pandoc: 3.1.11
-pkgdown: 2.2.0
+pandoc: 3.8.3
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   calculator-2x2: calculator-2x2.html
@@ -7,7 +7,7 @@ articles:
   intro-ppi: intro-ppi.html
   ppi-sample-size: ppi-sample-size.html
   sample-size-calculator: sample-size-calculator.html
-last_built: 2026-03-16T00:12Z
+last_built: 2026-11-08T20:28Z
 urls:
   reference: https://yiqunchen.github.io/pppower/reference
   article: https://yiqunchen.github.io/pppower/articles

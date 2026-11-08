@@ -7,7 +7,7 @@ This is the **detailed dive** behind the quickstart:
 - How
   [`power_ppi_mean()`](https://yiqunchen.github.io/pppower/reference/power_ppi_mean.md)
   works for mean estimation
-- How to feed prediction metrics (MSE, $R^{2}$, sensitivity/specificity)
+- How to feed prediction metrics (MSE, $`R^2`$, sensitivity/specificity)
   instead of raw moments
 - How to plan odds-ratio and relative-risk studies with
   [`power_ppi_2x2()`](https://yiqunchen.github.io/pppower/reference/power_ppi_2x2.md)
@@ -16,6 +16,7 @@ This is the **detailed dive** behind the quickstart:
 ## Core call shape (reference)
 
 ``` r
+
 power_ppi_mean(
   delta, N, n = NULL,
   power = 0.80, alpha = 0.05,
@@ -32,6 +33,7 @@ Only pass what you need for your path (moments **or** metrics).
 ## Mean mode with direct moments
 
 ``` r
+
 delta  <- 0.20
 N      <- 3000
 alpha  <- 0.05
@@ -69,6 +71,7 @@ power_ppi_mean(
 ## Mean mode with prediction metrics
 
 ``` r
+
 metrics <- list(
   type    = "continuous",
   var_y   = 1.00,   # total outcome variance
@@ -107,6 +110,7 @@ corrections keep the derived moments feasible.
 ## Binary metrics (confusion matrix or sens/spec)
 
 ``` r
+
 metrics <- list(
   type = "classification",
   # Confusion matrix (strong classifier)
@@ -149,12 +153,13 @@ power_ppi_mean(
 ```
 
 For binary outcomes, the helper computes prevalence and prediction
-prevalence from the confusion matrix and maps them to ${Var}(f)$ and
-${Cov}(Y,f)$.
+prevalence from the confusion matrix and maps them to
+$`\mathrm{Var}(f)`$ and $`\mathrm{Cov}(Y,f)`$.
 
 ## 2x2 tables: odds ratio and relative risk
 
 ``` r
+
 power_ppi_2x2(
   p_exp          = 0.35,
   p_ctrl         = 0.20,
@@ -189,6 +194,7 @@ We now demonstrate the **regression contrast** mode.
 Generate Data:
 
 ``` r
+
 p    <- 4
 n_l  <- 400
 n_u  <- 3000
@@ -205,6 +211,7 @@ f_u <- drop(X_u %*% beta + rnorm(n_u, sd = 0.6))
 Construct `PPI++` blocks for sandwich variance estimators:
 
 ``` r
+
 blocks <- compute_ppi_blocks(
   model_type = "ols",
   X_l = X_l, Y_l = Y_l, f_l = f_l,
@@ -213,9 +220,10 @@ blocks <- compute_ppi_blocks(
 )
 ```
 
-Solve sample size for contrast $c^{\top}\beta$:
+Solve sample size for contrast $`c^\top \beta`$:
 
 ``` r
+
 c_vec <- c(0, 1, 0, 0)
 delta <- as.numeric(t(c_vec) %*% beta)
 
@@ -257,6 +265,7 @@ power_ppi_regression(
 (We follow similar steps as described in OLS case above)
 
 ``` r
+
 p    <- 3
 n_l  <- 500
 n_u  <- 2500
@@ -281,6 +290,7 @@ Construct `PPI++` blocks for sandwich variance estimators similar to
 previous OLS case:
 
 ``` r
+
 blocks_glm <- compute_ppi_blocks(
   model_type = "glm",
   family     = "binomial",
@@ -293,6 +303,7 @@ blocks_glm <- compute_ppi_blocks(
 Then solve for sample size:
 
 ``` r
+
 c_vec <- c(1, 0, 0)
 delta <- as.numeric(t(c_vec) %*% beta)
 
@@ -331,10 +342,11 @@ power_ppi_regression(
 
 ## Handling infeasible cases
 
-If the required labeled ($n$) exceeds the unlabeled ($N$), the function
-throws an error by default (`mode = "error"`):
+If the required labeled ($`n`$) exceeds the unlabeled ($`N`$), the
+function throws an error by default (`mode = "error"`):
 
 ``` r
+
 out <- power_ppi_mean(
   delta = 0.03,
   N     = 1000,
@@ -349,9 +361,10 @@ out <- power_ppi_mean(
 #> ! Required n = 8710 exceeds N = 1000.
 ```
 
-Switch to `mode = "cap"` to get an estimate of power at $n = N$:
+Switch to `mode = "cap"` to get an estimate of power at $`n = N`$:
 
 ``` r
+
 out <- power_ppi_mean(
   delta = 0.03,
   N     = 1000,
@@ -373,11 +386,12 @@ attr(out, "achieved_power")
 
 ## Power Curve Visualization
 
-This chunk visualizes how required ($n$) decreases as effect size grows,
-and how oracle $\lambda$ for `PPI++` estimator provides a clear
+This chunk visualizes how required ($`n`$) decreases as effect size
+grows, and how oracle $`\lambda`$ for `PPI++` estimator provides a clear
 reduction in sample size estimations over vanilla PPI:
 
 ``` r
+
 delta_grid <- seq(0.10, 0.40, length.out = 40)
 
 ## Shared parameters (mean-estimation case)
@@ -466,8 +480,8 @@ This vignette demonstrated:
   classification).
 - How to incorporate OLS or GLM models into contrast-based inference.
 - When sample sizes become infeasible and how to handle caps.
-- How $\lambda$ affects the required labeled sample size.
+- How $`\lambda`$ affects the required labeled sample size.
 
 `PPI++` typically yields the smallest labeled sample size, especially
 when the prediction model is strong and the correlation (
-${Cov}\left( Y,f(X) \right)$ ) is high.
+$`\mathrm{Cov}(Y,f(X))`$ ) is high.

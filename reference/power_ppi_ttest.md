@@ -18,7 +18,10 @@ power_ppi_ttest(
   cov_yf_A,
   sigma_y2_B,
   sigma_f2_B,
-  cov_yf_B
+  cov_yf_B,
+  pilot_n_A = NULL,
+  pilot_n_B = NULL,
+  confidence = 0.9
 )
 ```
 
@@ -71,6 +74,17 @@ power_ppi_ttest(
 - cov_yf_B:
 
   Covariance between Y and f in group B.
+
+- pilot_n_A, pilot_n_B:
+
+  Optional numbers of labeled pairs in the pilots that gave the moments
+  of groups A and B. If given, that group's covariance is replaced by
+  its value at the lower confidence bound for the correlation from
+  [`rho_lower_bound()`](https://yiqunchen.github.io/pppower/reference/rho_lower_bound.md).
+
+- confidence:
+
+  One-sided confidence level for the bound (default 0.9).
 
 ## Value
 

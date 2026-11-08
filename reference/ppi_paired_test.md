@@ -58,6 +58,9 @@ ppi_paired_test(D_L, fD_L, fD_U)
 #> $z_stat
 #> [1] 3.984814
 #> 
+#> $df
+#> [1] Inf
+#> 
 #> $p_value
 #> [1] 6.753292e-05
 #> 

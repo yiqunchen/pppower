@@ -15,7 +15,9 @@ power_ppi_paired(
   alpha = 0.05,
   sigma_D2,
   rho_D,
-  sigma_fD2 = NULL
+  sigma_fD2 = NULL,
+  pilot_n = NULL,
+  confidence = 0.9
 )
 ```
 
@@ -54,6 +56,18 @@ power_ppi_paired(
 
   Optional variance of predicted differences. If NULL, assumed equal to
   `sigma_D2`.
+
+- pilot_n:
+
+  Optional number of labeled pairs in the pilot that estimated `rho_D`.
+  If given, the calculation uses the lower confidence bound for `rho_D`
+  from
+  [`rho_lower_bound()`](https://yiqunchen.github.io/pppower/reference/rho_lower_bound.md)
+  instead of the point estimate.
+
+- confidence:
+
+  One-sided confidence level for the bound (default 0.9).
 
 ## Value
 

@@ -42,6 +42,8 @@
 
 ## Utilities
 
+- [`rho_lower_bound()`](https://yiqunchen.github.io/pppower/reference/rho_lower_bound.md)
+  : Lower confidence bound for the prediction-outcome correlation
 - [`binary_moments_from_sens_spec()`](https://yiqunchen.github.io/pppower/reference/binary_moments_from_sens_spec.md)
   : Moments for binary outcome/prediction pairs from
   sensitivity/specificity
@@ -60,6 +62,18 @@
   : PPI++ Paired t-Test
 - [`ppi_ttest()`](https://yiqunchen.github.io/pppower/reference/ppi_ttest.md)
   : PPI++ Two-Sample t-Test
+
+## Agent tools
+
+Design assistant and MCP server for AI agents.
+
+- [`ppi_design()`](https://yiqunchen.github.io/pppower/reference/ppi_design.md)
+  : Plan a prediction-powered study in one call (agent-friendly
+  interface)
+- [`pppower_mcp_server()`](https://yiqunchen.github.io/pppower/reference/pppower_mcp_server.md)
+  : Serve pppower as an MCP server for LLM agents
+- [`pppower_mcp_tools()`](https://yiqunchen.github.io/pppower/reference/pppower_mcp_tools.md)
+  : Tools for LLM agents
 
 ## Deprecated
 

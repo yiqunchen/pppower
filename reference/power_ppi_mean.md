@@ -38,7 +38,11 @@ power_ppi_mean(
   lambda_user = NULL,
   mode = c("error", "cap"),
   warn_smallN = TRUE,
-  smallN_threshold = 500
+  smallN_threshold = 500,
+  plugin_correction = FALSE,
+  kappa = 1,
+  pilot_n = NULL,
+  confidence = 0.9
 )
 ```
 
@@ -136,6 +140,36 @@ power_ppi_mean(
 
   Numeric. Default `500`.
 
+- plugin_correction:
+
+  Logical (default `FALSE`). If `TRUE`, the variance used for planning
+  adds the second-order term
+  \\c\\\sigma\_\varepsilon^2\kappa/\\n(n-3)\\\\ for a tuning parameter
+  that is estimated from the study data, where \\c = N/(n+N)\\ and
+  \\\sigma\_\varepsilon^2 = \sigma_Y^2(1-\rho\_{Yf}^2)\\. For Gaussian
+  data (`kappa = 1`) this adds about one label to the planned sample
+  size. Only used with the oracle (closed-form) \\\lambda\\.
+
+- kappa:
+
+  Moment factor \\\kappa\\ for `plugin_correction` (default 1, the
+  Gaussian value). Values below 1 are replaced by 1.
+
+- pilot_n:
+
+  Optional number of labeled pairs in the pilot that gave the moments.
+  If given, the moments are treated as pilot estimates, and the
+  calculation uses the one-sided lower confidence bound for
+  \\\rho\_{Yf}\\ from
+  [`rho_lower_bound()`](https://yiqunchen.github.io/pppower/reference/rho_lower_bound.md)
+  instead of the point estimate. This protects against an optimistic
+  pilot at the cost of a few more labels.
+
+- confidence:
+
+  One-sided confidence level for the bound (default 0.9). Only used with
+  `pilot_n`.
+
 ## Value
 
 When computing power: scalar in \[0, 1\]. When computing sample size:
@@ -154,4 +188,9 @@ power_ppi_mean(delta = 0.3, N = 5000, n = 200,
 power_ppi_mean(delta = 0.3, N = 5000, power = 0.8,
                sigma_y2 = 1, sigma_f2 = 0.5, cov_y_f = 0.4)
 #> [1] 60
+
+# Same, planning at the 90% lower bound for rho from a pilot of 50 pairs:
+power_ppi_mean(delta = 0.3, N = 5000, power = 0.8,
+               sigma_y2 = 1, sigma_f2 = 0.5, cov_y_f = 0.4, pilot_n = 50)
+#> [1] 72
 ```

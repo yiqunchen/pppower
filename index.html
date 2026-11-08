@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Power Calculations for Prediction-Powered Inference • pppower</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Power Calculations for Prediction-Powered Inference">
 <meta name="description" content="Provides unified tools for power analysis and sample-size calculation under Prediction-Powered Inference (PPI and PPI++), supporting mean estimation and two-sample t-tests.">
@@ -59,21 +59,26 @@
 </h2>
 <p>For binary outcomes (prevalence), you can estimate required <strong>labeled</strong> sample size while leveraging model predictions on a large unlabeled set. This is exactly what PPI is for:</p>
 <ul>
-<li>Inputs: target effect size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math>, unlabeled size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>, and model quality (e.g., sensitivity/specificity)</li>
+<li>Inputs: target effect size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math>, unlabeled size <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>, and model quality (e.g., sensitivity/specificity)</li>
 <li>Output: required labeled <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> for your target power</li>
 <li>Benefit: better predictions can reduce labeled annotation burden</li>
 </ul>
 <p>Use <code>power_ppi_mean(..., n = NULL)</code> for one-sample prevalence and <code><a href="reference/power_ppi_ttest_binary.html">power_ppi_ttest_binary()</a></code> for two-group prevalence differences.</p>
 </div>
 <div class="section level2">
-<h2 id="interactive-calculator">Interactive Calculator<a class="anchor" aria-label="anchor" href="#interactive-calculator"></a>
+<h2 id="interactive-calculators">Interactive Calculators<a class="anchor" aria-label="anchor" href="#interactive-calculators"></a>
 </h2>
+<p>Two browser-based calculators run the same formulas as the R package. No installation is needed.</p>
 <div style="margin: 1rem 0 1.4rem; padding: 1.0rem; border: 2px solid #d9e7df; border-radius: 12px; text-align: center; background: #f8fbf9;">
-<p><a href="https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html" style="display: inline-block; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;"> Open Interactive PPI Sample Size Calculator </a></p>
-<div style="margin-top: 0.55rem; font-size: 0.92rem; color: #3f4d4a;">
-<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>Direct link to the live calculator page.</span></code></pre></div>
+<p><a href="https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html" style="display: inline-block; margin: 0.3rem; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;">PPI Sample Size Calculator</a> <a href="https://yiqunchen.github.io/pppower/articles/calculator-2x2.html" style="display: inline-block; margin: 0.3rem; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;">2x2 Table Calculator</a></p>
 </div>
-</div>
+<ul>
+<li>
+<strong><a href="https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html">PPI Sample Size Calculator</a></strong>: one-sample mean or prevalence, difference in two prevalences, difference in two means, paired mean difference, and paired proportions.</li>
+<li>
+<strong><a href="https://yiqunchen.github.io/pppower/articles/calculator-2x2.html">2x2 Table Calculator</a></strong>: odds ratio and relative risk in a 2x2 table with a binary prediction.</li>
+</ul>
+<p>Regression contrasts need variance terms estimated from pilot data, so they are available only through <code><a href="reference/power_ppi_regression.html">power_ppi_regression()</a></code> in the R package.</p>
 </div>
 <div class="section level2">
 <h2 id="what-is-prediction-powered-inference">What is Prediction-Powered Inference?<a class="anchor" aria-label="anchor" href="#what-is-prediction-powered-inference"></a>
@@ -81,23 +86,23 @@
 <p>Many modern studies have access to:</p>
 <ul>
 <li>
-<strong>Labeled data</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>i</mi></msub><mo>,</mo><msub><mi>Y</mi><mi>i</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(X_i, Y_i)</annotation></semantics></math> for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>n</mi></mrow><annotation encoding="application/x-tex">i = 1, \ldots, n</annotation></semantics></math> — expensive to obtain (human annotations, lab assays, expert reviews)</li>
+<strong>Labeled data</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>X</mi><mi>i</mi></msub><mo>,</mo><msub><mi>Y</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(X_i, Y_i)</annotation></semantics></math> for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>i</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>n</mi></mrow><annotation encoding="application/x-tex">i = 1, \ldots, n</annotation></semantics></math> — expensive to obtain (human annotations, lab assays, expert reviews)</li>
 <li>
-<strong>Unlabeled data</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>X</mi><mo accent="true">̃</mo></mover><mi>j</mi></msub><annotation encoding="application/x-tex">\tilde{X}_j</annotation></semantics></math> for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>N</mi></mrow><annotation encoding="application/x-tex">j = 1, \ldots, N</annotation></semantics></math> — cheap and abundant, with ML predictions <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>X</mi><mo accent="true">̃</mo></mover><mi>j</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(\tilde{X}_j)</annotation></semantics></math> available</li>
+<strong>Unlabeled data</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>X</mi><mo accent="true">̃</mo></mover><mi>j</mi></msub><annotation encoding="application/x-tex">\tilde{X}_j</annotation></semantics></math> for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>N</mi></mrow><annotation encoding="application/x-tex">j = 1, \ldots, N</annotation></semantics></math> — cheap and abundant, with ML predictions <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>X</mi><mo accent="true">̃</mo></mover><mi>j</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f(\tilde{X}_j)</annotation></semantics></math> available</li>
 </ul>
-<p>PPI combines both sources for valid, efficient inference. The <code>PPI++</code> estimator for the population mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>θ</mi><mo>*</mo></msup><mo>=</mo><mi>E</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>Y</mi><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">\theta^* = E[Y]</annotation></semantics></math> is:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>λ</mi></msub><mo>=</mo><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>L</mi></msub><mo>+</mo><mi>λ</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>f</mi><mo accent="true">‾</mo></mover><mi>U</mi></msub><mo>−</mo><msub><mover><mi>f</mi><mo accent="true">‾</mo></mover><mi>L</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\hat{\theta}_\lambda = \bar{Y}_L + \lambda(\bar{f}_U - \bar{f}_L)</annotation></semantics></math></p>
+<p>PPI combines both sources for valid, efficient inference. The <code>PPI++</code> estimator for the population mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>θ</mi><mo>*</mo></msup><mo>=</mo><mi>E</mi><mo stretchy="false" form="prefix">[</mo><mi>Y</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">\theta^* = E[Y]</annotation></semantics></math> is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mi>λ</mi></msub><mo>=</mo><msub><mover><mi>Y</mi><mo accent="true">‾</mo></mover><mi>L</mi></msub><mo>+</mo><mi>λ</mi><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>f</mi><mo accent="true">‾</mo></mover><mi>U</mi></msub><mo>−</mo><msub><mover><mi>f</mi><mo accent="true">‾</mo></mover><mi>L</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat{\theta}_\lambda = \bar{Y}_L + \lambda(\bar{f}_U - \bar{f}_L)</annotation></semantics></math></p>
 <p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> controls the blend between labeled data and predictions. The key insight: <strong>good predictions reduce the amount of labeled data needed</strong> for a given level of statistical power.</p>
 </div>
 <div class="section level2">
 <h2 id="key-formulas">Key Formulas<a class="anchor" aria-label="anchor" href="#key-formulas"></a>
 </h2>
 <p>The <code>PPI++</code> variance under the oracle <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>λ</mi><mo>*</mo></msup><annotation encoding="application/x-tex">\lambda^*</annotation></semantics></math> is:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Var</mtext><mrow><mo stretchy="true" form="prefix">(</mo><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><msup><mi>λ</mi><mo>*</mo></msup></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mi>n</mi></mfrac><mo>−</mo><mfrac><mrow><mtext mathvariant="normal">Cov</mtext><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup></mfrac><mo>⋅</mo><mfrac><mi>N</mi><mrow><mi>n</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo>+</mo><mi>N</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac></mrow><annotation encoding="application/x-tex">\text{Var}(\hat{\theta}_{\lambda^*}) = \frac{\sigma_Y^2}{n} - \frac{\text{Cov}(Y,f)^2}{\sigma_f^2} \cdot \frac{N}{n(n+N)}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Var</mtext><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>θ</mi><mo accent="true">̂</mo></mover><msup><mi>λ</mi><mo>*</mo></msup></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mi>n</mi></mfrac><mo>−</mo><mfrac><mrow><mtext mathvariant="normal">Cov</mtext><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup></mfrac><mo>⋅</mo><mfrac><mi>N</mi><mrow><mi>n</mi><mo stretchy="false" form="prefix">(</mo><mi>n</mi><mo>+</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">\text{Var}(\hat{\theta}_{\lambda^*}) = \frac{\sigma_Y^2}{n} - \frac{\text{Cov}(Y,f)^2}{\sigma_f^2} \cdot \frac{N}{n(n+N)}</annotation></semantics></math></p>
 <p>Solving for the required labeled sample size (quadratic in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>):</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>≥</mo><mfrac><mrow><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mo>−</mo><msup><mi>S</mi><mn>2</mn></msup><mi>N</mi><mo>+</mo><msqrt><mrow><msup><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mo>−</mo><msup><mi>S</mi><mn>2</mn></msup><mi>N</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo>+</mo><mn>4</mn><msup><mi>S</mi><mn>2</mn></msup><mi>N</mi><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><msubsup><mi>ρ</mi><mrow><mi>Y</mi><mi>f</mi></mrow><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msqrt></mrow><mrow><mn>2</mn><msup><mi>S</mi><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">n \geq \frac{\sigma_Y^2 - S^2 N + \sqrt{(\sigma_Y^2 - S^2 N)^2 + 4 S^2 N \sigma_Y^2 (1 - \rho_{Yf}^2)}}{2S^2}</annotation></semantics></math></p>
-<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>S</mi><mn>2</mn></msup><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>Δ</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>z</mi><mrow><mn>1</mn><mo>−</mo><mi>α</mi><mi>/</mi><mn>2</mn></mrow></msub><mo>+</mo><msub><mi>z</mi><mrow><mn>1</mn><mo>−</mo><mi>β</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">S^2 = (\Delta / (z_{1-\alpha/2} + z_{1-\beta}))^2</annotation></semantics></math>.</p>
-<p><strong>Rule of thumb:</strong> The sample size ratio satisfies <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="monospace">𝙿𝙿𝙸++</mtext></msub><mi>/</mi><msub><mi>n</mi><mtext mathvariant="normal">classical</mtext></msub><mo>≈</mo><mn>1</mn><mo>−</mo><msup><mi>R</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">n_{\texttt{PPI++}} / n_{\text{classical}} \approx 1 - R^2</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math> is the squared correlation between <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">f(X)</annotation></semantics></math>. A predictor explaining 80% of the variance cuts labeled data needs by ~80%.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>≥</mo><mfrac><mrow><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mo>−</mo><msup><mi>S</mi><mn>2</mn></msup><mi>N</mi><mo>+</mo><msqrt><mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mo>−</mo><msup><mi>S</mi><mn>2</mn></msup><mi>N</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><mn>4</mn><msup><mi>S</mi><mn>2</mn></msup><mi>N</mi><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msubsup><mi>ρ</mi><mrow><mi>Y</mi><mi>f</mi></mrow><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow></msqrt></mrow><mrow><mn>2</mn><msup><mi>S</mi><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">n \geq \frac{\sigma_Y^2 - S^2 N + \sqrt{(\sigma_Y^2 - S^2 N)^2 + 4 S^2 N \sigma_Y^2 (1 - \rho_{Yf}^2)}}{2S^2}</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>S</mi><mn>2</mn></msup><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi mathvariant="normal">Δ</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>z</mi><mrow><mn>1</mn><mo>−</mo><mi>α</mi><mi>/</mi><mn>2</mn></mrow></msub><mo>+</mo><msub><mi>z</mi><mrow><mn>1</mn><mo>−</mo><mi>β</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">S^2 = (\Delta / (z_{1-\alpha/2} + z_{1-\beta}))^2</annotation></semantics></math>.</p>
+<p><strong>Rule of thumb:</strong> The sample size ratio satisfies <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>n</mi><mtext mathvariant="monospace">𝙿𝙿𝙸++</mtext></msub><mi>/</mi><msub><mi>n</mi><mtext mathvariant="normal">classical</mtext></msub><mo>≈</mo><mn>1</mn><mo>−</mo><msup><mi>R</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">n_{\texttt{PPI++}} / n_{\text{classical}} \approx 1 - R^2</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math> is the squared correlation between <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false" form="prefix">(</mo><mi>X</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f(X)</annotation></semantics></math>. A predictor explaining 80% of the variance cuts labeled data needs by ~80%.</p>
 </div>
 <div class="section level2">
 <h2 id="supported-designs">Supported Designs<a class="anchor" aria-label="anchor" href="#supported-designs"></a>
@@ -108,38 +113,38 @@
 <col width="33%">
 <col width="33%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Design</th>
 <th>Power / Sample Size</th>
 <th>Simulation</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>One-sample mean (continuous)</td>
 <td><code><a href="reference/power_ppi_mean.html">power_ppi_mean()</a></code></td>
 <td><code><a href="reference/simulate_ppi_mean.html">simulate_ppi_mean()</a></code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>One-sample mean (binary)</td>
 <td><code><a href="reference/power_ppi_mean.html">power_ppi_mean()</a></code></td>
 <td><code>simulate_ppi_vanilla_mean()</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Two-sample <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>-test</td>
 <td><code><a href="reference/power_ppi_ttest.html">power_ppi_ttest()</a></code></td>
 <td><code><a href="reference/simulate_ppi_ttest_binary.html">simulate_ppi_ttest_binary()</a></code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Paired <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>-test</td>
 <td><code><a href="reference/power_ppi_paired.html">power_ppi_paired()</a></code></td>
 <td>—</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>2x2 contingency table</td>
 <td><code><a href="reference/power_ppi_2x2.html">power_ppi_2x2()</a></code></td>
 <td>—</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Regression contrast</td>
 <td><code><a href="reference/power_ppi_regression.html">power_ppi_regression()</a></code></td>
 <td>—</td>
@@ -151,7 +156,7 @@
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <p>You can install the development version of <code>pppower</code> from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"yiqunchen/pppower"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -159,7 +164,7 @@
 <h2 id="quick-example">Quick Example<a class="anchor" aria-label="anchor" href="#quick-example"></a>
 </h2>
 <p>A three-step workflow: compute power → solve for required <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> → verify with Monte Carlo.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://yiqunchen.github.io/pppower">pppower</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Step 1: Compute power for a given sample size</span></span>
@@ -200,16 +205,16 @@
 <h2 id="input-modes">Input Modes<a class="anchor" aria-label="anchor" href="#input-modes"></a>
 </h2>
 <p><code>pppower</code> supports three ways to specify variance components:</p>
-<p><strong>1. Direct moments</strong> — supply <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_Y^2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_f^2</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Cov</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Cov}(Y, f)</annotation></semantics></math> directly:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p><strong>1. Direct moments</strong> — supply <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>Y</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_Y^2</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>σ</mi><mi>f</mi><mn>2</mn></msubsup><annotation encoding="application/x-tex">\sigma_f^2</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Cov</mtext><mo stretchy="false" form="prefix">(</mo><mi>Y</mi><mo>,</mo><mi>f</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{Cov}(Y, f)</annotation></semantics></math> directly:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span>delta <span class="op">=</span> <span class="fl">0.2</span>, N <span class="op">=</span> <span class="fl">5000</span>, n <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>                  sigma_y2 <span class="op">=</span> <span class="fl">1.0</span>, sigma_f2 <span class="op">=</span> <span class="fl">0.49</span>, cov_y_f <span class="op">=</span> <span class="fl">0.63</span><span class="op">)</span></span></code></pre></div>
 <p><strong>2. Prediction variance / residual variance</strong> — decompose outcome variance via <code>var_f</code> and <code>var_res</code>:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span>delta <span class="op">=</span> <span class="fl">0.2</span>, N <span class="op">=</span> <span class="fl">5000</span>, n <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>                  var_f <span class="op">=</span> <span class="fl">0.49</span>, var_res <span class="op">=</span> <span class="fl">0.51</span>, cov_y_f <span class="op">=</span> <span class="fl">0.49</span><span class="op">)</span></span></code></pre></div>
 <p><strong>3. Metrics interface</strong> — supply sensitivity/specificity (binary) or MSE/<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math> (continuous):</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/power_ppi_mean.html">power_ppi_mean</a></span><span class="op">(</span>delta <span class="op">=</span> <span class="fl">0.05</span>, N <span class="op">=</span> <span class="fl">5000</span>, n <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>                  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sensitivity <span class="op">=</span> <span class="fl">0.85</span>, specificity <span class="op">=</span> <span class="fl">0.90</span>,</span>
 <span>                                 p_y <span class="op">=</span> <span class="fl">0.3</span>, m_obs <span class="op">=</span> <span class="fl">200</span><span class="op">)</span>,</span>
@@ -233,12 +238,12 @@
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <p>If you use <code>pppower</code> in your research, please cite:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="sc">@</span>software{pppower,</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  title <span class="ot">=</span> {pppower<span class="sc">:</span> Prediction<span class="sc">-</span>Powered Inference Power Calculations},</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  author <span class="ot">=</span> {Guo, Moran and Chen, Yiqun},</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  url <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>yiqunchen<span class="sc">/</span>pppower},</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  year <span class="ot">=</span> {<span class="dv">2025</span>}</span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="sc">@</span>software{pppower,</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  title <span class="ot">=</span> {pppower<span class="sc">:</span> Prediction<span class="sc">-</span>Powered Inference Power Calculations},</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  author <span class="ot">=</span> {Guo, Moran and Chen, Yiqun},</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  url <span class="ot">=</span> {https<span class="sc">:</span><span class="er">//</span>github.com<span class="sc">/</span>yiqunchen<span class="sc">/</span>pppower},</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  year <span class="ot">=</span> {<span class="dv">2025</span>}</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 </div>
 
@@ -278,7 +283,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>
