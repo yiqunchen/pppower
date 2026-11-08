@@ -20,12 +20,12 @@ library(pppower)
 # Parameters
 n_values_14 <- c(20, 40, 60, 80, 100)
 N_values_14 <- c(200, 500)
-rho_values_14 <- c(0.5, 0.7, 0.9)
+rho_values_14 <- c(0.3, 0.45, 0.5, 0.7, 0.9)  # R1: added low R^2
 delta_14 <- 0.2
 sigma_Y2_14 <- 1
 sigma_f2_14 <- 1
 alpha_14 <- 0.05
-R_14 <- 1000
+R_14 <- 2000  # R1 revision: was 1000
 
 grid_14 <- expand.grid(
   rho = rho_values_14,
@@ -96,6 +96,7 @@ for (i in seq_len(total_14)) {
     power_theo = power_theo,
     power_emp_oracle = rej_oracle / R_14,
     power_emp_plugin = rej_plugin / R_14,
+    mc_reps = R_14,
     stringsAsFactors = FALSE
   )
 }

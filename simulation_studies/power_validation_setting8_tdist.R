@@ -13,9 +13,20 @@ N_t_values <- c(200, 500)
 sigma_Y2_t <- df_t / (df_t - 2)  # Variance of t_5
 delta_t <- 0.3
 
-rho_values_t <- c(0.5, 0.7, 0.9)
+rho_values_t <- c(0.3, 0.45, 0.5, 0.7, 0.9)  # Gaussian copula correlation; R1: added low values
+
+# R1 fix: the t5 marginals have a slightly lower correlation than the Gaussian
+# copula parameter, so compute the actual correlation once per rho.
+rng_state_8 <- .Random.seed
+set.seed(8)
+z1_8 <- rnorm(2e6); z2_8 <- rnorm(2e6)
+rho_t_actual <- sapply(rho_values_t, function(r)
+  cor(qt(pnorm(z1_8), df_t), qt(pnorm(r * z1_8 + sqrt(1 - r^2) * z2_8), df_t)))
+names(rho_t_actual) <- rho_values_t
+rm(z1_8, z2_8)
+assign(".Random.seed", rng_state_8, envir = .GlobalEnv)
 alpha <- 0.05
-R <- 1000  # Monte Carlo replications
+R <- 2000  # Monte Carlo replications (R1 revision: was 1000)
 
 # Calculate total iterations for progress
 total_configs_8 <- length(rho_values_t) * length(n_values_t) * length(N_t_values)
@@ -33,7 +44,8 @@ for (rho in rho_values_t) {
 
       # Oracle lambda
       sigma_f2_t <- sigma_Y2_t
-      cov_Yf_t <- rho * sqrt(sigma_Y2_t * sigma_f2_t)
+      rho_actual <- rho_t_actual[[as.character(rho)]]
+      cov_Yf_t <- rho_actual * sqrt(sigma_Y2_t * sigma_f2_t)
       lambda_oracle <- cov_Yf_t / ((1 + n / N_t) * sigma_f2_t)
 
       # Theoretical power using package functions
@@ -79,13 +91,15 @@ for (rho in rho_values_t) {
       results_tdist <- rbind(results_tdist, data.frame(
         setting = "Mean (t-dist, df=5)",
         rho = rho,
+        rho_actual = rho_actual,
         n = n,
         N = N_t,
         delta = delta_t,
         power_theo_ppi = power_theo_ppi,
         power_emp_ppi = power_emp_ppi,
         power_theo_classical = power_theo_classical,
-        power_emp_classical = power_emp_classical
+        power_emp_classical = power_emp_classical,
+        mc_reps = R
       ))
     }
   }

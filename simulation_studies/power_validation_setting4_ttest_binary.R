@@ -30,7 +30,7 @@ classifier_settings <- list(
   c(sens = 0.95, spec = 0.95)
 )
 alpha <- 0.05
-R <- 1000  # Monte Carlo replications
+R <- 2000  # Monte Carlo replications (R1 revision: was 1000)
 
 results_bin_ttest <- do.call(
   rbind,

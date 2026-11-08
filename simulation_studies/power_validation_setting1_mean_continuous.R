@@ -8,11 +8,11 @@ setting1_start <- Sys.time()
 # Parameters
 n_values <- c(20, 40, 60, 80, 100)
 N_values <- c(200, 500)
-rho_values <- c(0.5, 0.7, 0.9)
+rho_values <- c(0.3, 0.45, 0.5, 0.7, 0.9)  # R1: added low R^2
 delta <- 0.2
 sigma_Y2 <- 1
 alpha <- 0.05
-R <- 1000  # Monte Carlo replications
+R <- 2000  # Monte Carlo replications (R1 revision: was 1000)
 
 settings_cont_mean <- list(
   n_values = n_values,
@@ -86,7 +86,8 @@ for (rho in rho_values) {
         power_theo_ppi = power_theo_ppi,
         power_emp_ppi = power_emp_ppi,
         power_theo_classical = power_theo_classical,
-        power_emp_classical = power_emp_classical
+        power_emp_classical = power_emp_classical,
+        mc_reps = R
       ))
     }
   }

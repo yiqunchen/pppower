@@ -30,16 +30,24 @@ This is exactly what PPI is for:
 Use `power_ppi_mean(..., n = NULL)` for one-sample prevalence and
 `power_ppi_ttest_binary()` for two-group prevalence differences.
 
-## Interactive Calculator
+## Interactive Calculators
+
+Two browser-based calculators run the same formulas as the R package. No
+installation is needed.
 
 <div style="margin: 1rem 0 1.4rem; padding: 1.0rem; border: 2px solid #d9e7df; border-radius: 12px; text-align: center; background: #f8fbf9;">
-  <a href="https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html" style="display: inline-block; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;">
-    Open Interactive PPI Sample Size Calculator
-  </a>
-  <div style="margin-top: 0.55rem; font-size: 0.92rem; color: #3f4d4a;">
-    Direct link to the live calculator page.
-  </div>
+<a href="https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html" style="display: inline-block; margin: 0.3rem; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;">PPI Sample Size Calculator</a>
+<a href="https://yiqunchen.github.io/pppower/articles/calculator-2x2.html" style="display: inline-block; margin: 0.3rem; padding: 0.8rem 1.1rem; font-size: 1.05rem; font-weight: 700; text-decoration: none; border-radius: 10px; background: #155f54; color: #ffffff;">2x2 Table Calculator</a>
 </div>
+
+- **[PPI Sample Size Calculator](https://yiqunchen.github.io/pppower/articles/sample-size-calculator.html)**:
+  one-sample mean or prevalence, difference in two prevalences, difference
+  in two means, paired mean difference, and paired proportions.
+- **[2x2 Table Calculator](https://yiqunchen.github.io/pppower/articles/calculator-2x2.html)**:
+  odds ratio and relative risk in a 2x2 table with a binary prediction.
+
+Regression contrasts need variance terms estimated from pilot data, so they
+are available only through `power_ppi_regression()` in the R package.
 
 ## What is Prediction-Powered Inference?
 

@@ -25,7 +25,7 @@ delta_18 <- 0.3
 sigma_Y2_18 <- 1
 sigma_f2_18 <- 1
 alpha_18 <- 0.05
-R_18 <- 1000
+R_18 <- 2000  # R1 revision: was 1000
 
 grid_18 <- expand.grid(
   rho = rho_values_18,
@@ -107,6 +107,7 @@ for (i in seq_len(total_18)) {
     power_theo_ppi = power_theo_ppi,
     power_emp_ppi = rej_ppi / R_18,
     power_emp_classical = rej_classical / R_18,
+    mc_reps = R_18,
     stringsAsFactors = FALSE
   )
 }

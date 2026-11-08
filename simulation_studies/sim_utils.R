@@ -271,7 +271,8 @@ simulate_twosample_binary_power <- function(p0, delta, sens, spec,
       power_theo_ppi = power_theo_ppi,
       power_emp_ppi = rej_ppi / R,
       power_theo_classical = power_theo_classical,
-      power_emp_classical = rej_classical / R
+      power_emp_classical = rej_classical / R,
+      mc_reps = R
     )
   }
 

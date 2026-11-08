@@ -46,6 +46,7 @@ reference:
       - plot_type1_error_curve
   - title: "Utilities"
     contents:
+      - rho_lower_bound
       - binary_moments_from_sens_spec
       - resolve_ppi_variances
       - compute_ppi_blocks
@@ -54,6 +55,12 @@ reference:
       - ppi_mean_test
       - ppi_paired_test
       - ppi_ttest
+  - title: "Agent tools"
+    desc: "Design assistant and MCP server for AI agents."
+    contents:
+      - ppi_design
+      - pppower_mcp_server
+      - pppower_mcp_tools
   - title: "Deprecated"
     desc: "Soft-deprecated shims; use the renamed functions above."
     contents:

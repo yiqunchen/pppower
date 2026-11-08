@@ -38,6 +38,21 @@ colors_val <- c(
   "Classical"  = "gray55"
 )
 
+# Monte Carlo 95% intervals for empirical power (R1 revision). Results cached
+# before the revision have no mc_reps column, so a default is supplied.
+with_mc <- function(df, R_default) {
+  if (!"mc_reps" %in% names(df)) df$mc_reps <- R_default
+  df
+}
+mc_errorbar <- function(col = "power_emp_ppi", label = "Empirical", data = NULL, width = 3) {
+  half <- function(p, R) 1.96 * sqrt(pmax(p * (1 - p), 0) / R)
+  geom_errorbar(data = data,
+                aes(ymin = pmax(0, .data[[col]] - half(.data[[col]], mc_reps)),
+                    ymax = pmin(1, .data[[col]] + half(.data[[col]], mc_reps)),
+                    color = label),
+                width = width, linewidth = 0.9, alpha = 0.9)
+}
+
 # =============================================================================
 # Extract settings variables from cached results (for --figures mode)
 # =============================================================================
@@ -102,7 +117,7 @@ save_fig <- function(plot, name, width = 10, height = 4.5) {
 # =============================================================================
 # Panel A: Mean (Continuous)
 # =============================================================================
-plot_data_A <- results_cont_mean %>%
+plot_data_A <- results_cont_mean %>% with_mc(1000) %>%
   mutate(rho_label = paste0("rho == ", rho),
          N_label = paste0("N == ", N))
 
@@ -110,7 +125,8 @@ fig_A <- ggplot(plot_data_A, aes(x = n)) +
   geom_line(aes(y = power_theo_classical, color = "Classical"),
             linetype = "dashed", linewidth = 1.8) +
   geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+  mc_errorbar() +
+  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
   facet_grid(N_label ~ rho_label,
              labeller = labeller(rho_label = label_parsed, N_label = label_parsed)) +
   geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
@@ -145,7 +161,7 @@ fig_B <- ggplot(plot_data_B, aes(x = n)) +
   geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
   geom_errorbar(aes(ymin = power_emp_ppi_lo, ymax = power_emp_ppi_hi, color = "Empirical"),
                 width = 4, linewidth = 0.7, alpha = 0.8) +
-  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
   facet_grid(N_label ~ classifier_label, labeller = labeller(N_label = label_parsed)) +
   geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
   scale_color_manual(values = colors_val) +
@@ -159,7 +175,7 @@ fig_B <- ggplot(plot_data_B, aes(x = n)) +
 # =============================================================================
 # Panel C: t-Test (Continuous)
 # =============================================================================
-plot_data_C <- results_cont_ttest %>%
+plot_data_C <- results_cont_ttest %>% with_mc(1000) %>%
   mutate(rho_label = paste0("rho == ", rho),
          N_label = paste0("N == ", N))
 
@@ -167,7 +183,8 @@ fig_C <- ggplot(plot_data_C, aes(x = n)) +
   geom_line(aes(y = power_theo_classical, color = "Classical"),
             linetype = "dashed", linewidth = 1.8) +
   geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+  mc_errorbar() +
+  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
   facet_grid(N_label ~ rho_label,
              labeller = labeller(rho_label = label_parsed, N_label = label_parsed)) +
   geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
@@ -182,7 +199,7 @@ fig_C <- ggplot(plot_data_C, aes(x = n)) +
 # =============================================================================
 # Panel D: Proportion Test (Binary)
 # =============================================================================
-plot_data_D <- results_bin_ttest %>%
+plot_data_D <- results_bin_ttest %>% with_mc(1000) %>%
   mutate(classifier_label = sprintf("Sens/Spec = %.0f%%", sens * 100),
          N_label = paste0("N == ", N))
 
@@ -190,7 +207,8 @@ fig_D <- ggplot(plot_data_D, aes(x = n)) +
   geom_line(aes(y = power_theo_classical, color = "Classical"),
             linetype = "dashed", linewidth = 1.8) +
   geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+  mc_errorbar() +
+  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
   facet_grid(N_label ~ classifier_label, labeller = labeller(N_label = label_parsed)) +
   geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
   scale_color_manual(values = colors_val) +
@@ -204,7 +222,7 @@ fig_D <- ggplot(plot_data_D, aes(x = n)) +
 # =============================================================================
 # Panel E: Paired t-Test (Continuous)
 # =============================================================================
-plot_data_E <- results_paired %>%
+plot_data_E <- results_paired %>% with_mc(1000) %>%
   mutate(rho_label = paste0("rho[D] == ", rho_D),
          N_label = paste0("N == ", N))
 
@@ -212,7 +230,8 @@ fig_E <- ggplot(plot_data_E, aes(x = n)) +
   geom_line(aes(y = power_theo_classical, color = "Classical"),
             linetype = "dashed", linewidth = 1.8) +
   geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+  mc_errorbar() +
+  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
   facet_grid(N_label ~ rho_label,
              labeller = labeller(rho_label = label_parsed, N_label = label_parsed)) +
   geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
@@ -227,7 +246,7 @@ fig_E <- ggplot(plot_data_E, aes(x = n)) +
 # =============================================================================
 # Panel F: Paired Proportion Test (Binary)
 # =============================================================================
-plot_data_F <- results_paired_bin %>%
+plot_data_F <- results_paired_bin %>% with_mc(1000) %>%
   mutate(classifier_label = sprintf("Sens/Spec = %.0f%%", sens * 100),
          N_label = paste0("N == ", N))
 
@@ -235,7 +254,8 @@ fig_F <- ggplot(plot_data_F, aes(x = n)) +
   geom_line(aes(y = power_theo_classical, color = "Classical"),
             linetype = "dashed", linewidth = 1.8) +
   geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+  mc_errorbar() +
+  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
   facet_grid(N_label ~ classifier_label, labeller = labeller(N_label = label_parsed)) +
   geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
   scale_color_manual(values = colors_val) +
@@ -249,15 +269,16 @@ fig_F <- ggplot(plot_data_F, aes(x = n)) +
 # =============================================================================
 # Panel G: Log-Normal (Skewed)
 # =============================================================================
-plot_data_G <- results_lognorm %>%
-  mutate(rho_label = paste0("rho == ", rho),
+plot_data_G <- results_lognorm %>% with_mc(1000) %>%
+  mutate(rho_label = if ("rho_orig" %in% names(.)) sprintf("rho == %.2f", rho_orig) else paste0("rho == ", rho),
          N_label = paste0("N == ", N))
 
 fig_G <- ggplot(plot_data_G, aes(x = n)) +
   geom_line(aes(y = power_theo_classical, color = "Classical"),
             linetype = "dashed", linewidth = 1.8) +
   geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+  mc_errorbar() +
+  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
   facet_grid(N_label ~ rho_label,
              labeller = labeller(rho_label = label_parsed, N_label = label_parsed)) +
   geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
@@ -272,15 +293,16 @@ fig_G <- ggplot(plot_data_G, aes(x = n)) +
 # =============================================================================
 # Panel H: t-distribution (Heavy-Tailed)
 # =============================================================================
-plot_data_H <- results_tdist %>%
-  mutate(rho_label = paste0("rho == ", rho),
+plot_data_H <- results_tdist %>% with_mc(1000) %>%
+  mutate(rho_label = if ("rho_actual" %in% names(.)) sprintf("rho == %.2f", rho_actual) else paste0("rho == ", rho),
          N_label = paste0("N == ", N))
 
 fig_H <- ggplot(plot_data_H, aes(x = n)) +
   geom_line(aes(y = power_theo_classical, color = "Classical"),
             linetype = "dashed", linewidth = 1.8) +
   geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+  mc_errorbar() +
+  geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
   facet_grid(N_label ~ rho_label,
              labeller = labeller(rho_label = label_parsed, N_label = label_parsed)) +
   geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
@@ -295,14 +317,14 @@ fig_H <- ggplot(plot_data_H, aes(x = n)) +
 # =============================================================================
 # Save panels A-H
 # =============================================================================
-save_fig(fig_A, "fig_validation_A_mean_continuous")
+save_fig(fig_A, "fig_validation_A_mean_continuous", width = 12.5)
 save_fig(fig_B, "fig_validation_B_mean_binary")
-save_fig(fig_C, "fig_validation_C_ttest_continuous")
+save_fig(fig_C, "fig_validation_C_ttest_continuous", width = 12.5)
 save_fig(fig_D, "fig_validation_D_ttest_binary")
-save_fig(fig_E, "fig_validation_E_paired_continuous")
+save_fig(fig_E, "fig_validation_E_paired_continuous", width = 12.5)
 save_fig(fig_F, "fig_validation_F_paired_binary")
-save_fig(fig_G, "fig_validation_G_lognormal")
-save_fig(fig_H, "fig_validation_H_tdist")
+save_fig(fig_G, "fig_validation_G_lognormal", width = 12.5)
+save_fig(fig_H, "fig_validation_H_tdist", width = 12.5)
 
 # =============================================================================
 # Panel J: Sample Size Inversion (Setting 10)
@@ -464,7 +486,7 @@ if (exists("results_lambda_convergence") && is.data.frame(results_lambda_converg
 # Panel N: Plugin Lambda Power (Setting 14)
 # =============================================================================
 if (exists("results_plugin_lambda") && is.data.frame(results_plugin_lambda)) {
-  plot_data_N <- results_plugin_lambda %>%
+  plot_data_N <- results_plugin_lambda %>% with_mc(1000) %>%
     mutate(rho_label = paste0("rho == ", rho),
            N_label = paste0("N == ", N))
 
@@ -481,12 +503,14 @@ if (exists("results_plugin_lambda") && is.data.frame(results_plugin_lambda)) {
 
   fig_N <- ggplot(plot_data_N, aes(x = n)) +
     geom_line(aes(y = power_theo, color = "Analytical"), linewidth = 1.8) +
+    mc_errorbar("power_emp", "Empirical (Oracle)", data = plot_data_N_long %>% filter(lambda_type == "oracle")) +
+    mc_errorbar("power_emp", "Empirical (Plugin)", data = plot_data_N_long %>% filter(lambda_type == "plugin")) +
     geom_point(data = plot_data_N_long %>% filter(lambda_type == "oracle"),
                aes(y = power_emp, color = "Empirical (Oracle)"),
-               size = 3.5, shape = 16) +
+               size = 2.3, shape = 16) +
     geom_point(data = plot_data_N_long %>% filter(lambda_type == "plugin"),
                aes(y = power_emp, color = "Empirical (Plugin)"),
-               size = 3.5, shape = 17) +
+               size = 2.3, shape = 17) +
     facet_grid(N_label ~ rho_label,
                labeller = labeller(rho_label = label_parsed, N_label = label_parsed)) +
     geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
@@ -502,7 +526,7 @@ if (exists("results_plugin_lambda") && is.data.frame(results_plugin_lambda)) {
     ) +
     theme_validation()
 
-  save_fig(fig_N, "fig_validation_N_plugin_lambda")
+  save_fig(fig_N, "fig_validation_N_plugin_lambda", width = 12.5)
 }
 
 # =============================================================================
@@ -537,7 +561,7 @@ if (exists("results_power_vs_delta") && is.data.frame(results_power_vs_delta)) {
 # Panel P: Small n Regime (Setting 16)
 # =============================================================================
 if (exists("results_small_n") && is.data.frame(results_small_n)) {
-  plot_data_P <- results_small_n %>%
+  plot_data_P <- results_small_n %>% with_mc(2000) %>%
     mutate(rho_label = paste0("rho == ", rho),
            N_label = paste0("N == ", N))
 
@@ -545,7 +569,8 @@ if (exists("results_small_n") && is.data.frame(results_small_n)) {
     geom_line(aes(y = power_theo_classical, color = "Classical"),
               linetype = "dashed", linewidth = 1.8) +
     geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+    mc_errorbar() +
+    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
     facet_grid(N_label ~ rho_label,
                labeller = labeller(rho_label = label_parsed, N_label = label_parsed)) +
     geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
@@ -567,14 +592,14 @@ if (exists("results_small_n") && is.data.frame(results_small_n)) {
 # Panel Q: N/n Ratio Sensitivity (Setting 17)
 # =============================================================================
 if (exists("results_Nn_ratio") && is.data.frame(results_Nn_ratio)) {
-  plot_data_Q <- results_Nn_ratio %>%
+  plot_data_Q <- results_Nn_ratio %>% with_mc(1000) %>%
     mutate(rho_label = paste0("rho == ", rho))
 
   fig_Q <- ggplot(plot_data_Q, aes(x = Nn_ratio)) +
     geom_line(aes(y = power_theo_ppi, color = "Analytical (PPI++)"),
               linewidth = 1.8) +
-    geom_point(aes(y = power_emp_ppi, color = "Empirical (PPI++)"),
-               size = 3.5) +
+    mc_errorbar(label = "Empirical (PPI++)") +
+    geom_point(aes(y = power_emp_ppi, color = "Empirical (PPI++)"), size = 2.3) +
     geom_hline(aes(yintercept = power_theo_classical),
                linetype = "dashed", color = "gray55",
                linewidth = 0.8,
@@ -600,7 +625,7 @@ if (exists("results_Nn_ratio") && is.data.frame(results_Nn_ratio)) {
 # Panel R: Unequal Group Sizes (Setting 18)
 # =============================================================================
 if (exists("results_unequal") && is.data.frame(results_unequal)) {
-  plot_data_R <- results_unequal %>%
+  plot_data_R <- results_unequal %>% with_mc(1000) %>%
     arrange(rho, alloc_ratio) %>%
     mutate(
       rho_label = paste0("rho == ", rho),
@@ -614,7 +639,8 @@ if (exists("results_unequal") && is.data.frame(results_unequal)) {
     geom_line(aes(y = power_emp_classical, color = "Classical"),
               linetype = "dashed", linewidth = 1.4) +
     geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+    mc_errorbar() +
+    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
     facet_wrap(~rho_label, labeller = labeller(rho_label = label_parsed)) +
     scale_color_manual(values = colors_val) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
@@ -669,7 +695,7 @@ if (exists("results_setting19") && is.data.frame(results_setting19)) {
 # Panel S: OLS Regression Contrast (Setting 20)
 # =============================================================================
 if (exists("results_ols_regression") && is.data.frame(results_ols_regression)) {
-  plot_data_S <- results_ols_regression %>%
+  plot_data_S <- results_ols_regression %>% with_mc(1000) %>%
     mutate(rho_label = paste0("rho == ", rho),
            N_label   = paste0("N == ", N))
 
@@ -677,7 +703,8 @@ if (exists("results_ols_regression") && is.data.frame(results_ols_regression)) {
     geom_line(aes(y = power_theo_classical, color = "Classical"),
               linetype = "dashed", linewidth = 1.8) +
     geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+    mc_errorbar() +
+    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
     facet_grid(N_label ~ rho_label,
                labeller = labeller(rho_label = label_parsed, N_label = label_parsed)) +
     geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
@@ -696,7 +723,7 @@ if (exists("results_ols_regression") && is.data.frame(results_ols_regression)) {
 # Panel T: GLM Logistic Regression Contrast (Setting 21)
 # =============================================================================
 if (exists("results_glm_logistic") && is.data.frame(results_glm_logistic)) {
-  plot_data_T <- results_glm_logistic %>%
+  plot_data_T <- results_glm_logistic %>% with_mc(1000) %>%
     mutate(acc_label = sprintf("Accuracy = %.0f%%", accuracy * 100),
            N_label   = paste0("N == ", N))
 
@@ -704,11 +731,12 @@ if (exists("results_glm_logistic") && is.data.frame(results_glm_logistic)) {
     geom_line(aes(y = power_theo_classical, color = "Classical"),
               linetype = "dashed", linewidth = 1.8) +
     geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+    mc_errorbar(label = "Empirical (cross-fitted plugin)") +
+    geom_point(aes(y = power_emp_ppi, color = "Empirical (cross-fitted plugin)"), size = 2.3) +
     facet_grid(N_label ~ acc_label,
                labeller = labeller(N_label = label_parsed)) +
     geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
-    scale_color_manual(values = colors_val) +
+    scale_color_manual(values = c(colors_val, "Empirical (cross-fitted plugin)" = pppower_colors$empirical)) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
     labs(
       title = "GLM Logistic Regression Contrast",
@@ -723,7 +751,7 @@ if (exists("results_glm_logistic") && is.data.frame(results_glm_logistic)) {
 # Panel U: 2x2 Table OR (Setting 22)
 # =============================================================================
 if (exists("results_2x2_or") && is.data.frame(results_2x2_or)) {
-  plot_data_U <- results_2x2_or %>%
+  plot_data_U <- results_2x2_or %>% with_mc(3000) %>%
     filter(p_exp == 0.40) %>%
     mutate(acc_label = sprintf("Accuracy = %.0f%%", accuracy * 100),
            N_label  = paste0("N == ", N))
@@ -732,7 +760,8 @@ if (exists("results_2x2_or") && is.data.frame(results_2x2_or)) {
     geom_line(aes(y = power_theo_classical, color = "Classical"),
               linetype = "dashed", linewidth = 1.8) +
     geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+    mc_errorbar() +
+    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
     facet_grid(N_label ~ acc_label,
                labeller = labeller(N_label = label_parsed)) +
     geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +
@@ -751,7 +780,7 @@ if (exists("results_2x2_or") && is.data.frame(results_2x2_or)) {
 # Panel V: 2x2 Table RR (Setting 22)
 # =============================================================================
 if (exists("results_2x2_rr") && is.data.frame(results_2x2_rr)) {
-  plot_data_V <- results_2x2_rr %>%
+  plot_data_V <- results_2x2_rr %>% with_mc(3000) %>%
     filter(p_exp == 0.40) %>%
     mutate(acc_label = sprintf("Accuracy = %.0f%%", accuracy * 100),
            N_label  = paste0("N == ", N))
@@ -760,7 +789,8 @@ if (exists("results_2x2_rr") && is.data.frame(results_2x2_rr)) {
     geom_line(aes(y = power_theo_classical, color = "Classical"),
               linetype = "dashed", linewidth = 1.8) +
     geom_line(aes(y = power_theo_ppi, color = "Analytical"), linewidth = 1.8) +
-    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 3.5) +
+    mc_errorbar() +
+    geom_point(aes(y = power_emp_ppi, color = "Empirical"), size = 2.3) +
     facet_grid(N_label ~ acc_label,
                labeller = labeller(N_label = label_parsed)) +
     geom_hline(yintercept = 0.8, linetype = "dotted", color = "gray50") +

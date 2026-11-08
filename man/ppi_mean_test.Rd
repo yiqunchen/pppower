@@ -4,7 +4,15 @@
 \alias{ppi_mean_test}
 \title{PPI++ One-Sample Mean Test}
 \usage{
-ppi_mean_test(Y_L, f_L, f_U, theta0 = 0, alpha = 0.05, lambda = NULL)
+ppi_mean_test(
+  Y_L,
+  f_L,
+  f_U,
+  theta0 = 0,
+  alpha = 0.05,
+  lambda = NULL,
+  se_type = c("standard", "corrected")
+)
 }
 \arguments{
 \item{Y_L}{Numeric vector of labeled outcomes.}
@@ -18,13 +26,22 @@ ppi_mean_test(Y_L, f_L, f_U, theta0 = 0, alpha = 0.05, lambda = NULL)
 \item{alpha}{Significance level (default 0.05).}
 
 \item{lambda}{Optional user-specified lambda. If NULL, uses EIF-optimal lambda.}
+
+\item{se_type}{\code{"standard"} (default) uses the usual plug-in standard error
+and a normal reference. \code{"corrected"} adds the second-order term
+\eqn{c\,\hat\sigma_\varepsilon^2\hat\kappa/\{n(n-3)\}} for the estimated
+\eqn{\lambda}, with \eqn{\hat\kappa} bounded below by 1, and uses a
+\eqn{t_{n-2}} reference. It is meant for small \code{n}; it is ignored when
+\code{lambda} is supplied, because a fixed \eqn{\lambda} needs no correction.}
 }
 \value{
 A list with components:
 \describe{
 \item{estimate}{The PPI++ point estimate of the mean.}
 \item{se}{Standard error of the estimate.}
-\item{z_stat}{Z test statistic.}
+\item{z_stat}{Test statistic (compared with a \eqn{t_{n-2}} distribution
+when \code{se_type = "corrected"}).}
+\item{df}{Degrees of freedom of the reference distribution (\code{Inf} for normal).}
 \item{p_value}{Two-sided p-value.}
 \item{reject}{Logical indicating whether null is rejected at level alpha.}
 \item{lambda}{The lambda value used.}

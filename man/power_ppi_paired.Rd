@@ -12,7 +12,9 @@ power_ppi_paired(
   alpha = 0.05,
   sigma_D2,
   rho_D,
-  sigma_fD2 = NULL
+  sigma_fD2 = NULL,
+  pilot_n = NULL,
+  confidence = 0.9
 )
 }
 \arguments{
@@ -33,6 +35,12 @@ Set to a value in (0, 1) to solve for \code{n} instead.}
 
 \item{sigma_fD2}{Optional variance of predicted differences. If NULL,
 assumed equal to \code{sigma_D2}.}
+
+\item{pilot_n}{Optional number of labeled pairs in the pilot that estimated
+\code{rho_D}. If given, the calculation uses the lower confidence bound for
+\code{rho_D} from \code{\link[=rho_lower_bound]{rho_lower_bound()}} instead of the point estimate.}
+
+\item{confidence}{One-sided confidence level for the bound (default 0.9).}
 }
 \value{
 When \code{power = NULL}: scalar power in \eqn{[0, 1]}.

@@ -14,7 +14,7 @@ library(pppower)
 rho_vals_13 <- c(0.5, 0.7, 0.9)
 N_13        <- 1000
 n_vals_13   <- c(20, 50, 100, 200, 500)
-R_13        <- 1000
+R_13        <- 2000  # R1 revision: was 1000
 sigma_Y2_13 <- 1.0
 sigma_f2_13 <- 1.0
 delta_13    <- 0.2

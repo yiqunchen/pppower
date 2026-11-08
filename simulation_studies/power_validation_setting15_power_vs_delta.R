@@ -19,7 +19,7 @@ rho_values_15 <- c(0.5, 0.7, 0.9)
 sigma_Y2_15 <- 1
 sigma_f2_15 <- 1
 alpha_15 <- 0.05
-R_15 <- 1000
+R_15 <- 2000  # R1 revision: was 1000
 
 grid_15 <- expand.grid(
   rho = rho_values_15,
@@ -80,6 +80,7 @@ for (i in seq_len(total_15)) {
     power_emp_ppi = rej_ppi / R_15,
     power_theo_classical = power_theo_classical,
     power_emp_classical = rej_classical / R_15,
+    mc_reps = R_15,
     stringsAsFactors = FALSE
   )
 }

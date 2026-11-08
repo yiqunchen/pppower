@@ -20,9 +20,9 @@ sigma_Y2_lognorm <- (exp(sigma_log^2) - 1) * exp(2 * mu_log + sigma_log^2)
 delta_log <- 0.15  # shift in log-scale -> multiplicative effect on original scale
 delta_lognorm <- exp(mu_log + delta_log + sigma_log^2 / 2) - true_mean_lognorm
 
-rho_values_lognorm <- c(0.5, 0.7, 0.9)
+rho_values_lognorm <- c(0.3, 0.45, 0.5, 0.7, 0.9)  # log-scale correlation; R1: added low values
 alpha <- 0.05
-R <- 1000  # Monte Carlo replications
+R <- 2000  # Monte Carlo replications (R1 revision: was 1000)
 
 # Calculate total iterations for progress
 total_configs_7 <- length(rho_values_lognorm) * length(n_values_lognorm) * length(N_lognorm_values)
@@ -42,14 +42,21 @@ for (rho in rho_values_lognorm) {
                    start_time = setting7_start)
 
       # Oracle lambda
-      sigma_f2_lognorm <- sigma_Y2_lognorm  # assume same variance for predictions
-      cov_Yf_lognorm <- rho * sqrt(sigma_Y2_lognorm * sigma_f2_lognorm)
+      # R1 fix: the data are generated under the alternative (log-scale mean
+      # mu_log + delta_log), so the planning moments must be those of that
+      # distribution. The original code used the variance at mu_log and the
+      # log-scale correlation in place of the original-scale covariance.
+      m_H1 <- mu_log + delta_log
+      sigma_Y2_H1 <- exp(2 * m_H1 + sigma_log^2) * (exp(sigma_log^2) - 1)
+      sigma_f2_lognorm <- sigma_Y2_H1
+      cov_Yf_lognorm <- exp(2 * m_H1 + sigma_log^2) * (exp(rho * sigma_log^2) - 1)
+      rho_orig <- (exp(rho * sigma_log^2) - 1) / (exp(sigma_log^2) - 1)
       lambda_oracle <- cov_Yf_lognorm / ((1 + n / N_lognorm) * sigma_f2_lognorm)
 
       # Theoretical power using package functions
       power_theo_ppi <- theo_power_ppi_mean(delta_lognorm, n, N_lognorm,
-                                            sigma_Y2_lognorm, sigma_f2_lognorm, cov_Yf_lognorm, alpha)
-      power_theo_classical <- theo_power_classical_onesample(delta_lognorm, n, sigma_Y2_lognorm, alpha)
+                                            sigma_Y2_H1, sigma_f2_lognorm, cov_Yf_lognorm, alpha)
+      power_theo_classical <- theo_power_classical_onesample(delta_lognorm, n, sigma_Y2_H1, alpha)
 
       # Monte Carlo simulation
       rejections_ppi <- 0
@@ -84,13 +91,15 @@ for (rho in rho_values_lognorm) {
       results_lognorm <- rbind(results_lognorm, data.frame(
         setting = "Mean (Log-Normal)",
         rho = rho,
+        rho_orig = rho_orig,
         n = n,
         N = N_lognorm,
         delta = delta_lognorm,
         power_theo_ppi = power_theo_ppi,
         power_emp_ppi = power_emp_ppi,
         power_theo_classical = power_theo_classical,
-        power_emp_classical = power_emp_classical
+        power_emp_classical = power_emp_classical,
+        mc_reps = R
       ))
     }
   }
